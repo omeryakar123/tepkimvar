@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ShieldAlert, X } from "lucide-react";
 import { apiGet, apiSend } from "@/lib/admin-api";
+import { Modal } from "@/components/ui/modal";
 
 type Profile = { id: string; full_name: string | null; username: string | null; is_banned: boolean; created_at: string };
 type AppRole = "user" | "brand" | "moderator" | "admin" | "super_admin";
@@ -105,35 +106,39 @@ function AdminUsersPage() {
         </table>
       </div>
 
-      {sanctionUser && (
-        <SanctionModal
-          user={sanctionUser}
-          onClose={() => setSanctionUser(null)}
-          onDone={() => { setSanctionUser(null); load(); }}
-        />
-      )}
+      <SanctionModal
+        user={sanctionUser}
+        onClose={() => setSanctionUser(null)}
+        onDone={() => { setSanctionUser(null); load(); }}
+      />
     </div>
   );
 }
 
-function SanctionModal({ user, onClose, onDone }: { user: Profile; onClose: () => void; onDone: () => void }) {
+function SanctionModal({ user, onClose, onDone }: { user: Profile | null; onClose: () => void; onDone: () => void }) {
+  const [shown, setShown] = useState<Profile | null>(user);
   const [history, setHistory] = useState<Sanction[]>([]);
   const [type, setType] = useState<Sanction["type"]>("warning");
   const [reason, setReason] = useState("");
   const [days, setDays] = useState(7);
   const [busy, setBusy] = useState(false);
 
-  async function loadHistory() {
-    const d = await apiGet<{ items: Sanction[] }>(`/api/admin/sanctions?userId=${user.id}`);
+  // Açılışta yeni kullanıcıyı yansıt; kapanış animasyonu boyunca son kullanıcı
+  // görünür kalsın diye null'a düşürmüyoruz.
+  useEffect(() => { if (user) setShown(user); }, [user]);
+
+  async function loadHistory(id: string) {
+    const d = await apiGet<{ items: Sanction[] }>(`/api/admin/sanctions?userId=${id}`);
     setHistory(d?.items ?? []);
   }
-  useEffect(() => { loadHistory(); /* eslint-disable-next-line */ }, [user.id]);
+  useEffect(() => { if (user) { setType("warning"); setReason(""); loadHistory(user.id); } /* eslint-disable-next-line */ }, [user?.id]);
 
   async function submit() {
+    if (!shown) return;
     if (type !== "unban" && reason.trim().length < 3) return toast.error("Sebep girin");
     setBusy(true);
     const ok = await apiSend("/api/admin/sanctions", "POST", {
-      userId: user.id, type, reason: reason.trim(), days,
+      userId: shown.id, type, reason: reason.trim(), days,
     });
     setBusy(false);
     if (!ok) return;
@@ -142,11 +147,10 @@ function SanctionModal({ user, onClose, onDone }: { user: Profile; onClose: () =
   }
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-lg bg-card rounded-2xl p-6 space-y-4 max-h-[85vh] overflow-y-auto">
+    <Modal open={!!user} onClose={onClose} className="max-w-lg bg-card rounded-2xl p-6 space-y-4 max-h-[85vh] overflow-y-auto shadow-lift">
         <div className="flex items-center justify-between">
           <h3 className="font-display text-lg font-bold text-ink">
-            Yaptırım · {user.full_name || user.username || user.id.slice(0, 8)}
+            Yaptırım · {shown?.full_name || shown?.username || shown?.id.slice(0, 8)}
           </h3>
           <button onClick={onClose}><X className="size-4 text-navy-mid" /></button>
         </div>
@@ -197,7 +201,6 @@ function SanctionModal({ user, onClose, onDone }: { user: Profile; onClose: () =
             </ul>
           )}
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 }

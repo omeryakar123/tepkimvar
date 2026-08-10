@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Modal } from "@/components/ui/modal";
 import { AlertTriangle, X } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
@@ -30,8 +31,6 @@ export function EscalateModal({
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
 
-  if (!open) return null;
-
   async function submit() {
     if (!user) { toast.error("Giriş yapmalısınız"); return; }
     setBusy(true);
@@ -52,27 +51,25 @@ export function EscalateModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-lg bg-card rounded-2xl p-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <AlertTriangle className="size-5 text-amber-500" />
-            <h3 className="font-display text-lg font-bold text-ink">Super Admin'e İlet</h3>
-          </div>
-          <button onClick={onClose}><X className="size-4 text-navy-mid" /></button>
+    <Modal open={open} onClose={onClose} className="max-w-lg bg-card rounded-2xl p-6 space-y-4 shadow-lift">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <AlertTriangle className="size-5 text-amber-500" />
+          <h3 className="font-display text-lg font-bold text-ink">Super Admin'e İlet</h3>
         </div>
-        <p className="text-[13px] text-navy-mid">Bu şikayet için bir sebep seçin. Super Admin inceleyip karar verecek.</p>
-        <div className="grid grid-cols-2 gap-2">
-          {REASONS.map((r) => (
-            <button key={r.v} onClick={() => setReason(r.v)} className={`h-10 rounded-lg text-[12.5px] font-medium ring-1 ${reason === r.v ? "bg-brand text-brand-foreground ring-brand" : "ring-rule hover:bg-surface text-ink"}`}>{r.label}</button>
-          ))}
-        </div>
-        <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3} placeholder="Açıklama (opsiyonel)" className="w-full rounded-lg ring-1 ring-rule p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40" />
-        <div className="flex gap-2">
-          <button onClick={onClose} className="flex-1 h-10 rounded-lg ring-1 ring-rule text-sm font-medium hover:bg-surface">İptal</button>
-          <button disabled={busy} onClick={submit} className="flex-1 h-10 rounded-lg bg-amber-500 text-white text-sm font-semibold disabled:opacity-60">İlet</button>
-        </div>
+        <button onClick={onClose}><X className="size-4 text-navy-mid" /></button>
       </div>
-    </div>
+      <p className="text-[13px] text-navy-mid">Bu şikayet için bir sebep seçin. Super Admin inceleyip karar verecek.</p>
+      <div className="grid grid-cols-2 gap-2">
+        {REASONS.map((r) => (
+          <button key={r.v} onClick={() => setReason(r.v)} className={`h-10 rounded-lg text-[12.5px] font-medium ring-1 ${reason === r.v ? "bg-brand text-brand-foreground ring-brand" : "ring-rule hover:bg-surface text-ink"}`}>{r.label}</button>
+        ))}
+      </div>
+      <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3} placeholder="Açıklama (opsiyonel)" className="w-full rounded-lg ring-1 ring-rule p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40" />
+      <div className="flex gap-2">
+        <button onClick={onClose} className="flex-1 h-10 rounded-lg ring-1 ring-rule text-sm font-medium hover:bg-surface">İptal</button>
+        <button disabled={busy} onClick={submit} className="flex-1 h-10 rounded-lg bg-amber-500 text-white text-sm font-semibold disabled:opacity-60">İlet</button>
+      </div>
+    </Modal>
   );
 }

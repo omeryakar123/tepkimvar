@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Plus, Search, ShieldCheck, Crown } from "lucide-react";
 import { toast } from "sonner";
 import { apiGet, apiSend } from "@/lib/admin-api";
+import { Modal } from "@/components/ui/modal";
 
 type Brand = { id: string; name: string; slug: string; logo_url: string | null; verified: boolean; premium: boolean; created_at: string };
 type Category = { id: string; name: string; slug: string };
@@ -103,17 +104,19 @@ function AdminBrandsPage() {
         </div>
       </div>
 
-      {open && <BrandCreateModal cats={cats} onClose={() => { setOpen(false); load(); }} />}
+      <BrandCreateModal open={open} cats={cats} onClose={() => { setOpen(false); load(); }} />
     </div>
   );
 }
 
-function BrandCreateModal({ cats, onClose }: { cats: Category[]; onClose: () => void }) {
+function BrandCreateModal({ open, cats, onClose }: { open: boolean; cats: Category[]; onClose: () => void }) {
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [website, setWebsite] = useState("");
   const [categoryId, setCategoryId] = useState<string>(cats[0]?.id ?? "");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => { if (open) { setName(""); setSlug(""); setWebsite(""); setCategoryId(cats[0]?.id ?? ""); } /* eslint-disable-next-line */ }, [open]);
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
@@ -125,8 +128,8 @@ function BrandCreateModal({ cats, onClose }: { cats: Category[]; onClose: () => 
   }
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" onClick={onClose}>
-      <form onClick={(e) => e.stopPropagation()} onSubmit={save} className="w-full max-w-md bg-card rounded-2xl p-6 space-y-4">
+    <Modal open={open} onClose={onClose} className="max-w-md">
+      <form onSubmit={save} className="bg-card rounded-2xl p-6 space-y-4 shadow-lift">
         <h2 className="font-display text-xl font-bold text-ink">Yeni Firma</h2>
         <Input label="Firma adı" value={name} onChange={setName} required />
         <Input label="Slug (opsiyonel)" value={slug} onChange={setSlug} placeholder="otomatik" />
@@ -142,7 +145,7 @@ function BrandCreateModal({ cats, onClose }: { cats: Category[]; onClose: () => 
           <button disabled={loading} className="flex-1 h-10 rounded-lg bg-brand text-brand-foreground text-sm font-semibold hover:brightness-110 disabled:opacity-60">Oluştur</button>
         </div>
       </form>
-    </div>
+    </Modal>
   );
 }
 

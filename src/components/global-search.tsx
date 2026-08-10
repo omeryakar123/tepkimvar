@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Search, X, Building2, MessageSquare, FileText, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "@tanstack/react-router";
+import { Modal } from "@/components/ui/modal";
 
 type BrandHit = { id: string; slug: string; name: string; logo_url: string | null };
 type ComplaintHit = { id: string; public_id: string | null; title: string; brands?: { slug: string; name: string } | null };
@@ -22,12 +23,12 @@ export function GlobalSearchTrigger({ className }: { className?: string }) {
         <Search className="size-4" /> Marka, şikayet veya kod ara…
         <kbd className="ml-2 hidden sm:inline-flex items-center gap-1 text-[10px] text-navy-mid bg-surface rounded px-1.5 py-0.5">⌘K</kbd>
       </button>
-      {open && <GlobalSearchModal onClose={() => setOpen(false)} />}
+      <GlobalSearchModal open={open} onClose={() => setOpen(false)} />
     </>
   );
 }
 
-function GlobalSearchModal({ onClose }: { onClose: () => void }) {
+function GlobalSearchModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [q, setQ] = useState("");
   const [debounced, setDebounced] = useState("");
   const [loading, setLoading] = useState(false);
@@ -37,7 +38,10 @@ function GlobalSearchModal({ onClose }: { onClose: () => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
-  useEffect(() => { inputRef.current?.focus(); }, []);
+  useEffect(() => {
+    if (open) { setTimeout(() => inputRef.current?.focus(), 40); }
+    else { setQ(""); setDebounced(""); }
+  }, [open]);
   useEffect(() => {
     const t = setTimeout(() => setDebounced(q.trim()), 300);
     return () => clearTimeout(t);
@@ -68,9 +72,8 @@ function GlobalSearchModal({ onClose }: { onClose: () => void }) {
   function go(to: string) { onClose(); setTimeout(() => navigate({ to }), 0); }
 
   return (
-    <div className="fixed inset-0 z-[60] bg-black/50 grid place-items-start pt-[10vh] px-4" onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-2xl bg-card rounded-2xl shadow-2xl overflow-hidden">
-        <div className="flex items-center gap-3 px-5 h-14 border-b border-rule">
+    <Modal open={open} onClose={onClose} align="top" className="max-w-2xl bg-card rounded-2xl shadow-2xl overflow-hidden">
+      <div className="flex items-center gap-3 px-5 h-14 border-b border-rule">
           <Search className="size-4 text-navy-mid" />
           <input ref={inputRef} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Marka, şikayet başlığı veya 6 haneli kod (örn. KJ-4M2X)…" className="flex-1 bg-transparent text-[14px] focus:outline-none" />
           {loading && <Loader2 className="size-4 text-navy-mid animate-spin" />}
@@ -116,8 +119,7 @@ function GlobalSearchModal({ onClose }: { onClose: () => void }) {
             </Section>
           )}
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 }
 

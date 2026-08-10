@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Modal } from "@/components/ui/modal";
 import { BadgeCheck, X } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
@@ -15,8 +16,6 @@ export function BrandVerifyModal({
   const [website, setWebsite] = useState("");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
-
-  if (!open) return null;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -43,8 +42,8 @@ export function BrandVerifyModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" onClick={onClose}>
-      <form onSubmit={submit} onClick={(e) => e.stopPropagation()} className="w-full max-w-lg bg-card rounded-2xl p-6 space-y-3">
+    <Modal open={open} onClose={onClose} className="max-w-lg">
+      <form onSubmit={submit} className="bg-card rounded-2xl p-6 space-y-3 shadow-lift">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2"><BadgeCheck className="size-5 text-info" /><h3 className="font-display text-lg font-bold text-ink">Doğrulanmış Firma Başvurusu</h3></div>
           <button type="button" onClick={onClose}><X className="size-4 text-navy-mid" /></button>
@@ -64,7 +63,7 @@ export function BrandVerifyModal({
           <button disabled={busy} className="flex-1 h-10 rounded-lg bg-brand text-brand-foreground text-sm font-semibold disabled:opacity-60">Başvuruyu Gönder</button>
         </div>
       </form>
-    </div>
+    </Modal>
   );
 }
 

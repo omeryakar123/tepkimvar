@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Modal } from "@/components/ui/modal";
 import { Star, Heart, X, Check } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
@@ -13,8 +14,6 @@ export function ResolutionTunnel({
   const [rating, setRating] = useState(5);
   const [hover, setHover] = useState(0);
   const [busy, setBusy] = useState(false);
-
-  if (!open) return null;
 
   async function finalize() {
     if (!user) { toast.error("Giriş yapın"); return; }
@@ -39,9 +38,8 @@ export function ResolutionTunnel({
   }
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4" onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md bg-card rounded-2xl p-6 space-y-5 relative">
-        <button onClick={onClose} className="absolute top-4 right-4 text-navy-mid hover:text-ink"><X className="size-4" /></button>
+    <Modal open={open} onClose={onClose} className="max-w-md bg-card rounded-2xl p-6 space-y-5 relative shadow-lift">
+      <button onClick={onClose} className="absolute top-4 right-4 text-navy-mid hover:text-ink"><X className="size-4" /></button>
 
         {step === 1 && (
           <>
@@ -90,7 +88,6 @@ export function ResolutionTunnel({
             <button onClick={onClose} className="mt-5 h-10 px-5 rounded-lg bg-ink text-paper text-[13px] font-semibold">Kapat</button>
           </div>
         )}
-      </div>
-    </div>
+    </Modal>
   );
 }

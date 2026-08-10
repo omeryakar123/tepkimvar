@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Modal } from "@/components/ui/modal";
 import { Flag, X } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
@@ -49,26 +50,22 @@ export function ReportButton({
       <button onClick={() => setOpen(true)} className={className ?? "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-navy-mid hover:text-danger text-sm"}>
         <Flag className="size-4" /> Raporla
       </button>
-      {open && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" onClick={() => setOpen(false)}>
-          <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md bg-card rounded-2xl p-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="font-display text-lg font-bold text-ink">İçeriği Raporla</h3>
-              <button onClick={() => setOpen(false)}><X className="size-4 text-navy-mid" /></button>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              {REASONS.map((r) => (
-                <button key={r.v} onClick={() => setReason(r.v)} className={`h-10 rounded-lg text-[13px] font-medium ring-1 ${reason === r.v ? "bg-brand text-brand-foreground ring-brand" : "ring-rule hover:bg-surface"}`}>{r.label}</button>
-              ))}
-            </div>
-            <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3} placeholder="Açıklama (opsiyonel)" className="w-full rounded-lg ring-1 ring-rule p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40" />
-            <div className="flex gap-2">
-              <button onClick={() => setOpen(false)} className="flex-1 h-10 rounded-lg ring-1 ring-rule text-sm font-medium hover:bg-surface">İptal</button>
-              <button disabled={busy} onClick={submit} className="flex-1 h-10 rounded-lg bg-brand text-brand-foreground text-sm font-semibold disabled:opacity-60">Gönder</button>
-            </div>
-          </div>
+      <Modal open={open} onClose={() => setOpen(false)} className="max-w-md bg-card rounded-2xl p-6 space-y-4 shadow-lift">
+        <div className="flex items-center justify-between">
+          <h3 className="font-display text-lg font-bold text-ink">İçeriği Raporla</h3>
+          <button onClick={() => setOpen(false)}><X className="size-4 text-navy-mid" /></button>
         </div>
-      )}
+        <div className="grid grid-cols-2 gap-2">
+          {REASONS.map((r) => (
+            <button key={r.v} onClick={() => setReason(r.v)} className={`h-10 rounded-lg text-[13px] font-medium ring-1 ${reason === r.v ? "bg-brand text-brand-foreground ring-brand" : "ring-rule hover:bg-surface"}`}>{r.label}</button>
+          ))}
+        </div>
+        <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3} placeholder="Açıklama (opsiyonel)" className="w-full rounded-lg ring-1 ring-rule p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40" />
+        <div className="flex gap-2">
+          <button onClick={() => setOpen(false)} className="flex-1 h-10 rounded-lg ring-1 ring-rule text-sm font-medium hover:bg-surface">İptal</button>
+          <button disabled={busy} onClick={submit} className="flex-1 h-10 rounded-lg bg-brand text-brand-foreground text-sm font-semibold disabled:opacity-60">Gönder</button>
+        </div>
+      </Modal>
     </>
   );
 }

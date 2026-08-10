@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { apiGet, apiSend } from "@/lib/admin-api";
+import { Modal } from "@/components/ui/modal";
 
 type Blog = { id: string; title: string; slug: string; status: string; published_at: string | null; created_at: string };
 
@@ -71,16 +72,18 @@ function AdminBlogPage() {
         </table>
       </div>
 
-      {open && <BlogCreateModal onClose={() => { setOpen(false); load(); }} />}
+      <BlogCreateModal open={open} onClose={() => { setOpen(false); load(); }} />
     </div>
   );
 }
 
-function BlogCreateModal({ onClose }: { onClose: () => void }) {
+function BlogCreateModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [title, setTitle] = useState("");
   const [excerpt, setExcerpt] = useState("");
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => { if (open) { setTitle(""); setExcerpt(""); setContent(""); } }, [open]);
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
@@ -93,8 +96,8 @@ function BlogCreateModal({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" onClick={onClose}>
-      <form onClick={(e) => e.stopPropagation()} onSubmit={save} className="w-full max-w-lg bg-card rounded-2xl p-6 space-y-4">
+    <Modal open={open} onClose={onClose} className="max-w-lg">
+      <form onSubmit={save} className="bg-card rounded-2xl p-6 space-y-4 shadow-lift">
         <h2 className="font-display text-xl font-bold text-ink">Yeni Blog Yazısı</h2>
         <div>
           <label className="text-[12px] font-medium text-navy-mid">Başlık</label>
@@ -113,6 +116,6 @@ function BlogCreateModal({ onClose }: { onClose: () => void }) {
           <button disabled={loading} className="flex-1 h-10 rounded-lg bg-brand text-brand-foreground text-sm font-semibold hover:brightness-110 disabled:opacity-60">Kaydet</button>
         </div>
       </form>
-    </div>
+    </Modal>
   );
 }

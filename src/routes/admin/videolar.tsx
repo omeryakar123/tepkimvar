@@ -6,6 +6,7 @@ import { apiGet, apiSend, uploadFile } from "@/lib/admin-api";
 import { fetchMe } from "@/lib/me";
 import type { AppRole } from "@/hooks/use-auth";
 import { Pagination } from "@/components/pagination";
+import { Modal } from "@/components/ui/modal";
 import { PAGE_SIZE } from "@/lib/data";
 
 type Video = {
@@ -154,36 +155,48 @@ function AdminVideosPage() {
         </div>
       </div>
 
-      {(editing || creating) && (
-        <VideoEditor
-          value={editing}
-          onClose={() => { setEditing(null); setCreating(false); }}
-          onSaved={() => { setEditing(null); setCreating(false); load(page); }}
-        />
-      )}
+      <VideoEditor
+        open={!!(editing || creating)}
+        value={editing}
+        onClose={() => { setEditing(null); setCreating(false); }}
+        onSaved={() => { setEditing(null); setCreating(false); load(page); }}
+      />
     </div>
   );
 }
 
 function VideoEditor({
+  open,
   value,
   onClose,
   onSaved,
 }: {
+  open: boolean;
   value: Video | null;
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const [title, setTitle] = useState(value?.title ?? "");
-  const [slug, setSlug] = useState(value?.slug ?? "");
-  const [description, setDescription] = useState(value?.description ?? "");
-  const [coverUrl, setCoverUrl] = useState(value?.cover_url ?? "");
-  const [videoUrl, setVideoUrl] = useState(value?.video_url ?? "");
-  const [status, setStatus] = useState(value?.status ?? "published");
+  const [title, setTitle] = useState("");
+  const [slug, setSlug] = useState("");
+  const [description, setDescription] = useState("");
+  const [coverUrl, setCoverUrl] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
+  const [status, setStatus] = useState("published");
+  const [isEdit, setIsEdit] = useState(false);
   const [busy, setBusy] = useState(false);
   const coverRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLInputElement>(null);
   const [uploadKind, setUploadKind] = useState<null | "cover" | "video">(null);
+
+  // Açılışta alanları `value`'dan doldur. Kapanış animasyonu boyunca son
+  // içerik ekranda kalsın diye sıfırlamayı yalnızca açılışta yapıyoruz.
+  useEffect(() => {
+    if (!open) return;
+    setTitle(value?.title ?? ""); setSlug(value?.slug ?? ""); setDescription(value?.description ?? "");
+    setCoverUrl(value?.cover_url ?? ""); setVideoUrl(value?.video_url ?? ""); setStatus(value?.status ?? "published");
+    setIsEdit(!!value); setBusy(false); setUploadKind(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   async function onCover(file: File | undefined) {
     if (!file) return;
@@ -224,10 +237,10 @@ function VideoEditor({
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-card rounded-2xl ring-1 ring-rule w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+    <Modal open={open} onClose={onClose} className="max-w-2xl">
+      <div className="bg-card rounded-2xl ring-1 ring-rule w-full max-h-[90vh] overflow-y-auto shadow-lift">
         <div className="p-5 border-b border-rule flex items-center justify-between">
-          <h2 className="font-display text-xl font-bold">{value ? "Videoyu Düzenle" : "Yeni Video"}</h2>
+          <h2 className="font-display text-xl font-bold">{isEdit ? "Videoyu Düzenle" : "Yeni Video"}</h2>
           <button onClick={onClose} className="p-2 rounded hover:bg-surface"><X className="size-4" /></button>
         </div>
         <div className="p-5 space-y-4">
@@ -293,7 +306,7 @@ function VideoEditor({
           </button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }
 
