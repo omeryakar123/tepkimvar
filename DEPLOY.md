@@ -1,0 +1,85 @@
+# itirazvar — Coolify Deploy Rehberi
+
+Uygulama: **TanStack Start + Nitro (node-server) + Drizzle/Postgres + BetterAuth + S3/MinIO**.
+Build ve migration `Dockerfile` içinde otomatik; sen sadece servisleri ve env'leri kurarsın.
+
+## 1. Coolify'da gerekli servisler
+
+| Servis | Not |
+|---|---|
+| **PostgreSQL** | Coolify "Databases → PostgreSQL". Bağlantı URL'ini kopyala → `DATABASE_URL`. |
+| **MinIO** (veya S3/R2) | Dosya/görsel yükleme için. Access/secret key üret. Alternatif: Cloudflare R2. |
+| **Uygulama** | Bu repo → "Application → Dockerfile". Port **3000**. |
+
+## 2. Uygulama servisi ayarı
+- **Build Pack:** Dockerfile (repo kökündeki `Dockerfile` otomatik bulunur).
+- **Port:** `3000` (Nitro node-server bunu dinler).
+- **Domain:** `itirazvar.com` bağla, Coolify otomatik HTTPS (Let's Encrypt) verir.
+- **Health check path:** `/robots.txt` (hafif, hızlı 200 döner).
+
+## 3. Environment Variables (Coolify → Environment)
+
+**Zorunlu:**
+```
+DATABASE_URL=postgresql://...        # Coolify Postgres servisinden
+BETTER_AUTH_SECRET=<openssl rand -base64 32 ile ÜRET>
+BETTER_AUTH_URL=https://itirazvar.com
+TRUSTED_ORIGINS=https://itirazvar.com
+SITE_URL=https://itirazvar.com
+VITE_SITE_URL=https://itirazvar.com
+INTERNAL_API_URL=http://localhost:3000
+PORT=3000
+S3_ENDPOINT=<minio/r2 endpoint>
+S3_ACCESS_KEY_ID=<...>
+S3_SECRET_ACCESS_KEY=<...>
+S3_BUCKET=itirazvar
+S3_REGION=us-east-1
+RESEND_API_KEY=<Resend anahtarı>     # gerçek e-posta doğrulaması için
+```
+
+> **Not:** `VITE_*` değişkenleri build sırasında gömülür. Coolify'da bunları
+> "Build Variable" olarak da işaretle (yalnızca runtime değil).
+
+**Opsiyonel (Google ile giriş):**
+```
+GOOGLE_CLIENT_ID=<...>
+GOOGLE_CLIENT_SECRET=<...>
+VITE_GOOGLE_ENABLED=true
+```
+Google Cloud Console → OAuth client → redirect URI: `https://itirazvar.com/api/auth/callback/google`
+
+## 4. Deploy
+1. Repo'yu Coolify'a bağla (GitHub veya git push).
+2. Yukarıdaki env'leri gir.
+3. **Deploy**. Container başlarken önce migration'ları uygular
+   (`bun run src/db/migrate.ts`), sonra sunucuyu başlatır. İlk deploy'da
+   33 tablo boş DB'ye kurulur; sonraki deploy'larda sadece yeni migration'lar.
+
+## 5. İlk kurulum (deploy sonrası, tek seferlik)
+```bash
+# Kategoriler/markalar boş gelir. İstersen tohum verisiyle başla:
+#   (lokalde çalıştır, prod DATABASE_URL'i vererek — ya da kendi verini gir)
+DATABASE_URL=<prod-url> bun run src/db/seed.ts
+
+# İlk admin: siteden kayıt ol, sonra:
+DATABASE_URL=<prod-url> bun run src/db/make-admin.ts senin@mailin.com super_admin
+```
+
+## 6. Şema değişince (sonraki güncellemeler)
+```bash
+bun run db:generate        # schema.ts'ten yeni SQL migration üret
+git commit && push         # Coolify redeploy -> migrate otomatik koşar
+```
+
+## Bağımlılıklar / dış servisler (senin sağlaman gerekenler)
+- **Domain + DNS:** `itirazvar.com` A kaydı Coolify sunucusuna.
+- **Resend hesabı:** e-posta doğrulama/OTP için (domain doğrulaması gerekir).
+- **Google OAuth (ops.):** kendi Client ID/Secret'ın.
+- **S3/MinIO:** Coolify MinIO ya da Cloudflare R2 (R2 önerilir: egress ücretsiz).
+
+## Notlar
+- SSR, sayfa verisini kendi API'sinden çeker; `INTERNAL_API_URL=http://localhost:3000`
+  sayesinde bu istek konteyner içinde kalır (public proxy'ye çıkmaz).
+- Rate limit şu an **in-memory** (tek replica için). Birden fazla replica
+  çalıştıracaksan `src/lib/server/guard.ts`'i Redis'e taşı.
+- Eski `supabase/` klasörü kullanılmıyor; `.dockerignore`'da image'a girmiyor.

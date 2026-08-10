@@ -1,0 +1,28 @@
+# itirazvar.
+
+> Türkiye'nin bağımsız müşteri deneyimi ve şikayet çözüm platformu. Kullanıcılar markalara sorunlarını iletir, çözüm süreçlerini takip eder; markalar ise doğrulanmış profillerle yanıt verir.
+
+itirazvar., müşterilerle markalar arasında köprü görevi üstlenen bir çözüm platformudur. Milyonlarca ziyaretçinin alışverişleri öncesi karar vermelerine yardımcı olur; markaların müşteri memnuniyetini artırmasına imkan tanır.
+
+## Pages
+
+- [Ana Sayfa](/): Trend şikayetler, öne çıkan markalar ve kategoriler.
+- [Markalar](/markalar): Kayıtlı markaların dizini; filtre ve sıralama.
+- [Trend Şikayetler](/trendler): En çok okunan ve etkileşim alan şikayetler.
+- [Video Şikayetler](/video): Video formatındaki müşteri şikayetleri.
+- [Şikayet Yaz](/sikayet-yaz): Yeni bir şikayet oluşturma sayfası.
+- [Arama](/arama): Marka ve şikayet arama.
+- [Reklam Çözümleri](/reklam-cozumleri): Markalar için tanıtım ve doğrulama paketleri.
+
+## Kurumsal
+
+- [Hakkımızda](/hakkimizda): Platform hakkında bilgi ve istatistikler.
+- [Şeffaflık Raporu](/seffaflik-raporu): Yıllık moderasyon ve büyüme verileri.
+- [Yardım](/yardim): Sık sorulan sorular ve yardım merkezi.
+- [İletişim](/iletisim): İletişim kanalları ve form.
+
+## Optional
+
+- [Kullanım Koşulları](/kullanim-kosullari)
+- [Gizlilik Politikası](/gizlilik)
+- [KVKK Aydınlatma Metni](/kvkk)

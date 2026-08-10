@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Env / secrets — ASLA commit'leme
+.env
+.env.*
+!.env.example
+
+# Build çıktıları
+dist/
+.output/
+.nitro/
+.tanstack/
+.vinxi/
+
+# Cache
+.cache/
+*.tsbuildinfo
+
+# Editor / OS
+.DS_Store
+.vscode/
+.idea/
+
+# Loglar
+*.log
+npm-debug.log*

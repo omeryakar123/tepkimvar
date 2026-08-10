@@ -1,0 +1,145 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { and, desc, eq, ilike, sql, type SQL } from "drizzle-orm";
+import { db, schema } from "@/db";
+import { recordStatusChange } from "@/lib/server/history";
+import { notifyComplaintOwner } from "@/lib/server/notify";
+import { audit } from "@/lib/server/audit";
+import { HttpError, errorResponse, requireStaff } from "@/lib/server/guard";
+
+// schema.complaintStatus enum ile birebir. İstemciden gelen değer BURADA doğrulanır.
+const STATUSES = [
+  "pending",
+  "approved",
+  "in_review",
+  "answered",
+  "resolved",
+  "rejected",
+  "spam",
+  "user_replied",
+  "super_admin_review",
+  "escalated",
+  "archived",
+] as const;
+type Status = (typeof STATUSES)[number];
+
+export const Route = createFileRoute("/api/admin/complaints")({
+  server: {
+    handlers: {
+      GET: async ({ request }) => {
+        try {
+          await requireStaff(request);
+          const p = new URL(request.url).searchParams;
+
+          const page = Math.max(1, Number(p.get("page")) || 1);
+          const pageSize = Math.min(100, Math.max(1, Number(p.get("pageSize")) || 12));
+          const status = p.get("status") ?? "";
+          const q = (p.get("q") ?? "").trim();
+
+          const conditions: SQL[] = [];
+          if (status) {
+            if (!STATUSES.includes(status as Status)) throw new HttpError(400, "Geçersiz durum");
+            conditions.push(eq(schema.complaints.status, status as Status));
+          }
+          if (q) conditions.push(ilike(schema.complaints.title, `%${q}%`));
+          const where = conditions.length ? and(...conditions) : undefined;
+
+          const rows = await db
+            .select({
+              id: schema.complaints.id,
+              title: schema.complaints.title,
+              status: schema.complaints.status,
+              created_at: schema.complaints.createdAt,
+              brand_id: schema.complaints.brandId,
+              user_id: schema.complaints.userId,
+            })
+            .from(schema.complaints)
+            .where(where)
+            .orderBy(desc(schema.complaints.createdAt))
+            .limit(pageSize)
+            .offset((page - 1) * pageSize);
+
+          const [{ count }] = await db
+            .select({ count: sql<number>`count(*)` })
+            .from(schema.complaints)
+            .where(where);
+
+          return Response.json({ items: rows, total: Number(count) });
+        } catch (e) {
+          return errorResponse(e);
+        }
+      },
+
+      PATCH: async ({ request }) => {
+        try {
+          const user = await requireStaff(request);
+          const b = (await request.json()) as { id?: string; status?: string };
+          if (!b.id) throw new HttpError(400, "Şikayet belirtilmeli");
+          if (!STATUSES.includes(b.status as Status)) throw new HttpError(400, "Geçersiz durum");
+
+          const [before] = await db
+            .select({ status: schema.complaints.status })
+            .from(schema.complaints)
+            .where(eq(schema.complaints.id, b.id))
+            .limit(1);
+          if (!before) throw new HttpError(404, "Şikayet bulunamadı");
+
+          await db
+            .update(schema.complaints)
+            .set({ status: b.status as Status, updatedAt: new Date() })
+            .where(eq(schema.complaints.id, b.id));
+
+          await recordStatusChange({
+            complaintId: b.id,
+            fromStatus: before.status,
+            toStatus: b.status as Status,
+            changedBy: user.id,
+            actorRole: "admin",
+          });
+          await notifyComplaintOwner(b.id, {
+            type: "status_change",
+            title:
+              b.status === "approved"
+                ? "Şikayetiniz yayınlandı"
+                : "Şikayetinizin durumu güncellendi",
+            body: `Yeni durum: ${b.status}`,
+            skipIfSameAs: user.id,
+          });
+
+          await audit(request, user.id, {
+            action: "complaint.status",
+            entityType: "complaint",
+            entityId: b.id,
+            metadata: { from: before.status, to: b.status },
+          });
+          return Response.json({ ok: true });
+        } catch (e) {
+          return errorResponse(e);
+        }
+      },
+
+      DELETE: async ({ request }) => {
+        try {
+          const user = await requireStaff(request);
+          const b = (await request.json().catch(() => ({}))) as { id?: string };
+          if (!b.id) throw new HttpError(400, "Şikayet belirtilmeli");
+
+          const [deleted] = await db
+            .delete(schema.complaints)
+            .where(eq(schema.complaints.id, b.id))
+            .returning({ id: schema.complaints.id });
+          if (!deleted) throw new HttpError(404, "Şikayet bulunamadı");
+
+          await audit(request, user.id, {
+            action: "complaint.delete",
+            entityType: "complaint",
+            entityId: deleted.id,
+            severity: "warn",
+          });
+          return Response.json({ ok: true });
+        } catch (e) {
+          return errorResponse(e);
+        }
+      },
+    },
+  },
+});

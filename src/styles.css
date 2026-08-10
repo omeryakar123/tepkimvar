@@ -1,0 +1,344 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Marka tokenları — hepsi light/dark'a göre değişir */
+  --color-ink: var(--ink);
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-elevated: var(--elevated);
+  --color-navy: var(--navy);
+  --color-navy-deep: var(--navy-deep);
+  --color-navy-mid: var(--navy-mid);
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-ring: var(--brand-ring);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-dark: var(--ink);
+  --color-canvas: var(--paper);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-accent-red: var(--accent-purple);
+  --color-accent-purple: var(--accent-purple);
+  --color-accent-yellow: var(--accent-yellow);
+  /* Medya yüzeyi (video posteri vb.): HER İKİ temada da koyu kalır. */
+  --color-media: var(--media);
+  --color-media-foreground: var(--media-foreground);
+}
+
+/* ─────────────────────────── AÇIK TEMA ─────────────────────────── */
+:root {
+  --radius: 0.875rem;
+
+  --brand: oklch(0.68 0.15 162);
+  --brand-hover: oklch(0.62 0.15 162);
+  --brand-soft: oklch(0.955 0.035 162);
+  --brand-ring: oklch(0.68 0.15 162 / 0.35);
+  --brand-foreground: oklch(1 0 0);
+
+  --accent-purple: oklch(0.6 0.17 285);
+  --accent-yellow: oklch(0.84 0.15 92);
+
+  --paper: oklch(0.995 0.002 250);
+  --surface: oklch(0.975 0.004 250);
+  --elevated: oklch(1 0 0);
+
+  --ink: oklch(0.22 0.02 262);
+  --navy-deep: oklch(0.3 0.025 262);
+  --navy: oklch(0.44 0.022 262);
+  --navy-mid: oklch(0.56 0.018 262);
+
+  --rule: oklch(0.925 0.005 250);
+  --rule-strong: oklch(0.87 0.008 250);
+
+  --success: oklch(0.62 0.14 162);
+  --success-soft: oklch(0.955 0.035 162);
+  --warning: oklch(0.62 0.13 70);
+  --warning-soft: oklch(0.96 0.04 85);
+  --danger: oklch(0.58 0.2 25);
+  --danger-soft: oklch(0.96 0.03 25);
+  --info: oklch(0.58 0.15 250);
+  --info-soft: oklch(0.96 0.03 250);
+
+  /* Medya yüzeyi bilerek temaya göre DEĞİŞMEZ: video/görsel kaplamaları
+     her zaman koyu zemin + açık yazı ister. */
+  --media: oklch(0.17 0.015 262);
+  --media-foreground: oklch(0.97 0.004 250);
+
+  --shadow-color: 220 30% 18%;
+  --shadow-strength: 1;
+
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --card: var(--elevated);
+  --card-foreground: var(--ink);
+  --popover: var(--elevated);
+  --popover-foreground: var(--ink);
+  --primary: var(--brand);
+  --primary-foreground: var(--brand-foreground);
+  --secondary: var(--surface);
+  --secondary-foreground: var(--ink);
+  --muted: var(--surface);
+  --muted-foreground: var(--navy-mid);
+  --accent: var(--surface);
+  --accent-foreground: var(--ink);
+  --destructive: var(--danger);
+  --destructive-foreground: oklch(1 0 0);
+  --border: var(--rule);
+  --input: var(--rule);
+  --ring: var(--brand);
+}
+
+/* ─────────────────────────── KOYU TEMA ─────────────────────────── */
+/* Saf siyah değil: gözü yormayan derin arduvaz + parlayan zümrüt aksan. */
+.dark {
+  --brand: oklch(0.76 0.15 162);
+  --brand-hover: oklch(0.82 0.15 162);
+  --brand-soft: oklch(0.32 0.06 162);
+  --brand-ring: oklch(0.76 0.15 162 / 0.4);
+  --brand-foreground: oklch(0.16 0.02 262);
+
+  --accent-purple: oklch(0.72 0.16 285);
+  --accent-yellow: oklch(0.86 0.14 92);
+
+  --paper: oklch(0.17 0.015 262);
+  --surface: oklch(0.21 0.018 262);
+  --elevated: oklch(0.225 0.018 262);
+
+  --ink: oklch(0.97 0.004 250);
+  --navy-deep: oklch(0.9 0.008 250);
+  --navy: oklch(0.78 0.012 255);
+  --navy-mid: oklch(0.66 0.014 258);
+
+  --rule: oklch(0.29 0.014 262);
+  --rule-strong: oklch(0.36 0.016 262);
+
+  --success: oklch(0.75 0.14 162);
+  --success-soft: oklch(0.3 0.055 162);
+  --warning: oklch(0.8 0.13 78);
+  --warning-soft: oklch(0.32 0.05 78);
+  --danger: oklch(0.7 0.17 25);
+  --danger-soft: oklch(0.32 0.07 25);
+  --info: oklch(0.72 0.13 250);
+  --info-soft: oklch(0.3 0.06 250);
+
+  --media: oklch(0.17 0.015 262);
+  --media-foreground: oklch(0.97 0.004 250);
+
+  --shadow-color: 220 60% 2%;
+  --shadow-strength: 2.2;
+
+  --destructive-foreground: oklch(0.16 0.02 262);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+  }
+
+  /* Tema geçişini yumuşat; ama animasyonlu öğeleri bozmadan. */
+  html.theme-transition,
+  html.theme-transition *,
+  html.theme-transition *::before,
+  html.theme-transition *::after {
+    transition:
+      background-color 220ms ease,
+      border-color 220ms ease,
+      color 220ms ease,
+      fill 220ms ease,
+      stroke 220ms ease !important;
+    transition-delay: 0ms !important;
+  }
+
+  ::selection {
+    background-color: var(--color-brand);
+    color: var(--color-brand-foreground);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+  }
+
+  /* Daha zarif kaydırma çubuğu */
+  ::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--color-rule-strong);
+    border-radius: 999px;
+    border: 3px solid var(--color-paper);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-navy-mid);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ticker {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@keyframes floaty {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+
+@utility animate-fade-up {
+  animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@utility animate-ticker {
+  animation: ticker 40s linear infinite;
+}
+
+@utility animate-floaty {
+  animation: floaty 6s ease-in-out infinite;
+}
+
+@utility eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* Katmanlı, renk uyumlu gölgeler — koyu temada otomatik güçlenir. */
+@utility shadow-soft {
+  box-shadow:
+    0 1px 2px hsl(var(--shadow-color) / calc(0.04 * var(--shadow-strength))),
+    0 8px 24px -12px hsl(var(--shadow-color) / calc(0.1 * var(--shadow-strength)));
+}
+
+@utility shadow-pop {
+  box-shadow:
+    0 2px 6px -1px hsl(var(--shadow-color) / calc(0.06 * var(--shadow-strength))),
+    0 18px 40px -16px hsl(var(--shadow-color) / calc(0.2 * var(--shadow-strength)));
+}
+
+@utility shadow-lift {
+  box-shadow:
+    0 1px 2px hsl(var(--shadow-color) / calc(0.05 * var(--shadow-strength))),
+    0 24px 56px -24px hsl(var(--shadow-color) / calc(0.28 * var(--shadow-strength)));
+}
+
+/* Kart: her yerde tutarlı yüzey. */
+@utility card-surface {
+  background-color: var(--color-elevated);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-2xl);
+}
+
+/* Hover'da hafifçe yükselen kart. */
+@utility card-interactive {
+  background-color: var(--color-elevated);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-2xl);
+  transition:
+    transform 220ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 220ms ease,
+    border-color 220ms ease;
+}
+
+@utility hero-glow {
+  background-image:
+    radial-gradient(60% 55% at 15% 0%, var(--color-brand-soft) 0%, transparent 62%),
+    radial-gradient(45% 45% at 92% 8%, oklch(from var(--accent-purple) l c h / 0.14) 0%, transparent 60%);
+}
+
+@utility text-gradient-brand {
+  background-image: linear-gradient(100deg, var(--color-brand), var(--color-accent-purple));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Yükleniyor iskeleti */
+@utility skeleton {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--color-surface);
+  border-radius: var(--radius-md);
+}
