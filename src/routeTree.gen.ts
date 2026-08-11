@@ -53,6 +53,7 @@ import { Route as AdminModerasyonRouteImport } from './routes/admin/moderasyon'
 import { Route as AdminMedyaRouteImport } from './routes/admin/medya'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminKullanicilarRouteImport } from './routes/admin/kullanicilar'
+import { Route as AdminKategorilerRouteImport } from './routes/admin/kategoriler'
 import { Route as AdminFirmalarRouteImport } from './routes/admin/firmalar'
 import { Route as AdminEscalationsRouteImport } from './routes/admin/escalations'
 import { Route as AdminDogrulamaRouteImport } from './routes/admin/dogrulama'
@@ -98,6 +99,7 @@ import { Route as ApiAdminMediaRouteImport } from './routes/api/admin/media'
 import { Route as ApiAdminEscalationsRouteImport } from './routes/api/admin/escalations'
 import { Route as ApiAdminComplaintsRouteImport } from './routes/api/admin/complaints'
 import { Route as ApiAdminCmsRouteImport } from './routes/api/admin/cms'
+import { Route as ApiAdminCategoriesRouteImport } from './routes/api/admin/categories'
 import { Route as ApiAdminBrandsRouteImport } from './routes/api/admin/brands'
 import { Route as ApiAdminBlogsRouteImport } from './routes/api/admin/blogs'
 import { Route as AdminFirmaIdRouteImport } from './routes/admin/firma.$id'
@@ -335,6 +337,11 @@ const AdminKullanicilarRoute = AdminKullanicilarRouteImport.update({
   path: '/kullanicilar',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminKategorilerRoute = AdminKategorilerRouteImport.update({
+  id: '/kategoriler',
+  path: '/kategoriler',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminFirmalarRoute = AdminFirmalarRouteImport.update({
   id: '/firmalar',
   path: '/firmalar',
@@ -560,6 +567,11 @@ const ApiAdminCmsRoute = ApiAdminCmsRouteImport.update({
   path: '/api/admin/cms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAdminCategoriesRoute = ApiAdminCategoriesRouteImport.update({
+  id: '/api/admin/categories',
+  path: '/api/admin/categories',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAdminBrandsRoute = ApiAdminBrandsRouteImport.update({
   id: '/api/admin/brands',
   path: '/api/admin/brands',
@@ -674,6 +686,7 @@ export interface FileRoutesByFullPath {
   '/admin/dogrulama': typeof AdminDogrulamaRoute
   '/admin/escalations': typeof AdminEscalationsRoute
   '/admin/firmalar': typeof AdminFirmalarRoute
+  '/admin/kategoriler': typeof AdminKategorilerRoute
   '/admin/kullanicilar': typeof AdminKullanicilarRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/medya': typeof AdminMedyaRoute
@@ -728,6 +741,7 @@ export interface FileRoutesByFullPath {
   '/admin/firma/$id': typeof AdminFirmaIdRoute
   '/api/admin/blogs': typeof ApiAdminBlogsRoute
   '/api/admin/brands': typeof ApiAdminBrandsRouteWithChildren
+  '/api/admin/categories': typeof ApiAdminCategoriesRoute
   '/api/admin/cms': typeof ApiAdminCmsRoute
   '/api/admin/complaints': typeof ApiAdminComplaintsRoute
   '/api/admin/escalations': typeof ApiAdminEscalationsRoute
@@ -778,6 +792,7 @@ export interface FileRoutesByTo {
   '/admin/dogrulama': typeof AdminDogrulamaRoute
   '/admin/escalations': typeof AdminEscalationsRoute
   '/admin/firmalar': typeof AdminFirmalarRoute
+  '/admin/kategoriler': typeof AdminKategorilerRoute
   '/admin/kullanicilar': typeof AdminKullanicilarRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/medya': typeof AdminMedyaRoute
@@ -833,6 +848,7 @@ export interface FileRoutesByTo {
   '/admin/firma/$id': typeof AdminFirmaIdRoute
   '/api/admin/blogs': typeof ApiAdminBlogsRoute
   '/api/admin/brands': typeof ApiAdminBrandsRouteWithChildren
+  '/api/admin/categories': typeof ApiAdminCategoriesRoute
   '/api/admin/cms': typeof ApiAdminCmsRoute
   '/api/admin/complaints': typeof ApiAdminComplaintsRoute
   '/api/admin/escalations': typeof ApiAdminEscalationsRoute
@@ -887,6 +903,7 @@ export interface FileRoutesById {
   '/admin/dogrulama': typeof AdminDogrulamaRoute
   '/admin/escalations': typeof AdminEscalationsRoute
   '/admin/firmalar': typeof AdminFirmalarRoute
+  '/admin/kategoriler': typeof AdminKategorilerRoute
   '/admin/kullanicilar': typeof AdminKullanicilarRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/medya': typeof AdminMedyaRoute
@@ -942,6 +959,7 @@ export interface FileRoutesById {
   '/admin/firma/$id': typeof AdminFirmaIdRoute
   '/api/admin/blogs': typeof ApiAdminBlogsRoute
   '/api/admin/brands': typeof ApiAdminBrandsRouteWithChildren
+  '/api/admin/categories': typeof ApiAdminCategoriesRoute
   '/api/admin/cms': typeof ApiAdminCmsRoute
   '/api/admin/complaints': typeof ApiAdminComplaintsRoute
   '/api/admin/escalations': typeof ApiAdminEscalationsRoute
@@ -997,6 +1015,7 @@ export interface FileRouteTypes {
     | '/admin/dogrulama'
     | '/admin/escalations'
     | '/admin/firmalar'
+    | '/admin/kategoriler'
     | '/admin/kullanicilar'
     | '/admin/login'
     | '/admin/medya'
@@ -1051,6 +1070,7 @@ export interface FileRouteTypes {
     | '/admin/firma/$id'
     | '/api/admin/blogs'
     | '/api/admin/brands'
+    | '/api/admin/categories'
     | '/api/admin/cms'
     | '/api/admin/complaints'
     | '/api/admin/escalations'
@@ -1101,6 +1121,7 @@ export interface FileRouteTypes {
     | '/admin/dogrulama'
     | '/admin/escalations'
     | '/admin/firmalar'
+    | '/admin/kategoriler'
     | '/admin/kullanicilar'
     | '/admin/login'
     | '/admin/medya'
@@ -1156,6 +1177,7 @@ export interface FileRouteTypes {
     | '/admin/firma/$id'
     | '/api/admin/blogs'
     | '/api/admin/brands'
+    | '/api/admin/categories'
     | '/api/admin/cms'
     | '/api/admin/complaints'
     | '/api/admin/escalations'
@@ -1209,6 +1231,7 @@ export interface FileRouteTypes {
     | '/admin/dogrulama'
     | '/admin/escalations'
     | '/admin/firmalar'
+    | '/admin/kategoriler'
     | '/admin/kullanicilar'
     | '/admin/login'
     | '/admin/medya'
@@ -1264,6 +1287,7 @@ export interface FileRouteTypes {
     | '/admin/firma/$id'
     | '/api/admin/blogs'
     | '/api/admin/brands'
+    | '/api/admin/categories'
     | '/api/admin/cms'
     | '/api/admin/complaints'
     | '/api/admin/escalations'
@@ -1331,6 +1355,7 @@ export interface RootRouteChildren {
   ApiVideosRoute: typeof ApiVideosRouteWithChildren
   ApiAdminBlogsRoute: typeof ApiAdminBlogsRoute
   ApiAdminBrandsRoute: typeof ApiAdminBrandsRouteWithChildren
+  ApiAdminCategoriesRoute: typeof ApiAdminCategoriesRoute
   ApiAdminCmsRoute: typeof ApiAdminCmsRoute
   ApiAdminComplaintsRoute: typeof ApiAdminComplaintsRoute
   ApiAdminEscalationsRoute: typeof ApiAdminEscalationsRoute
@@ -1662,6 +1687,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminKullanicilarRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/kategoriler': {
+      id: '/admin/kategoriler'
+      path: '/kategoriler'
+      fullPath: '/admin/kategoriler'
+      preLoaderRoute: typeof AdminKategorilerRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/firmalar': {
       id: '/admin/firmalar'
       path: '/firmalar'
@@ -1977,6 +2009,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAdminCmsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/admin/categories': {
+      id: '/api/admin/categories'
+      path: '/api/admin/categories'
+      fullPath: '/api/admin/categories'
+      preLoaderRoute: typeof ApiAdminCategoriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/admin/brands': {
       id: '/api/admin/brands'
       path: '/api/admin/brands'
@@ -2160,6 +2199,7 @@ interface AdminRouteChildren {
   AdminDogrulamaRoute: typeof AdminDogrulamaRoute
   AdminEscalationsRoute: typeof AdminEscalationsRoute
   AdminFirmalarRoute: typeof AdminFirmalarRoute
+  AdminKategorilerRoute: typeof AdminKategorilerRoute
   AdminKullanicilarRoute: typeof AdminKullanicilarRoute
   AdminLoginRoute: typeof AdminLoginRoute
   AdminMedyaRoute: typeof AdminMedyaRoute
@@ -2178,6 +2218,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminDogrulamaRoute: AdminDogrulamaRoute,
   AdminEscalationsRoute: AdminEscalationsRoute,
   AdminFirmalarRoute: AdminFirmalarRoute,
+  AdminKategorilerRoute: AdminKategorilerRoute,
   AdminKullanicilarRoute: AdminKullanicilarRoute,
   AdminLoginRoute: AdminLoginRoute,
   AdminMedyaRoute: AdminMedyaRoute,
@@ -2319,6 +2360,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiVideosRoute: ApiVideosRouteWithChildren,
   ApiAdminBlogsRoute: ApiAdminBlogsRoute,
   ApiAdminBrandsRoute: ApiAdminBrandsRouteWithChildren,
+  ApiAdminCategoriesRoute: ApiAdminCategoriesRoute,
   ApiAdminCmsRoute: ApiAdminCmsRoute,
   ApiAdminComplaintsRoute: ApiAdminComplaintsRoute,
   ApiAdminEscalationsRoute: ApiAdminEscalationsRoute,
