@@ -4,7 +4,8 @@
  * Çalıştır (app container'ında):  bun scripts/seed-demo.mjs
  * İdempotent: var olan markanın şikayetlerini tekrar eklemez.
  *
- * Logolar: https://logo.clearbit.com/<domain>  (dış URL; proxyImage olduğu gibi geçirir)
+ * Logolar: https://unavatar.io/<domain>  (dış URL; proxyImage olduğu gibi geçirir)
+ * (Not: eski logo.clearbit.com kapandı, unavatar.io kullanıyoruz.)
  */
 import postgres from "postgres";
 
@@ -92,7 +93,7 @@ async function main() {
   let newBrands = 0, newComplaints = 0;
 
   for (const [slug, name, cat, city, domain, verified, premium, rating, resolvedPct, about] of BRANDS) {
-    const logo = `https://logo.clearbit.com/${domain}`;
+    const logo = `https://unavatar.io/${domain}`;
     const total = rnd(80, 1400);
     const resolved = Math.round((total * resolvedPct) / 100);
     const rc = rnd(60, 1200);
