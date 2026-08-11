@@ -13,16 +13,26 @@ async function sendOtpEmail(email: string, otp: string, type: string) {
     console.log(`[OTP:${type}] ${email} -> ${otp}`);
     return;
   }
-  await fetch("https://api.resend.com/emails", {
+  // Gönderen adresi: Resend'de DOĞRULANMIŞ domain olmalı. Domain'i EMAIL_FROM
+  // ile ver (ör. "itirazvar <noreply@itirazvarplus.com>"). Doğrulanmamış domain
+  // Resend tarafından 403 ile reddedilir.
+  const from = process.env.EMAIL_FROM || "itirazvar <noreply@itirazvarplus.com>";
+  const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: "itirazvar <noreply@itirazvar.com>",
+      from,
       to: email,
       subject,
       html: `<p>Doğrulama kodun: <b style="font-size:22px;letter-spacing:3px">${otp}</b></p><p>Kod 10 dakika geçerlidir.</p>`,
     }),
   });
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    // Sessizce yutma: hata prod loglarında görünsün ve akış "başarılı" sanılmasın.
+    console.error(`[Resend] OTP gönderilemedi (${res.status}) from="${from}" to="${email}": ${detail}`);
+    throw new Error(`E-posta gönderilemedi (${res.status})`);
+  }
 }
 
 export const auth = betterAuth({
