@@ -26,7 +26,6 @@ export function SiteNav() {
           <Link to="/trendler" className="hover:text-brand transition-colors">
             Trend <span className="ml-1 inline-flex items-center justify-center text-[10px] font-bold bg-brand-soft text-brand rounded-full px-1.5 py-px">100</span>
           </Link>
-          <Link to="/video" className="hover:text-brand transition-colors">Video</Link>
         </nav>
 
         <div className="flex-1 flex justify-end">
@@ -77,7 +76,6 @@ export function SiteFooter() {
       ["Son Şikayetler", "/sikayetler"],
       ["Trend Şikayetler", "/trendler"],
       ["Çözülen Şikayetler", "/sikayetler", { durum: "cozuldu" }],
-      ["Video Şikayetler", "/video"],
       ["Anonim Şikayet", "/sikayet-yaz"],
       ["Yardım", "/yardim"],
       ["SSS", "/yardim"],
@@ -120,7 +118,6 @@ export function SiteFooter() {
     ["Markalar İçin", "/reklam-cozumleri"],
     ["Blog", "/blog"],
     ["Şeffaflık Raporu", "/seffaflik-raporu"],
-    ["Video", "/video"],
     ["İletişim", "/iletisim"],
   ] as const;
   return (

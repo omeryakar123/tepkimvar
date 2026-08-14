@@ -21,7 +21,6 @@ import { Route as BrandSikayetlerRouteImport } from './routes/brand/sikayetler'
 import { Route as BrandProfilRouteImport } from './routes/brand/profil'
 import { Route as BrandMesajlarRouteImport } from './routes/brand/mesajlar'
 import { Route as BrandLoginRouteImport } from './routes/brand/login'
-import { Route as ApiVideosRouteImport } from './routes/api/videos'
 import { Route as ApiUploadRouteImport } from './routes/api/upload'
 import { Route as ApiTrendingRouteImport } from './routes/api/trending'
 import { Route as ApiStatsRouteImport } from './routes/api/stats'
@@ -46,7 +45,6 @@ import { Route as ApiBrandResolutionsRouteImport } from './routes/api/brand-reso
 import { Route as ApiBrandRatingsRouteImport } from './routes/api/brand-ratings'
 import { Route as ApiBlogRouteImport } from './routes/api/blog'
 import { Route as ApiAuditRouteImport } from './routes/api/audit'
-import { Route as AdminVideolarRouteImport } from './routes/admin/videolar'
 import { Route as AdminSikayetlerRouteImport } from './routes/admin/sikayetler'
 import { Route as AdminPremiumRouteImport } from './routes/admin/premium'
 import { Route as AdminModerasyonRouteImport } from './routes/admin/moderasyon'
@@ -60,7 +58,6 @@ import { Route as AdminDogrulamaRouteImport } from './routes/admin/dogrulama'
 import { Route as AdminCmsRouteImport } from './routes/admin/cms'
 import { Route as AdminBlogRouteImport } from './routes/admin/blog'
 import { Route as AdminAyarlarRouteImport } from './routes/admin/ayarlar'
-import { Route as SiteVideoRouteImport } from './routes/_site/video'
 import { Route as SiteTrendlerRouteImport } from './routes/_site/trendler'
 import { Route as SiteTrend100RouteImport } from './routes/_site/trend-100'
 import { Route as SiteSikayetlerRouteImport } from './routes/_site/sikayetler'
@@ -74,7 +71,6 @@ import { Route as authRegisterRouteImport } from './routes/(auth)/register'
 import { Route as authLoginRouteImport } from './routes/(auth)/login'
 import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
 import { Route as SiteBlogIndexRouteImport } from './routes/_site/blog.index'
-import { Route as ApiVideosLikeRouteImport } from './routes/api/videos/like'
 import { Route as ApiMeComplaintsRouteImport } from './routes/api/me.complaints'
 import { Route as ApiFilesSplatRouteImport } from './routes/api/files/$'
 import { Route as ApiEventsComplaintIdRouteImport } from './routes/api/events/$complaintId'
@@ -88,7 +84,6 @@ import { Route as ApiBrandPremiumRouteImport } from './routes/api/brand/premium'
 import { Route as ApiBrandMembershipsRouteImport } from './routes/api/brand/memberships'
 import { Route as ApiBrandComplaintsRouteImport } from './routes/api/brand/complaints'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
-import { Route as ApiAdminVideosRouteImport } from './routes/api/admin/videos'
 import { Route as ApiAdminVerificationRouteImport } from './routes/api/admin/verification'
 import { Route as ApiAdminUsersRouteImport } from './routes/api/admin/users'
 import { Route as ApiAdminStatsRouteImport } from './routes/api/admin/stats'
@@ -176,11 +171,6 @@ const BrandLoginRoute = BrandLoginRouteImport.update({
   id: '/login',
   path: '/login',
   getParentRoute: () => BrandRoute,
-} as any)
-const ApiVideosRoute = ApiVideosRouteImport.update({
-  id: '/api/videos',
-  path: '/api/videos',
-  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiUploadRoute = ApiUploadRouteImport.update({
   id: '/api/upload',
@@ -302,11 +292,6 @@ const ApiAuditRoute = ApiAuditRouteImport.update({
   path: '/api/audit',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminVideolarRoute = AdminVideolarRouteImport.update({
-  id: '/videolar',
-  path: '/videolar',
-  getParentRoute: () => AdminRoute,
-} as any)
 const AdminSikayetlerRoute = AdminSikayetlerRouteImport.update({
   id: '/sikayetler',
   path: '/sikayetler',
@@ -371,11 +356,6 @@ const AdminAyarlarRoute = AdminAyarlarRouteImport.update({
   id: '/ayarlar',
   path: '/ayarlar',
   getParentRoute: () => AdminRoute,
-} as any)
-const SiteVideoRoute = SiteVideoRouteImport.update({
-  id: '/video',
-  path: '/video',
-  getParentRoute: () => SiteRoute,
 } as any)
 const SiteTrendlerRoute = SiteTrendlerRouteImport.update({
   id: '/trendler',
@@ -442,11 +422,6 @@ const SiteBlogIndexRoute = SiteBlogIndexRouteImport.update({
   path: '/blog/',
   getParentRoute: () => SiteRoute,
 } as any)
-const ApiVideosLikeRoute = ApiVideosLikeRouteImport.update({
-  id: '/like',
-  path: '/like',
-  getParentRoute: () => ApiVideosRoute,
-} as any)
 const ApiMeComplaintsRoute = ApiMeComplaintsRouteImport.update({
   id: '/complaints',
   path: '/complaints',
@@ -510,11 +485,6 @@ const ApiBrandComplaintsRoute = ApiBrandComplaintsRouteImport.update({
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiAdminVideosRoute = ApiAdminVideosRouteImport.update({
-  id: '/api/admin/videos',
-  path: '/api/admin/videos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAdminVerificationRoute = ApiAdminVerificationRouteImport.update({
@@ -679,7 +649,6 @@ export interface FileRoutesByFullPath {
   '/sikayetler': typeof SiteSikayetlerRoute
   '/trend-100': typeof SiteTrend100Route
   '/trendler': typeof SiteTrendlerRoute
-  '/video': typeof SiteVideoRoute
   '/admin/ayarlar': typeof AdminAyarlarRoute
   '/admin/blog': typeof AdminBlogRoute
   '/admin/cms': typeof AdminCmsRoute
@@ -693,7 +662,6 @@ export interface FileRoutesByFullPath {
   '/admin/moderasyon': typeof AdminModerasyonRoute
   '/admin/premium': typeof AdminPremiumRoute
   '/admin/sikayetler': typeof AdminSikayetlerRoute
-  '/admin/videolar': typeof AdminVideolarRoute
   '/api/audit': typeof ApiAuditRoute
   '/api/blog': typeof ApiBlogRoute
   '/api/brand-ratings': typeof ApiBrandRatingsRoute
@@ -718,7 +686,6 @@ export interface FileRoutesByFullPath {
   '/api/stats': typeof ApiStatsRoute
   '/api/trending': typeof ApiTrendingRoute
   '/api/upload': typeof ApiUploadRoute
-  '/api/videos': typeof ApiVideosRouteWithChildren
   '/brand/login': typeof BrandLoginRoute
   '/brand/mesajlar': typeof BrandMesajlarRoute
   '/brand/profil': typeof BrandProfilRoute
@@ -752,7 +719,6 @@ export interface FileRoutesByFullPath {
   '/api/admin/stats': typeof ApiAdminStatsRoute
   '/api/admin/users': typeof ApiAdminUsersRoute
   '/api/admin/verification': typeof ApiAdminVerificationRoute
-  '/api/admin/videos': typeof ApiAdminVideosRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/brand/complaints': typeof ApiBrandComplaintsRoute
   '/api/brand/memberships': typeof ApiBrandMembershipsRoute
@@ -766,7 +732,6 @@ export interface FileRoutesByFullPath {
   '/api/events/$complaintId': typeof ApiEventsComplaintIdRoute
   '/api/files/$': typeof ApiFilesSplatRoute
   '/api/me/complaints': typeof ApiMeComplaintsRoute
-  '/api/videos/like': typeof ApiVideosLikeRoute
   '/blog/': typeof SiteBlogIndexRoute
   '/api/admin/brands/$id': typeof ApiAdminBrandsIdRoute
 }
@@ -785,7 +750,6 @@ export interface FileRoutesByTo {
   '/sikayetler': typeof SiteSikayetlerRoute
   '/trend-100': typeof SiteTrend100Route
   '/trendler': typeof SiteTrendlerRoute
-  '/video': typeof SiteVideoRoute
   '/admin/ayarlar': typeof AdminAyarlarRoute
   '/admin/blog': typeof AdminBlogRoute
   '/admin/cms': typeof AdminCmsRoute
@@ -799,7 +763,6 @@ export interface FileRoutesByTo {
   '/admin/moderasyon': typeof AdminModerasyonRoute
   '/admin/premium': typeof AdminPremiumRoute
   '/admin/sikayetler': typeof AdminSikayetlerRoute
-  '/admin/videolar': typeof AdminVideolarRoute
   '/api/audit': typeof ApiAuditRoute
   '/api/blog': typeof ApiBlogRoute
   '/api/brand-ratings': typeof ApiBrandRatingsRoute
@@ -824,7 +787,6 @@ export interface FileRoutesByTo {
   '/api/stats': typeof ApiStatsRoute
   '/api/trending': typeof ApiTrendingRoute
   '/api/upload': typeof ApiUploadRoute
-  '/api/videos': typeof ApiVideosRouteWithChildren
   '/brand/login': typeof BrandLoginRoute
   '/brand/mesajlar': typeof BrandMesajlarRoute
   '/brand/profil': typeof BrandProfilRoute
@@ -859,7 +821,6 @@ export interface FileRoutesByTo {
   '/api/admin/stats': typeof ApiAdminStatsRoute
   '/api/admin/users': typeof ApiAdminUsersRoute
   '/api/admin/verification': typeof ApiAdminVerificationRoute
-  '/api/admin/videos': typeof ApiAdminVideosRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/brand/complaints': typeof ApiBrandComplaintsRoute
   '/api/brand/memberships': typeof ApiBrandMembershipsRoute
@@ -873,7 +834,6 @@ export interface FileRoutesByTo {
   '/api/events/$complaintId': typeof ApiEventsComplaintIdRoute
   '/api/files/$': typeof ApiFilesSplatRoute
   '/api/me/complaints': typeof ApiMeComplaintsRoute
-  '/api/videos/like': typeof ApiVideosLikeRoute
   '/blog': typeof SiteBlogIndexRoute
   '/api/admin/brands/$id': typeof ApiAdminBrandsIdRoute
 }
@@ -896,7 +856,6 @@ export interface FileRoutesById {
   '/_site/sikayetler': typeof SiteSikayetlerRoute
   '/_site/trend-100': typeof SiteTrend100Route
   '/_site/trendler': typeof SiteTrendlerRoute
-  '/_site/video': typeof SiteVideoRoute
   '/admin/ayarlar': typeof AdminAyarlarRoute
   '/admin/blog': typeof AdminBlogRoute
   '/admin/cms': typeof AdminCmsRoute
@@ -910,7 +869,6 @@ export interface FileRoutesById {
   '/admin/moderasyon': typeof AdminModerasyonRoute
   '/admin/premium': typeof AdminPremiumRoute
   '/admin/sikayetler': typeof AdminSikayetlerRoute
-  '/admin/videolar': typeof AdminVideolarRoute
   '/api/audit': typeof ApiAuditRoute
   '/api/blog': typeof ApiBlogRoute
   '/api/brand-ratings': typeof ApiBrandRatingsRoute
@@ -935,7 +893,6 @@ export interface FileRoutesById {
   '/api/stats': typeof ApiStatsRoute
   '/api/trending': typeof ApiTrendingRoute
   '/api/upload': typeof ApiUploadRoute
-  '/api/videos': typeof ApiVideosRouteWithChildren
   '/brand/login': typeof BrandLoginRoute
   '/brand/mesajlar': typeof BrandMesajlarRoute
   '/brand/profil': typeof BrandProfilRoute
@@ -970,7 +927,6 @@ export interface FileRoutesById {
   '/api/admin/stats': typeof ApiAdminStatsRoute
   '/api/admin/users': typeof ApiAdminUsersRoute
   '/api/admin/verification': typeof ApiAdminVerificationRoute
-  '/api/admin/videos': typeof ApiAdminVideosRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/brand/complaints': typeof ApiBrandComplaintsRoute
   '/api/brand/memberships': typeof ApiBrandMembershipsRoute
@@ -984,7 +940,6 @@ export interface FileRoutesById {
   '/api/events/$complaintId': typeof ApiEventsComplaintIdRoute
   '/api/files/$': typeof ApiFilesSplatRoute
   '/api/me/complaints': typeof ApiMeComplaintsRoute
-  '/api/videos/like': typeof ApiVideosLikeRoute
   '/_site/blog/': typeof SiteBlogIndexRoute
   '/api/admin/brands/$id': typeof ApiAdminBrandsIdRoute
 }
@@ -1008,7 +963,6 @@ export interface FileRouteTypes {
     | '/sikayetler'
     | '/trend-100'
     | '/trendler'
-    | '/video'
     | '/admin/ayarlar'
     | '/admin/blog'
     | '/admin/cms'
@@ -1022,7 +976,6 @@ export interface FileRouteTypes {
     | '/admin/moderasyon'
     | '/admin/premium'
     | '/admin/sikayetler'
-    | '/admin/videolar'
     | '/api/audit'
     | '/api/blog'
     | '/api/brand-ratings'
@@ -1047,7 +1000,6 @@ export interface FileRouteTypes {
     | '/api/stats'
     | '/api/trending'
     | '/api/upload'
-    | '/api/videos'
     | '/brand/login'
     | '/brand/mesajlar'
     | '/brand/profil'
@@ -1081,7 +1033,6 @@ export interface FileRouteTypes {
     | '/api/admin/stats'
     | '/api/admin/users'
     | '/api/admin/verification'
-    | '/api/admin/videos'
     | '/api/auth/$'
     | '/api/brand/complaints'
     | '/api/brand/memberships'
@@ -1095,7 +1046,6 @@ export interface FileRouteTypes {
     | '/api/events/$complaintId'
     | '/api/files/$'
     | '/api/me/complaints'
-    | '/api/videos/like'
     | '/blog/'
     | '/api/admin/brands/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -1114,7 +1064,6 @@ export interface FileRouteTypes {
     | '/sikayetler'
     | '/trend-100'
     | '/trendler'
-    | '/video'
     | '/admin/ayarlar'
     | '/admin/blog'
     | '/admin/cms'
@@ -1128,7 +1077,6 @@ export interface FileRouteTypes {
     | '/admin/moderasyon'
     | '/admin/premium'
     | '/admin/sikayetler'
-    | '/admin/videolar'
     | '/api/audit'
     | '/api/blog'
     | '/api/brand-ratings'
@@ -1153,7 +1101,6 @@ export interface FileRouteTypes {
     | '/api/stats'
     | '/api/trending'
     | '/api/upload'
-    | '/api/videos'
     | '/brand/login'
     | '/brand/mesajlar'
     | '/brand/profil'
@@ -1188,7 +1135,6 @@ export interface FileRouteTypes {
     | '/api/admin/stats'
     | '/api/admin/users'
     | '/api/admin/verification'
-    | '/api/admin/videos'
     | '/api/auth/$'
     | '/api/brand/complaints'
     | '/api/brand/memberships'
@@ -1202,7 +1148,6 @@ export interface FileRouteTypes {
     | '/api/events/$complaintId'
     | '/api/files/$'
     | '/api/me/complaints'
-    | '/api/videos/like'
     | '/blog'
     | '/api/admin/brands/$id'
   id:
@@ -1224,7 +1169,6 @@ export interface FileRouteTypes {
     | '/_site/sikayetler'
     | '/_site/trend-100'
     | '/_site/trendler'
-    | '/_site/video'
     | '/admin/ayarlar'
     | '/admin/blog'
     | '/admin/cms'
@@ -1238,7 +1182,6 @@ export interface FileRouteTypes {
     | '/admin/moderasyon'
     | '/admin/premium'
     | '/admin/sikayetler'
-    | '/admin/videolar'
     | '/api/audit'
     | '/api/blog'
     | '/api/brand-ratings'
@@ -1263,7 +1206,6 @@ export interface FileRouteTypes {
     | '/api/stats'
     | '/api/trending'
     | '/api/upload'
-    | '/api/videos'
     | '/brand/login'
     | '/brand/mesajlar'
     | '/brand/profil'
@@ -1298,7 +1240,6 @@ export interface FileRouteTypes {
     | '/api/admin/stats'
     | '/api/admin/users'
     | '/api/admin/verification'
-    | '/api/admin/videos'
     | '/api/auth/$'
     | '/api/brand/complaints'
     | '/api/brand/memberships'
@@ -1312,7 +1253,6 @@ export interface FileRouteTypes {
     | '/api/events/$complaintId'
     | '/api/files/$'
     | '/api/me/complaints'
-    | '/api/videos/like'
     | '/_site/blog/'
     | '/api/admin/brands/$id'
   fileRoutesById: FileRoutesById
@@ -1352,7 +1292,6 @@ export interface RootRouteChildren {
   ApiStatsRoute: typeof ApiStatsRoute
   ApiTrendingRoute: typeof ApiTrendingRoute
   ApiUploadRoute: typeof ApiUploadRoute
-  ApiVideosRoute: typeof ApiVideosRouteWithChildren
   ApiAdminBlogsRoute: typeof ApiAdminBlogsRoute
   ApiAdminBrandsRoute: typeof ApiAdminBrandsRouteWithChildren
   ApiAdminCategoriesRoute: typeof ApiAdminCategoriesRoute
@@ -1366,7 +1305,6 @@ export interface RootRouteChildren {
   ApiAdminStatsRoute: typeof ApiAdminStatsRoute
   ApiAdminUsersRoute: typeof ApiAdminUsersRoute
   ApiAdminVerificationRoute: typeof ApiAdminVerificationRoute
-  ApiAdminVideosRoute: typeof ApiAdminVideosRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiBrandComplaintsRoute: typeof ApiBrandComplaintsRoute
   ApiBrandMembershipsRoute: typeof ApiBrandMembershipsRoute
@@ -1462,13 +1400,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/brand/login'
       preLoaderRoute: typeof BrandLoginRouteImport
       parentRoute: typeof BrandRoute
-    }
-    '/api/videos': {
-      id: '/api/videos'
-      path: '/api/videos'
-      fullPath: '/api/videos'
-      preLoaderRoute: typeof ApiVideosRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/api/upload': {
       id: '/api/upload'
@@ -1638,13 +1569,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuditRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/videolar': {
-      id: '/admin/videolar'
-      path: '/videolar'
-      fullPath: '/admin/videolar'
-      preLoaderRoute: typeof AdminVideolarRouteImport
-      parentRoute: typeof AdminRoute
-    }
     '/admin/sikayetler': {
       id: '/admin/sikayetler'
       path: '/sikayetler'
@@ -1735,13 +1659,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/ayarlar'
       preLoaderRoute: typeof AdminAyarlarRouteImport
       parentRoute: typeof AdminRoute
-    }
-    '/_site/video': {
-      id: '/_site/video'
-      path: '/video'
-      fullPath: '/video'
-      preLoaderRoute: typeof SiteVideoRouteImport
-      parentRoute: typeof SiteRoute
     }
     '/_site/trendler': {
       id: '/_site/trendler'
@@ -1834,13 +1751,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SiteBlogIndexRouteImport
       parentRoute: typeof SiteRoute
     }
-    '/api/videos/like': {
-      id: '/api/videos/like'
-      path: '/like'
-      fullPath: '/api/videos/like'
-      preLoaderRoute: typeof ApiVideosLikeRouteImport
-      parentRoute: typeof ApiVideosRoute
-    }
     '/api/me/complaints': {
       id: '/api/me/complaints'
       path: '/complaints'
@@ -1930,13 +1840,6 @@ declare module '@tanstack/react-router' {
       path: '/api/auth/$'
       fullPath: '/api/auth/$'
       preLoaderRoute: typeof ApiAuthSplatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/admin/videos': {
-      id: '/api/admin/videos'
-      path: '/api/admin/videos'
-      fullPath: '/api/admin/videos'
-      preLoaderRoute: typeof ApiAdminVideosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/admin/verification': {
@@ -2146,7 +2049,6 @@ interface SiteRouteChildren {
   SiteSikayetlerRoute: typeof SiteSikayetlerRoute
   SiteTrend100Route: typeof SiteTrend100Route
   SiteTrendlerRoute: typeof SiteTrendlerRoute
-  SiteVideoRoute: typeof SiteVideoRoute
   SiteIndexRoute: typeof SiteIndexRoute
   SitekurumsalErisimYokRoute: typeof SitekurumsalErisimYokRoute
   SitekurumsalGizlilikRoute: typeof SitekurumsalGizlilikRoute
@@ -2172,7 +2074,6 @@ const SiteRouteChildren: SiteRouteChildren = {
   SiteSikayetlerRoute: SiteSikayetlerRoute,
   SiteTrend100Route: SiteTrend100Route,
   SiteTrendlerRoute: SiteTrendlerRoute,
-  SiteVideoRoute: SiteVideoRoute,
   SiteIndexRoute: SiteIndexRoute,
   SitekurumsalErisimYokRoute: SitekurumsalErisimYokRoute,
   SitekurumsalGizlilikRoute: SitekurumsalGizlilikRoute,
@@ -2206,7 +2107,6 @@ interface AdminRouteChildren {
   AdminModerasyonRoute: typeof AdminModerasyonRoute
   AdminPremiumRoute: typeof AdminPremiumRoute
   AdminSikayetlerRoute: typeof AdminSikayetlerRoute
-  AdminVideolarRoute: typeof AdminVideolarRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminFirmaIdRoute: typeof AdminFirmaIdRoute
 }
@@ -2225,7 +2125,6 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminModerasyonRoute: AdminModerasyonRoute,
   AdminPremiumRoute: AdminPremiumRoute,
   AdminSikayetlerRoute: AdminSikayetlerRoute,
-  AdminVideolarRoute: AdminVideolarRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminFirmaIdRoute: AdminFirmaIdRoute,
 }
@@ -2298,18 +2197,6 @@ const ApiMeRouteChildren: ApiMeRouteChildren = {
 
 const ApiMeRouteWithChildren = ApiMeRoute._addFileChildren(ApiMeRouteChildren)
 
-interface ApiVideosRouteChildren {
-  ApiVideosLikeRoute: typeof ApiVideosLikeRoute
-}
-
-const ApiVideosRouteChildren: ApiVideosRouteChildren = {
-  ApiVideosLikeRoute: ApiVideosLikeRoute,
-}
-
-const ApiVideosRouteWithChildren = ApiVideosRoute._addFileChildren(
-  ApiVideosRouteChildren,
-)
-
 interface ApiAdminBrandsRouteChildren {
   ApiAdminBrandsIdRoute: typeof ApiAdminBrandsIdRoute
 }
@@ -2357,7 +2244,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiStatsRoute: ApiStatsRoute,
   ApiTrendingRoute: ApiTrendingRoute,
   ApiUploadRoute: ApiUploadRoute,
-  ApiVideosRoute: ApiVideosRouteWithChildren,
   ApiAdminBlogsRoute: ApiAdminBlogsRoute,
   ApiAdminBrandsRoute: ApiAdminBrandsRouteWithChildren,
   ApiAdminCategoriesRoute: ApiAdminCategoriesRoute,
@@ -2371,7 +2257,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAdminStatsRoute: ApiAdminStatsRoute,
   ApiAdminUsersRoute: ApiAdminUsersRoute,
   ApiAdminVerificationRoute: ApiAdminVerificationRoute,
-  ApiAdminVideosRoute: ApiAdminVideosRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiBrandComplaintsRoute: ApiBrandComplaintsRoute,
   ApiBrandMembershipsRoute: ApiBrandMembershipsRoute,

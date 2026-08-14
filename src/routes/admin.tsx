@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, Link, useNavigate, redirect, useLocation } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { LayoutDashboard, Building2, MessageSquare, Users, FileText, ImageIcon, Layers, Settings, LogOut, ShieldCheck, ShieldAlert, BadgeCheck, AlertTriangle, Video, Crown, Tags } from "lucide-react";
+import { LayoutDashboard, Building2, MessageSquare, Users, FileText, ImageIcon, Layers, Settings, LogOut, ShieldCheck, ShieldAlert, BadgeCheck, AlertTriangle, Crown, Tags } from "lucide-react";
 import { useAuth, type AppRole } from "@/hooks/use-auth";
 import { fetchMe } from "@/lib/me";
 
@@ -49,7 +49,6 @@ function AdminLayout() {
           <NavItem to="/admin/escalations" icon={AlertTriangle} label="Escalation" />
           <NavItem to="/admin/dogrulama" icon={BadgeCheck} label="Doğrulama" />
           <NavItem to="/admin/premium" icon={Crown} label="Premium" />
-          <NavItem to="/admin/videolar" icon={Video} label="Videolar" />
           <NavItem to="/admin/blog" icon={FileText} label="Blog" />
           <NavItem to="/admin/medya" icon={ImageIcon} label="Medya" />
           <NavItem to="/admin/cms" icon={Layers} label="CMS" />

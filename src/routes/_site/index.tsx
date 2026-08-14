@@ -1,9 +1,28 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { seoHead } from "@/lib/seo";
 import { useEffect, useState } from "react";
-import { ArrowRight, Search, TrendingUp, MessageCircle, Play, Award, ShieldCheck, Star, FileText, Eye, Users, Check } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
+import {
+  ArrowRight,
+  Search,
+  TrendingUp,
+  MessageCircle,
+  Award,
+  ShieldCheck,
+  Star,
+  FileText,
+  Eye,
+  Users,
+  Check,
+} from "lucide-react";
 import type { Company, Complaint } from "@/lib/mock-data";
-import { fetchBrandsList, fetchCategoriesWithCount, fetchComplaintsList, fetchPlatformStats } from "@/lib/data";
+import {
+  fetchBrandsList,
+  fetchCategoriesWithCount,
+  fetchComplaintsList,
+  fetchPlatformStats,
+} from "@/lib/data";
+import { BrandAvatar } from "@/components/cards";
 
 export const Route = createFileRoute("/_site/")({
   // SSR: ana sayfa içeriği sunucuda üretilir.
@@ -30,9 +49,16 @@ function Home() {
   const [talked, setTalked] = useState<Complaint[]>([]);
   const [top, setTop] = useState<Company[]>([]);
   const [trend100, setTrend100] = useState<Company[]>([]);
-  const [stats, setStats] = useState({ totalComplaints: 0, resolvedComplaints: 0, resolutionRate: 0, totalCompanies: 0, totalUsers: 0 });
+  const [stats, setStats] = useState({
+    totalComplaints: 0,
+    resolvedComplaints: 0,
+    resolutionRate: 0,
+    totalCompanies: 0,
+    totalUsers: 0,
+  });
   const [search, setSearch] = useState("");
   const navigate = useNavigate();
+  const reduceMotion = useReducedMotion();
 
   useEffect(() => {
     fetchComplaintsList({ limit: 6, sortBy: "recent" }).then(setFeatured);
@@ -55,11 +81,17 @@ function Home() {
       {/* Top announcement bar */}
       <div className="bg-ink text-paper/85 dark:bg-surface dark:text-navy text-[12.5px]">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 h-9 flex items-center justify-between">
-          <span>Toplam çözülen şikayet: <b className="text-brand tabular-nums">{stats.resolvedComplaints.toLocaleString("tr-TR")}</b></span>
-          <span className="hidden sm:inline text-paper/55 dark:text-navy-mid">Alışverişten önce marka skorunu sorgula →</span>
+          <span>
+            Toplam çözülen şikayet:{" "}
+            <b className="text-brand tabular-nums">
+              {stats.resolvedComplaints.toLocaleString("tr-TR")}
+            </b>
+          </span>
+          <span className="hidden sm:inline text-paper/55 dark:text-navy-mid">
+            Alışverişten önce marka skorunu sorgula →
+          </span>
         </div>
       </div>
-
 
       {/* HERO */}
       <section className="relative overflow-hidden md:hero-glow">
@@ -71,7 +103,8 @@ function Home() {
             </span>
 
             <h1 className="mt-5 font-display font-black text-[44px] sm:text-[58px] lg:text-[64px] leading-[1.02] tracking-[-0.03em] text-ink">
-              Sesini duyur,<br />
+              Sesini duyur,
+              <br />
               <span className="text-gradient-brand">çözümü takip et.</span>
             </h1>
 
@@ -83,17 +116,31 @@ function Home() {
             <form onSubmit={doSearch} className="mt-8 max-w-xl">
               <div className="flex items-center bg-card rounded-full shadow-pop ring-1 ring-rule pl-5 pr-1.5 h-14 focus-within:ring-2 focus-within:ring-brand/40 transition">
                 <Search className="size-5 text-navy-mid shrink-0" />
-                <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Marka, model, ürün ara…"
-                  className="flex-1 bg-transparent border-0 px-3 text-[15px] text-ink placeholder:text-navy-mid focus:outline-none" />
-                <button className="shrink-0 rounded-full bg-brand text-brand-foreground px-8 h-11 text-[14px] font-semibold hover:bg-brand-hover transition">Ara</button>
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Marka, model, ürün ara…"
+                  className="flex-1 bg-transparent border-0 px-3 text-[15px] text-ink placeholder:text-navy-mid focus:outline-none"
+                />
+                <button className="shrink-0 rounded-full bg-brand text-brand-foreground px-8 h-11 text-[14px] font-semibold hover:bg-brand-hover transition">
+                  Ara
+                </button>
               </div>
             </form>
 
             <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-[12.5px] text-navy">
               <span className="font-semibold text-navy-mid">Popüler:</span>
-              {["Trendyol", "Turkcell", "Papara", "Getir", "Migros"].map((t) => (
-                <a key={t} href={`/arama?q=${encodeURIComponent(t)}`} className="hover:text-brand transition-colors">{t}</a>
-              ))}
+              {["Trendyol", "Turkcell", "Papara", "Getir", "Migros"].map(
+                (t) => (
+                  <a
+                    key={t}
+                    href={`/arama?q=${encodeURIComponent(t)}`}
+                    className="hover:text-brand transition-colors"
+                  >
+                    {t}
+                  </a>
+                ),
+              )}
             </div>
 
             {/* Gerçek verilerden güven şeridi */}
@@ -101,13 +148,19 @@ function Home() {
               {[
                 { v: stats.totalComplaints, l: "şikayet" },
                 { v: stats.totalCompanies, l: "marka" },
-                { v: Math.round(stats.resolutionRate), l: "% çözüm oranı", raw: true },
+                {
+                  v: Math.round(stats.resolutionRate),
+                  l: "% çözüm oranı",
+                  raw: true,
+                },
               ].map((s) => (
                 <div key={s.l}>
                   <dt className="font-display text-[26px] font-black text-ink tabular-nums leading-none">
                     {s.raw ? `%${s.v}` : s.v.toLocaleString("tr-TR")}
                   </dt>
-                  <dd className="mt-1 text-[12px] text-navy-mid">{s.raw ? "çözüm oranı" : s.l}</dd>
+                  <dd className="mt-1 text-[12px] text-navy-mid">
+                    {s.raw ? "çözüm oranı" : s.l}
+                  </dd>
                 </div>
               ))}
             </dl>
@@ -115,7 +168,10 @@ function Home() {
 
           {/* Canlı akış — gerçek şikayetler */}
           <div className="relative hidden lg:block">
-            <div className="absolute -inset-6 rounded-[32px] bg-brand/5 blur-2xl" aria-hidden />
+            <div
+              className="absolute -inset-6 rounded-[32px] bg-brand/5 blur-2xl"
+              aria-hidden
+            />
             <div className="relative card-surface shadow-lift p-5">
               <div className="flex items-center justify-between px-1 pb-4 border-b border-rule">
                 <div className="flex items-center gap-2">
@@ -123,21 +179,34 @@ function Home() {
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand opacity-60" />
                     <span className="relative inline-flex size-2 rounded-full bg-brand" />
                   </span>
-                  <span className="text-[13px] font-semibold text-ink">Canlı akış</span>
+                  <span className="text-[13px] font-semibold text-ink">
+                    Canlı akış
+                  </span>
                 </div>
-                <Link to="/sikayetler" className="text-[12px] font-medium text-brand hover:underline">Tümü</Link>
+                <Link
+                  to="/sikayetler"
+                  className="text-[12px] font-medium text-brand hover:underline"
+                >
+                  Tümü
+                </Link>
               </div>
 
               <ul className="divide-y divide-rule">
                 {(featured.length ? featured : []).slice(0, 4).map((c) => (
                   <li key={c.id} className="py-3.5">
-                    <Link to="/sikayet/$id" params={{ id: c.publicId ?? c.id }} className="group flex gap-3">
+                    <Link
+                      to="/sikayet/$id"
+                      params={{ id: c.publicId ?? c.id }}
+                      className="group flex gap-3"
+                    >
                       <span className="mt-0.5 grid place-items-center size-9 shrink-0 rounded-full bg-brand-soft text-brand text-[11px] font-bold">
                         {c.userInitials}
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="flex items-center gap-2 text-[11.5px] text-navy-mid">
-                          <span className="font-semibold text-brand truncate">{c.companyName}</span>
+                          <span className="font-semibold text-brand truncate">
+                            {c.companyName}
+                          </span>
                           <span aria-hidden>·</span>
                           <span className="shrink-0">{c.createdAgo}</span>
                         </span>
@@ -172,19 +241,28 @@ function Home() {
       {/* GÜNDEMDEKİ ŞİKAYETLER — 6 küçük kart */}
       <section className="bg-surface">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-14">
-          <h2 className="font-display font-bold text-[22px] text-ink mb-6">Gündemdeki Şikayetler</h2>
+          <h2 className="font-display font-bold text-[22px] text-ink mb-6">
+            Gündemdeki Şikayetler
+          </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {featured.map((c) => (
-              <Link key={c.id} to="/sikayet/$id" params={{ id: c.id }}
-                className="bg-card rounded-2xl p-5 hover:shadow-pop transition ring-1 ring-rule/50 flex gap-3">
+              <Link
+                key={c.id}
+                to="/sikayet/$id"
+                params={{ id: c.id }}
+                className="bg-card rounded-2xl p-5 hover:shadow-pop transition ring-1 ring-rule/50 flex gap-3"
+              >
                 <div className="size-9 rounded-full bg-accent-purple text-paper grid place-items-center text-[12px] font-bold shrink-0">
                   {c.userInitials}
                 </div>
                 <div className="min-w-0">
                   <div className="text-[12px] text-navy-mid">
-                    <b className="text-ink">{c.userName}</b> · <span className="text-brand">{c.companyName}</span>
+                    <b className="text-ink">{c.userName}</b> ·{" "}
+                    <span className="text-brand">{c.companyName}</span>
                   </div>
-                  <p className="mt-1.5 text-[13px] text-navy line-clamp-3 leading-relaxed">{c.title}</p>
+                  <p className="mt-1.5 text-[13px] text-navy line-clamp-3 leading-relaxed">
+                    {c.title}
+                  </p>
                 </div>
               </Link>
             ))}
@@ -198,25 +276,48 @@ function Home() {
         <div className="absolute -left-24 bottom-0 size-48 rounded-full bg-brand/30" />
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-16 relative">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="font-display font-bold text-[22px] text-ink">Çok Konuşulanlar</h2>
+            <h2 className="font-display font-bold text-[22px] text-ink">
+              Çok Konuşulanlar
+            </h2>
             <div className="flex gap-2">
-              <button className="size-9 rounded-full bg-card ring-1 ring-rule text-navy grid place-items-center hover:bg-surface hover:text-ink transition">‹</button>
-              <button className="size-9 rounded-full bg-card ring-1 ring-rule text-navy grid place-items-center hover:bg-surface hover:text-ink transition">›</button>
+              <button className="size-9 rounded-full bg-card ring-1 ring-rule text-navy grid place-items-center hover:bg-surface hover:text-ink transition">
+                ‹
+              </button>
+              <button className="size-9 rounded-full bg-card ring-1 ring-rule text-navy grid place-items-center hover:bg-surface hover:text-ink transition">
+                ›
+              </button>
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {talked.map((c) => (
-              <Link key={c.id} to="/sikayet/$id" params={{ id: c.id }} className="bg-card rounded-2xl p-6 hover:shadow-pop transition">
+              <Link
+                key={c.id}
+                to="/sikayet/$id"
+                params={{ id: c.id }}
+                className="bg-card rounded-2xl p-6 hover:shadow-pop transition"
+              >
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="size-10 rounded-full bg-accent-purple text-paper grid place-items-center font-bold text-[13px]">{c.userInitials}</div>
+                  <div className="size-10 rounded-full bg-accent-purple text-paper grid place-items-center font-bold text-[13px]">
+                    {c.userInitials}
+                  </div>
                   <div>
-                    <div className="font-semibold text-[13px] text-ink">{c.userName}</div>
-                    <div className="text-[11px] text-navy-mid">{c.createdAgo}</div>
+                    <div className="font-semibold text-[13px] text-ink">
+                      {c.userName}
+                    </div>
+                    <div className="text-[11px] text-navy-mid">
+                      {c.createdAgo}
+                    </div>
                   </div>
                 </div>
-                <h3 className="font-display font-bold text-[17px] text-ink mb-2 line-clamp-2">{c.title}</h3>
-                <p className="text-[13px] text-navy line-clamp-3 leading-relaxed">{c.body}</p>
-                <div className="mt-3 text-[12px] font-semibold text-brand">▸ {c.companyName}</div>
+                <h3 className="font-display font-bold text-[17px] text-ink mb-2 line-clamp-2">
+                  {c.title}
+                </h3>
+                <p className="text-[13px] text-navy line-clamp-3 leading-relaxed">
+                  {c.body}
+                </p>
+                <div className="mt-3 text-[12px] font-semibold text-brand">
+                  ▸ {c.companyName}
+                </div>
               </Link>
             ))}
           </div>
@@ -227,21 +328,37 @@ function Home() {
       <section className="bg-ink text-paper dark:bg-surface dark:text-ink">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-16">
           <div className="text-center mb-8">
-            <h2 className="font-display font-bold text-[26px]">Çözüm Başarısı</h2>
-            <p className="mt-2 text-paper/60 dark:text-navy-mid text-[13px]">Şikayet çözüm oranı en yüksek markaların güncel listesi.</p>
+            <h2 className="font-display font-bold text-[26px]">
+              Çözüm Başarısı
+            </h2>
+            <p className="mt-2 text-paper/60 dark:text-navy-mid text-[13px]">
+              Şikayet çözüm oranı en yüksek markaların güncel listesi.
+            </p>
           </div>
           <div className="max-w-3xl mx-auto bg-card text-ink rounded-2xl overflow-hidden">
             {top.map((b, i) => (
-              <Link key={b.slug} to="/firma/$slug" params={{ slug: b.slug }}
-                className={`flex items-center gap-4 px-5 py-4 hover:bg-surface transition ${i > 0 ? "border-t border-rule" : ""}`}>
-                <span className="grid place-items-center size-8 rounded-full bg-surface text-navy font-bold text-[13px] tabular-nums">{i + 1}</span>
-                <div className="size-10 rounded-lg bg-surface grid place-items-center font-bold text-brand">{b.name[0]}</div>
+              <Link
+                key={b.slug}
+                to="/firma/$slug"
+                params={{ slug: b.slug }}
+                className={`flex items-center gap-4 px-5 py-4 hover:bg-surface transition ${i > 0 ? "border-t border-rule" : ""}`}
+              >
+                <span className="grid place-items-center size-8 rounded-full bg-surface text-navy font-bold text-[13px] tabular-nums">
+                  {i + 1}
+                </span>
+                <BrandAvatar name={b.name} slug={b.slug} logoUrl={b.logoUrl} website={b.website} size={40} rounded="rounded-lg" />
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-[14px] truncate">{b.name}</div>
-                  <div className="text-[11.5px] text-navy-mid">{b.categoryName}</div>
+                  <div className="font-semibold text-[14px] truncate">
+                    {b.name}
+                  </div>
+                  <div className="text-[11.5px] text-navy-mid">
+                    {b.categoryName}
+                  </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-[13px] font-bold text-brand tabular-nums">%{b.resolutionRate.toFixed(0)}</div>
+                  <div className="text-[13px] font-bold text-brand tabular-nums">
+                    %{b.resolutionRate.toFixed(0)}
+                  </div>
                   <div className="text-[10.5px] text-navy-mid">çözüm</div>
                 </div>
               </Link>
@@ -257,11 +374,18 @@ function Home() {
             <div className="inline-flex items-center gap-2 text-[12px] font-bold uppercase tracking-wider text-brand mb-3">
               <Award className="size-4" /> itirazvar Ödülleri
             </div>
-            <h2 className="font-display font-black text-[32px] text-ink leading-tight tracking-tight">Çözüme değer verenler ödüllendirilir.</h2>
+            <h2 className="font-display font-black text-[32px] text-ink leading-tight tracking-tight">
+              Çözüme değer verenler ödüllendirilir.
+            </h2>
             <p className="mt-3 text-[14px] text-navy leading-relaxed max-w-md">
-              Her yıl, en yüksek çözüm oranına sahip markaları ve en hızlı yanıt veren firmaları itirazvar Ödülleri ile taçlandırıyoruz.
+              Her yıl, en yüksek çözüm oranına sahip markaları ve en hızlı yanıt
+              veren firmaları itirazvar Ödülleri ile taçlandırıyoruz.
             </p>
-            <Link to="/markalar" search={{ dogrulanmis: true }} className="mt-5 inline-flex items-center gap-2 text-[13px] font-semibold text-brand hover:gap-3 transition-all">
+            <Link
+              to="/markalar"
+              search={{ dogrulanmis: true }}
+              className="mt-5 inline-flex items-center gap-2 text-[13px] font-semibold text-brand hover:gap-3 transition-all"
+            >
               Detaylı incele <ArrowRight className="size-4" />
             </Link>
           </div>
@@ -280,7 +404,9 @@ function Home() {
       {/* SAYILARLA */}
       <section>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-16">
-          <h2 className="text-center font-display font-bold text-[24px] text-ink mb-10">Sayılarla itirazvar</h2>
+          <h2 className="text-center font-display font-bold text-[24px] text-ink mb-10">
+            Sayılarla itirazvar
+          </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
               // Hepsi gerçek veriden; uydurma sayı yok.
@@ -291,11 +417,16 @@ function Home() {
             ].map((s) => {
               const Icon = s.i;
               return (
-                <div key={s.k} className="bg-card rounded-2xl p-6 ring-1 ring-rule">
+                <div
+                  key={s.k}
+                  className="bg-card rounded-2xl p-6 ring-1 ring-rule"
+                >
                   <span className="grid place-items-center size-10 rounded-xl bg-brand-soft text-brand mb-4">
                     <Icon className="size-5" />
                   </span>
-                  <div className="font-display font-black text-[26px] text-ink tabular-nums">{s.v.toLocaleString("tr-TR")}</div>
+                  <div className="font-display font-black text-[26px] text-ink tabular-nums">
+                    {s.v.toLocaleString("tr-TR")}
+                  </div>
                   <div className="text-[12px] text-navy-mid mt-1">{s.k}</div>
                 </div>
               );
@@ -311,32 +442,52 @@ function Home() {
             <h2 className="font-display font-black text-[28px] text-ink inline-flex items-center gap-2">
               Trend<span className="text-brand">100</span>
             </h2>
-            <p className="mt-1 text-[13px] text-navy-mid">Son 7 günün en çok konuşulan markaları.</p>
+            <p className="mt-1 text-[13px] text-navy-mid">
+              Son 7 günün en çok konuşulan markaları.
+            </p>
           </div>
           <div className="bg-card rounded-2xl overflow-hidden ring-1 ring-rule">
             <div className="grid grid-cols-[48px_1fr_120px_80px] gap-4 px-5 py-3 border-b border-rule text-[11px] uppercase tracking-wider text-navy-mid font-semibold">
-              <span>#</span><span>Marka</span><span className="text-right">Trend</span><span className="text-right">Puan</span>
+              <span>#</span>
+              <span>Marka</span>
+              <span className="text-right">Trend</span>
+              <span className="text-right">Puan</span>
             </div>
             {trend100.map((b, i) => (
-              <Link key={b.slug} to="/firma/$slug" params={{ slug: b.slug }}
-                className="grid grid-cols-[48px_1fr_120px_80px] items-center gap-4 px-5 py-3.5 border-b border-rule hover:bg-surface transition">
-                <span className="text-[13px] text-navy-mid tabular-nums">{i + 1}.</span>
+              <Link
+                key={b.slug}
+                to="/firma/$slug"
+                params={{ slug: b.slug }}
+                className="grid grid-cols-[48px_1fr_120px_80px] items-center gap-4 px-5 py-3.5 border-b border-rule hover:bg-surface transition"
+              >
+                <span className="text-[13px] text-navy-mid tabular-nums">
+                  {i + 1}.
+                </span>
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="size-8 rounded-md bg-surface grid place-items-center font-bold text-brand text-[13px] shrink-0">{b.name[0]}</div>
+                  <BrandAvatar name={b.name} slug={b.slug} logoUrl={b.logoUrl} website={b.website} size={32} rounded="rounded-md" />
                   <div className="min-w-0">
-                    <div className="font-semibold text-[14px] text-ink truncate">{b.name}</div>
-                    <div className="text-[11px] text-navy-mid truncate">{b.categoryName}</div>
+                    <div className="font-semibold text-[14px] text-ink truncate">
+                      {b.name}
+                    </div>
+                    <div className="text-[11px] text-navy-mid truncate">
+                      {b.categoryName}
+                    </div>
                   </div>
                 </div>
                 <div className="text-right">
                   <TrendingUp className="inline size-4 text-brand" />
                 </div>
-                <div className="text-right text-[13px] font-bold text-ink tabular-nums">{b.rating.toFixed(2)}</div>
+                <div className="text-right text-[13px] font-bold text-ink tabular-nums">
+                  {b.rating.toFixed(2)}
+                </div>
               </Link>
             ))}
           </div>
           <div className="mt-5 text-center">
-            <Link to="/trendler" className="inline-flex items-center gap-2 rounded-full ring-1 ring-brand text-brand px-5 h-10 text-[13px] font-semibold hover:bg-brand-soft transition">
+            <Link
+              to="/trendler"
+              className="inline-flex items-center gap-2 rounded-full ring-1 ring-brand text-brand px-5 h-10 text-[13px] font-semibold hover:bg-brand-soft transition"
+            >
               Devamını Gör
             </Link>
           </div>
@@ -346,11 +497,17 @@ function Home() {
       {/* PURPLE CTA — Tüketici deneyimi */}
       <section className="bg-ink text-paper dark:bg-surface dark:text-ink">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 py-16 text-center">
-          <h2 className="font-display font-bold text-[24px] leading-snug">Tüketici deneyimi, sizin markanız.</h2>
+          <h2 className="font-display font-bold text-[24px] leading-snug">
+            Tüketici deneyimi, sizin markanız.
+          </h2>
           <p className="mt-3 text-[13.5px] text-paper/85 dark:text-navy leading-relaxed">
-            Müşteri geri bildirimlerini şeffafça yönetin, çözüm hızınızı artırın ve marka itibarınızı güçlendirin.
+            Müşteri geri bildirimlerini şeffafça yönetin, çözüm hızınızı artırın
+            ve marka itibarınızı güçlendirin.
           </p>
-          <Link to="/reklam-cozumleri" className="mt-6 inline-flex items-center gap-2 rounded-full bg-card text-accent-purple px-6 h-11 text-[13px] font-semibold hover:brightness-105 transition">
+          <Link
+            to="/reklam-cozumleri"
+            className="mt-6 inline-flex items-center gap-2 rounded-full bg-card text-accent-purple px-6 h-11 text-[13px] font-semibold hover:brightness-105 transition"
+          >
             Detaylı Bilgi Al
           </Link>
         </div>
@@ -363,27 +520,53 @@ function Home() {
             <div className="inline-flex items-center gap-2 text-[12px] font-bold uppercase tracking-wider text-brand mb-2">
               <ShieldCheck className="size-4" /> Alışverişten Önce
             </div>
-            <h2 className="font-display font-black text-[30px] text-ink leading-tight">Markanın skorunu sorgula.</h2>
+            <h2 className="font-display font-black text-[30px] text-ink leading-tight">
+              Markanın skorunu sorgula.
+            </h2>
             <p className="mt-3 text-[13.5px] text-navy leading-relaxed max-w-md">
-              Satın alma kararından önce markanın çözüm oranını, yanıt hızını ve gerçek kullanıcı deneyimlerini görün.
+              Satın alma kararından önce markanın çözüm oranını, yanıt hızını ve
+              gerçek kullanıcı deneyimlerini görün.
             </p>
-            <Link to="/markalar" className="mt-5 inline-flex items-center gap-2 rounded-full bg-brand text-brand-foreground px-5 h-11 text-[13px] font-semibold">
+            <Link
+              to="/markalar"
+              className="mt-5 inline-flex items-center gap-2 rounded-full bg-brand text-brand-foreground px-5 h-11 text-[13px] font-semibold"
+            >
               Tereddüt Yok, Sorgula <ArrowRight className="size-4" />
             </Link>
           </div>
-          <div className="order-1 md:order-2 relative rounded-3xl overflow-hidden aspect-video bg-media text-media-foreground ring-1 ring-media-foreground/10 shadow-pop">
-            <div className="absolute inset-0 grid place-items-center">
-              <div className="size-16 rounded-full bg-card/20 grid place-items-center backdrop-blur">
-                <Play className="size-7 text-media-foreground fill-media-foreground" />
-              </div>
-            </div>
-            <div className="absolute bottom-4 left-4 right-4 text-media-foreground">
-              <div className="font-display font-black text-[26px] tracking-tight">Teredd<span className="text-brand">ü</span>t Yok</div>
-            </div>
+          <div className="order-1 md:order-2 relative flex justify-center md:justify-end">
+            {/* Arka ışıma */}
+            <div
+              className="absolute inset-8 rounded-full bg-brand/10 blur-3xl"
+              aria-hidden
+            />
+            <motion.div
+              initial={
+                reduceMotion
+                  ? { opacity: 0 }
+                  : { opacity: 0, y: 32, scale: 0.94, rotate: -2 }
+              }
+              whileInView={
+                reduceMotion
+                  ? { opacity: 1 }
+                  : { opacity: 1, y: 0, scale: 1, rotate: 0 }
+              }
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ type: "spring", damping: 20, stiffness: 110 }}
+              className="relative w-full max-w-[380px]"
+            >
+              <motion.img
+                src="/itiraz1.png"
+                alt="Tereddüt Yok — markanın skorunu sorgula"
+                className="w-full h-auto rounded-3xl ring-1 ring-rule shadow-lift"
+                animate={reduceMotion ? undefined : { y: [0, -8, 0] }}
+                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                loading="lazy"
+              />
+            </motion.div>
           </div>
         </div>
       </section>
-
     </div>
   );
 }
