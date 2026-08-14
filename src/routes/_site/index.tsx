@@ -62,7 +62,7 @@ function Home() {
 
 
       {/* HERO */}
-      <section className="relative overflow-hidden hero-glow">
+      <section className="relative overflow-hidden md:hero-glow">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-16 lg:py-24 grid lg:grid-cols-[1.05fr_1fr] gap-12 lg:gap-16 items-center">
           <div className="animate-fade-up">
             <span className="inline-flex items-center gap-2 rounded-full bg-brand-soft text-brand px-3 h-7 text-[12px] font-semibold ring-1 ring-brand/15">
