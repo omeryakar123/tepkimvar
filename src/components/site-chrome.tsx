@@ -28,7 +28,7 @@ export function SiteNav() {
           </Link>
         </nav>
 
-        <div className="flex-1 flex justify-end">
+        <div className="flex-1 flex justify-center">
           <GlobalSearchTrigger className="hidden md:inline-flex items-center gap-2 rounded-full ring-1 ring-rule bg-card/70 backdrop-blur px-3 h-9 text-[13px] text-navy-mid hover:ring-brand/40 transition w-full max-w-xs" />
         </div>
 

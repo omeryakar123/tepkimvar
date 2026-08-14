@@ -1,7 +1,9 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { ArrowRight, Target, Sparkles, Radar, Check } from "lucide-react";
-import happyUser from "@/assets/happy-user.png.asset.json";
-import userDesk from "@/assets/user-desk1.png.asset.json";
+// Self-host edilen görseller (public/) — eski Lovable asset servisi (/__l5e)
+// kendi deploy'umuzda yok, o yüzden fotoğraflar kırılıyordu.
+const happyUser = { url: "/reklam-happy.jpg" };
+const userDesk = { url: "/reklam-desk.jpg" };
 
 export const Route = createFileRoute("/_site/(kurumsal)/reklam-cozumleri")({
   head: () => ({
@@ -142,9 +144,9 @@ function AdsPage() {
                     ))}
                   </ul>
                   <div className="mt-6">
-                    <Link to="/brand/login" className="inline-flex items-center gap-2 rounded-full bg-brand text-brand-foreground px-5 h-10 text-[13px] font-semibold">
+                    <a href="https://t.me/itirazvarplus" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-full bg-brand text-brand-foreground px-5 h-10 text-[13px] font-semibold">
                       İletişime Geç <ArrowRight className="size-4" />
-                    </Link>
+                    </a>
                   </div>
                 </div>
               );
@@ -158,9 +160,9 @@ function AdsPage() {
         <div className="mx-auto max-w-3xl px-4 sm:px-6 py-16 text-center">
           <h2 className="font-display font-bold text-[22px]">itirazvar Pro üyelik ile hem memnuniyeti hem de müşterilerinizi artırın.</h2>
           <p className="mt-3 text-[13px] text-white/85">Çözüm sunan markalar arasına katılmak için Pro üyelik özelliklerinden faydalanın.</p>
-          <Link to="/brand/login" className="mt-6 inline-flex items-center gap-2 rounded-full bg-card text-[oklch(0.62_0.18_285)] px-6 h-11 text-[13px] font-semibold">
+          <a href="https://t.me/itirazvarplus" target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex items-center gap-2 rounded-full bg-card text-[oklch(0.62_0.18_285)] px-6 h-11 text-[13px] font-semibold">
             Pro Üyelik için İletişime Geç
-          </Link>
+          </a>
         </div>
       </section>
 
