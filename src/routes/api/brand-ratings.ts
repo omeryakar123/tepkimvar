@@ -45,6 +45,13 @@ export const Route = createFileRoute("/api/brand-ratings")({
             .limit(1);
           if (!brand) throw new HttpError(404, "Firma bulunamadı");
 
+          // Daha önce oy vermiş mi? (yeni oy mu, oy değişikliği mi)
+          const [prev] = await db
+            .select({ rating: schema.brandRatings.rating })
+            .from(schema.brandRatings)
+            .where(and(eq(schema.brandRatings.brandId, b.brandId), eq(schema.brandRatings.userId, user.id)))
+            .limit(1);
+
           await db
             .insert(schema.brandRatings)
             .values({ brandId: b.brandId, userId: user.id, rating })
@@ -53,25 +60,31 @@ export const Route = createFileRoute("/api/brand-ratings")({
               set: { rating, updatedAt: new Date() },
             });
 
-          // Ortalamayı puanlardan yeniden hesapla.
-          const [agg] = await db
-            .select({
-              avg: sql<string>`coalesce(avg(${schema.brandRatings.rating}), 0)`,
-              cnt: sql<number>`count(*)`,
-            })
-            .from(schema.brandRatings)
-            .where(eq(schema.brandRatings.brandId, b.brandId));
+          // Marka ortalaması KAYAN ORTALAMA ile güncellenir (resolutions.ts ile
+          // aynı model). Sıfırdan avg(brand_ratings) HESAPLANMAZ: markanın
+          // mevcut taban puanı (çözüm puanları dahil) korunur.
+          const [updated] = prev
+            ? // Oy değişikliği: sayaç sabit, fark kadar kaydır.
+              await db
+                .update(schema.brands)
+                .set({
+                  rating: sql`round(greatest(1, least(5, ${schema.brands.rating} + (${rating - prev.rating})::numeric / greatest(${schema.brands.ratingCount}, 1))), 2)`,
+                  updatedAt: new Date(),
+                })
+                .where(eq(schema.brands.id, b.brandId))
+                .returning({ rating: schema.brands.rating, cnt: schema.brands.ratingCount })
+            : // Yeni oy: harmanla + sayaç artır.
+              await db
+                .update(schema.brands)
+                .set({
+                  rating: sql`round(((${schema.brands.rating} * ${schema.brands.ratingCount}) + ${rating})::numeric / (${schema.brands.ratingCount} + 1), 2)`,
+                  ratingCount: sql`${schema.brands.ratingCount} + 1`,
+                  updatedAt: new Date(),
+                })
+                .where(eq(schema.brands.id, b.brandId))
+                .returning({ rating: schema.brands.rating, cnt: schema.brands.ratingCount });
 
-          await db
-            .update(schema.brands)
-            .set({
-              rating: Number(agg.avg).toFixed(2),
-              ratingCount: Number(agg.cnt) || 0,
-              updatedAt: new Date(),
-            })
-            .where(eq(schema.brands.id, b.brandId));
-
-          return Response.json({ rating, average: Number(agg.avg), count: Number(agg.cnt) });
+          return Response.json({ rating, average: Number(updated.rating), count: updated.cnt });
         } catch (e) {
           return errorResponse(e);
         }

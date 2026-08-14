@@ -196,6 +196,16 @@ export const Route = createFileRoute("/api/complaints")({
             note: mod.ok ? "Otomatik kontrolden geçti, yayınlandı" : "Ön kontrol uyarı verdi, incelemeye alındı",
           });
 
+          // Marka sayacı: toplam şikayet +1, çözüm oranını yeni toplama göre tazele.
+          await db
+            .update(schema.brands)
+            .set({
+              totalComplaints: sql`${schema.brands.totalComplaints} + 1`,
+              resolutionRate: sql`least(100, round(${schema.brands.complaintsResolved}::numeric / (${schema.brands.totalComplaints} + 1) * 100))::int`,
+              updatedAt: new Date(),
+            })
+            .where(eq(schema.brands.id, b.brandId));
+
           // Şüpheliyse moderatörlerin göreceği kuyruğa ekle.
           if (!mod.ok) {
             await db.insert(schema.moderationQueue).values({

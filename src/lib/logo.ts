@@ -18,7 +18,11 @@ export function brandLogoUrl(opts: {
   website?: string | null;
   size?: number;
 }): string | null {
-  if (opts.logoUrl && opts.logoUrl.startsWith("http")) return proxyImage(opts.logoUrl);
+  if (opts.logoUrl) {
+    if (opts.logoUrl.startsWith("http")) return proxyImage(opts.logoUrl);
+    // MinIO'ya yüklenen logolar göreceli gelir (/api/files/brand-logos/...).
+    if (opts.logoUrl.startsWith("/")) return opts.logoUrl;
+  }
   const dom = normalizeDomain(opts.website);
   if (!dom || !LOGO_DEV_KEY) return null;
   const size = opts.size ?? 128;

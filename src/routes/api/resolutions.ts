@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { HttpError, errorResponse, rateLimit, requireUser } from "@/lib/server/guard";
 import { publish } from "@/lib/server/events";
@@ -74,8 +74,22 @@ export const Route = createFileRoute("/api/resolutions")({
 
           await db
             .update(schema.complaints)
-            .set({ status: "resolved", updatedAt: new Date() })
+            .set({ status: "resolved", rating, updatedAt: new Date() })
             .where(eq(schema.complaints.id, c.id));
+
+          // Puan markanın yıldızına yansır: kayan ortalama ile harmanla.
+          //   yeni_rating = (rating * rating_count + puan) / (rating_count + 1)
+          // Ayrıca çözülen sayacı ve çözüm oranı güncellenir. Tek UPDATE = atomik.
+          await db
+            .update(schema.brands)
+            .set({
+              rating: sql`round(((${schema.brands.rating} * ${schema.brands.ratingCount}) + ${rating})::numeric / (${schema.brands.ratingCount} + 1), 2)`,
+              ratingCount: sql`${schema.brands.ratingCount} + 1`,
+              complaintsResolved: sql`${schema.brands.complaintsResolved} + 1`,
+              resolutionRate: sql`least(100, round((${schema.brands.complaintsResolved} + 1)::numeric / greatest(${schema.brands.totalComplaints}, 1) * 100))::int`,
+              updatedAt: new Date(),
+            })
+            .where(eq(schema.brands.id, c.brandId));
 
           await recordStatusChange({
             complaintId: c.id,
