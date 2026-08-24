@@ -26,6 +26,15 @@ export const Route = createFileRoute("/_site/sikayet-yaz")({
 function WriteComplaintPage() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+
+  // Girişsiz kullanıcıyı doğrudan login'e gönder. Client tarafında yapılır ki
+  // SSR çıktısı (SEO) bozulmasın; oturum kontrolü biter bitmez yönlenir.
+  useEffect(() => {
+    if (!authLoading && !user) {
+      toast.info("Şikayet yazmak için giriş yapın");
+      navigate({ to: "/login" });
+    }
+  }, [authLoading, user, navigate]);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [cats, setCats] = useState<Category[]>([]);
   const [brandId, setBrandId] = useState("");
