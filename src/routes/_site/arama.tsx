@@ -6,12 +6,19 @@ import { CompanyCard, ComplaintCard } from "@/components/cards";
 import { Pagination } from "@/components/pagination";
 import type { Company, Complaint } from "@/lib/mock-data";
 import { fetchBrandsPaged, fetchComplaintsPaged, PAGE_SIZE } from "@/lib/data";
+import { seoHead } from "@/lib/seo";
 
 const searchSchema = z.object({ q: z.string().optional() });
 
 export const Route = createFileRoute("/_site/arama")({
   validateSearch: searchSchema,
-  head: () => ({ meta: [{ title: "Arama — itirazvar.com" }] }),
+  head: () => ({
+    ...seoHead({
+      title: "Arama — itirazvar",
+      description: "Marka, şikayet veya şikayet kodu arayın; sonuçlara hızla ulaşın.",
+      path: "/arama",
+    }),
+  }),
   component: SearchPage,
 });
 

@@ -6,7 +6,7 @@ import { OtpInput } from "@/components/otp-input";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/(auth)/forgot-password")({
-  head: () => ({ meta: [{ title: "Şifremi Unuttum — itirazvar.com" }] }),
+  head: () => ({ meta: [{ title: "Şifremi Unuttum — itirazvar" }] }),
   component: ForgotPasswordPage,
 });
 

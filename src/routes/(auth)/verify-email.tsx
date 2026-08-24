@@ -10,7 +10,7 @@ import { toast } from "sonner";
 const searchSchema = z.object({ email: z.string().email().optional() });
 
 export const Route = createFileRoute("/(auth)/verify-email")({
-  head: () => ({ meta: [{ title: "E-posta Doğrulama — itirazvar.com" }] }),
+  head: () => ({ meta: [{ title: "E-posta Doğrulama — itirazvar" }] }),
   validateSearch: searchSchema,
   component: VerifyEmailPage,
 });

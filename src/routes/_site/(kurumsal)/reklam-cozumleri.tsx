@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { seoHead } from "@/lib/seo";
 import { ArrowRight, Target, Sparkles, Radar, Check } from "lucide-react";
 // Self-host edilen görseller (public/) — eski Lovable asset servisi (/__l5e)
 // kendi deploy'umuzda yok, o yüzden fotoğraflar kırılıyordu.
@@ -7,10 +8,11 @@ const userDesk = { url: "/reklam-desk.jpg" };
 
 export const Route = createFileRoute("/_site/(kurumsal)/reklam-cozumleri")({
   head: () => ({
-    meta: [
-      { title: "Reklam Çözümleri — itirazvar.com" },
-      { name: "description", content: "Milyonların alışveriş kararlarını aldığı itirazvar'da hedef kitlenize kolayca ulaşın. Premium, hedefli ve programatik reklam modelleri." },
-    ],
+    ...seoHead({
+      title: "Reklam Çözümleri — itirazvar",
+      description: "Milyonların alışveriş kararlarını aldığı itirazvar'da hedef kitlenize kolayca ulaşın. Premium, hedefli ve programatik reklam modelleri.",
+      path: "/reklam-cozumleri",
+    }),
   }),
   component: AdsPage,
 });

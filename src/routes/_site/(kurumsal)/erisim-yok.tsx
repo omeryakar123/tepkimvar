@@ -1,8 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ShieldX, ArrowLeft } from "lucide-react";
+import { seoHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/_site/(kurumsal)/erisim-yok")({
-  head: () => ({ meta: [{ title: "Erişim Yok — itirazvar.com" }] }),
+  head: () => ({
+    ...seoHead({
+      title: "Erişim Yok — itirazvar",
+      description: "Bu sayfayı görüntülemek için yetkiniz yok.",
+      path: "/erisim-yok",
+      noindex: true,
+    }),
+  }),
   component: AccessDenied,
 });
 

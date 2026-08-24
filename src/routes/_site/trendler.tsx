@@ -5,9 +5,16 @@ import { ComplaintCard } from "@/components/cards";
 import { Pagination } from "@/components/pagination";
 import type { Complaint } from "@/lib/mock-data";
 import { fetchComplaintsPaged, PAGE_SIZE } from "@/lib/data";
+import { seoHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/_site/trendler")({
-  head: () => ({ meta: [{ title: "Trendler — itirazvar.com" }] }),
+  head: () => ({
+    ...seoHead({
+      title: "Trend Şikayetler — Gündemdeki Müşteri Şikayetleri | itirazvar",
+      description: "Şu an en çok konuşulan müşteri şikayetleri: en çok görüntülenen ve desteklenen güncel şikayetleri takip edin.",
+      path: "/trendler",
+    }),
+  }),
   component: TrendsPage,
 });
 

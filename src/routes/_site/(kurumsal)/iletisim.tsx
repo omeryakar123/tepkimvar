@@ -1,38 +1,84 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Mail, MapPin, Phone } from "lucide-react";
+import { useState } from "react";
+import { Mail, MapPin, Send } from "lucide-react";
+import { seoHead, breadcrumbLd } from "@/lib/seo";
+
+const CONTACT_EMAIL = "iletisim@itirazvarplus.com";
+const TELEGRAM_URL = "https://t.me/itirazvarplus";
 
 export const Route = createFileRoute("/_site/(kurumsal)/iletisim")({
-  head: () => ({ meta: [{ title: "İletişim — itirazvar." }, { name: "description", content: "itirazvar. ile iletişime geçin." }] }),
+  head: () => ({
+    ...seoHead({
+      title: "İletişim — itirazvar",
+      description:
+        "itirazvar ekibine ulaşın: soru, öneri, iş birliği ve marka başvuruları için e-posta veya Telegram üzerinden iletişime geçin.",
+      path: "/iletisim",
+    }),
+    scripts: [
+      breadcrumbLd([
+        { name: "Ana Sayfa", path: "/" },
+        { name: "İletişim", path: "/iletisim" },
+      ]),
+    ],
+  }),
   component: Page,
 });
 
 function Page() {
+  const [name, setName] = useState("");
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+
+  // Form, varsayılan e-posta uygulamasında hazır bir mesaj açar.
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
+    const body = `${message}\n\n— ${name || "İsimsiz"}`;
+    const url = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject || "itirazvar iletişim")}&body=${encodeURIComponent(body)}`;
+    window.location.href = url;
+  }
+
   return (
     <div>
       <div className="mx-auto max-w-5xl px-4 sm:px-6 py-16">
         <h1 className="text-3xl sm:text-4xl font-display font-black mb-3">İletişim</h1>
-        <p className="text-navy-mid mb-10">Bize ulaşmak için aşağıdaki kanalları kullanabilirsiniz.</p>
+        <p className="text-navy-mid mb-10">
+          Soru, öneri, iş birliği ve marka başvuruları için bize aşağıdaki kanallardan ulaşabilirsiniz.
+        </p>
         <div className="grid md:grid-cols-3 gap-4 mb-10">
-          {[
-            { i: Mail, t: "E-posta", v: "iletisim@itirazvar.com" },
-            { i: Phone, t: "Telefon", v: "+90 850 000 00 00" },
-            { i: MapPin, t: "Adres", v: "Levent, İstanbul" },
-          ].map((c) => (
-            <div key={c.t} className="bg-card rounded-2xl ring-1 ring-rule p-6">
-              <div className="size-10 rounded-xl bg-brand-soft text-brand grid place-items-center mb-3"><c.i className="size-5" /></div>
-              <div className="text-xs uppercase tracking-widest text-navy-mid">{c.t}</div>
-              <div className="mt-1 font-semibold text-ink">{c.v}</div>
+          <a href={`mailto:${CONTACT_EMAIL}`} className="bg-card rounded-2xl ring-1 ring-rule p-6 hover:ring-brand/40 transition">
+            <div className="size-10 rounded-xl bg-brand-soft text-brand grid place-items-center mb-3">
+              <Mail className="size-5" />
             </div>
-          ))}
-        </div>
-        <form className="bg-card rounded-2xl ring-1 ring-rule p-6 space-y-4">
-          <div className="grid md:grid-cols-2 gap-4">
-            <input placeholder="Ad Soyad" className="h-12 px-4 rounded-lg ring-1 ring-rule focus:outline-none focus:ring-brand/40" />
-            <input placeholder="E-posta" type="email" className="h-12 px-4 rounded-lg ring-1 ring-rule focus:outline-none focus:ring-brand/40" />
+            <div className="text-xs uppercase tracking-widest text-navy-mid">E-posta</div>
+            <div className="mt-1 font-semibold text-ink break-all">{CONTACT_EMAIL}</div>
+          </a>
+          <a href={TELEGRAM_URL} target="_blank" rel="noopener noreferrer" className="bg-card rounded-2xl ring-1 ring-rule p-6 hover:ring-brand/40 transition">
+            <div className="size-10 rounded-xl bg-brand-soft text-brand grid place-items-center mb-3">
+              <Send className="size-5" />
+            </div>
+            <div className="text-xs uppercase tracking-widest text-navy-mid">Telegram</div>
+            <div className="mt-1 font-semibold text-ink">@itirazvarplus</div>
+          </a>
+          <div className="bg-card rounded-2xl ring-1 ring-rule p-6">
+            <div className="size-10 rounded-xl bg-brand-soft text-brand grid place-items-center mb-3">
+              <MapPin className="size-5" />
+            </div>
+            <div className="text-xs uppercase tracking-widest text-navy-mid">Konum</div>
+            <div className="mt-1 font-semibold text-ink">İstanbul, Türkiye</div>
           </div>
-          <input placeholder="Konu" className="h-12 w-full px-4 rounded-lg ring-1 ring-rule focus:outline-none focus:ring-brand/40" />
-          <textarea placeholder="Mesajınız" rows={6} className="w-full p-4 rounded-lg ring-1 ring-rule focus:outline-none focus:ring-brand/40" />
-          <button type="button" className="h-11 px-6 rounded-full bg-brand text-brand-foreground font-semibold hover:brightness-105">Gönder</button>
+        </div>
+        <form onSubmit={submit} className="bg-card rounded-2xl ring-1 ring-rule p-6 space-y-4">
+          <div className="grid md:grid-cols-2 gap-4">
+            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ad Soyad" className="h-12 px-4 rounded-lg ring-1 ring-rule focus:outline-none focus:ring-brand/40" />
+            <input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Konu" className="h-12 px-4 rounded-lg ring-1 ring-rule focus:outline-none focus:ring-brand/40" />
+          </div>
+          <textarea value={message} onChange={(e) => setMessage(e.target.value)} required placeholder="Mesajınız" rows={6} className="w-full p-4 rounded-lg ring-1 ring-rule focus:outline-none focus:ring-brand/40" />
+          <div className="flex items-center gap-4">
+            <button className="h-11 px-6 rounded-full bg-brand text-brand-foreground font-semibold hover:brightness-105">
+              E-posta ile Gönder
+            </button>
+            <span className="text-[12px] text-navy-mid">Gönder'e bastığınızda e-posta uygulamanız hazır mesajla açılır.</span>
+          </div>
         </form>
       </div>
     </div>

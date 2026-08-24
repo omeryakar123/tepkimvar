@@ -7,12 +7,19 @@ import { PhoneInput } from "@/components/phone-input";
 import { toE164Tr } from "@/lib/phone";
 import { FileDropzone, type AcceptedFile } from "@/components/file-dropzone";
 import { Combobox } from "@/components/combobox";
+import { seoHead } from "@/lib/seo";
 
 type Brand = { id: string; name: string };
 type Category = { id: string; name: string };
 
 export const Route = createFileRoute("/_site/sikayet-yaz")({
-  head: () => ({ meta: [{ title: "Şikayet Yaz — itirazvar.com" }] }),
+  head: () => ({
+    ...seoHead({
+      title: "Şikayet Yaz — Sesini Duyur | itirazvar",
+      description: "Yaşadığınız sorunu birkaç dakikada yazın, markadan resmi yanıt alın. Dilerseniz anonim paylaşın; çözüm sürecini adım adım takip edin.",
+      path: "/sikayet-yaz",
+    }),
+  }),
   component: WriteComplaintPage,
 });
 

@@ -6,7 +6,10 @@ export const SITE_NAME = "itirazvar";
 export const SITE_URL =
   (typeof process !== "undefined" ? process.env.SITE_URL : undefined) ||
   (import.meta.env?.VITE_SITE_URL as string | undefined) ||
-  "https://itirazvar.com";
+  "https://itirazvarplus.com";
+
+/** Sayfaya özel görsel verilmediğinde kullanılan varsayılan OG görseli. */
+export const DEFAULT_OG_IMAGE = "/itiraz1.png";
 
 export function absUrl(path: string): string {
   return `${SITE_URL.replace(/\/$/, "")}${path.startsWith("/") ? path : `/${path}`}`;
@@ -32,7 +35,8 @@ type SeoInput = {
 /** TanStack `head()` için meta + canonical üretir. */
 export function seoHead(input: SeoInput) {
   const url = absUrl(input.path);
-  const image = input.image ? (input.image.startsWith("http") ? input.image : absUrl(input.image)) : null;
+  const rawImage = input.image ?? DEFAULT_OG_IMAGE;
+  const image = rawImage ? (rawImage.startsWith("http") ? rawImage : absUrl(rawImage)) : null;
 
   const meta: Record<string, string>[] = [
     { title: input.title },

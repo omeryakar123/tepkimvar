@@ -78,7 +78,7 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "itirazvar.com — Sesinizi Duyurun, Çözümü Takip Edin" },
+      { title: "itirazvar — Sesinizi Duyurun, Çözümü Takip Edin" },
       {
         name: "description",
         content:
@@ -86,7 +86,7 @@ export const Route = createRootRoute({
       },
       { name: "author", content: "itirazvar" },
       { property: "og:site_name", content: "itirazvar." },
-      { property: "og:title", content: "itirazvar.com — Sesinizi Duyurun, Çözümü Takip Edin" },
+      { property: "og:title", content: "itirazvar — Sesinizi Duyurun, Çözümü Takip Edin" },
       {
         property: "og:description",
         content:
@@ -95,7 +95,7 @@ export const Route = createRootRoute({
       { property: "og:type", content: "website" },
       { property: "og:locale", content: "tr_TR" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "itirazvar.com — Sesinizi Duyurun, Çözümü Takip Edin" },
+      { name: "twitter:title", content: "itirazvar — Sesinizi Duyurun, Çözümü Takip Edin" },
       { name: "twitter:description", content: "Türkiye'nin güvenilir şikayet ve çözüm platformu." },
     ],
     links: [

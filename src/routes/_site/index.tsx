@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { seoHead } from "@/lib/seo";
+import { seoHead, jsonLd, absUrl } from "@/lib/seo";
 import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import {
@@ -33,14 +33,40 @@ export const Route = createFileRoute("/_site/")({
     ]);
     return { latest, categories };
   },
-  head: () => ({
-    ...seoHead({
+  head: () => {
+    const base = seoHead({
       title: "itirazvar — Şikayetini Yaz, Firmadan Resmi Yanıt Al",
       description:
         "Türkiye'nin bağımsız şikayet platformu. Marka ve hizmetler hakkındaki gerçek deneyimleri keşfet, şikayetini paylaş, firmalardan resmi yanıt ve çözüm al.",
       path: "/",
-    }),
-  }),
+    });
+    return {
+      ...base,
+      scripts: [
+        // Organization + WebSite şemaları: Google'da site adı/logo ve
+        // sitelinks arama kutusu için.
+        jsonLd({
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          name: "itirazvar",
+          url: absUrl("/"),
+          logo: absUrl("/itiraz1.png"),
+          sameAs: ["https://t.me/itirazvarplus"],
+        }),
+        jsonLd({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "itirazvar",
+          url: absUrl("/"),
+          potentialAction: {
+            "@type": "SearchAction",
+            target: `${absUrl("/arama")}?q={search_term_string}`,
+            "query-input": "required name=search_term_string",
+          },
+        }),
+      ],
+    };
+  },
   component: Home,
 });
 

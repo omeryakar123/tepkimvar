@@ -1,9 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { seoHead } from "@/lib/seo";
 import { CheckCircle2, ShieldCheck, TrendingUp, Users } from "lucide-react";
 import { fetchPlatformStats } from "@/lib/data";
 
 export const Route = createFileRoute("/_site/(kurumsal)/seffaflik-raporu")({
-  head: () => ({ meta: [{ title: "Şeffaflık Raporu — itirazvar." }, { name: "description", content: "itirazvar Şeffaflık Raporu: platform verileri ve moderasyon süreci." }] }),
+  head: () => ({
+    ...seoHead({
+      title: "Şeffaflık Raporu — itirazvar",
+      description: "itirazvar Şeffaflık Raporu: üye, marka ve şikayet sayıları, çözüm oranları ve moderasyon süreçlerine dair gerçek platform verileri.",
+      path: "/seffaflik-raporu",
+    }),
+  }),
   loader: async () => ({ stats: await fetchPlatformStats().catch(() => null) }),
   component: Page,
 });
