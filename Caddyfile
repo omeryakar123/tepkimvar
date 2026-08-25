@@ -1,0 +1,11 @@
+# Caddy reverse proxy — TLS otomatik (Let's Encrypt).
+# DOMAIN env'i compose'dan gelir.
+{$DOMAIN} {
+	encode gzip
+	reverse_proxy app:3000
+}
+
+# www -> apex yönlendirmesi (INVALID_ORIGIN tuzağını da önler).
+www.{$DOMAIN} {
+	redir https://{$DOMAIN}{uri} permanent
+}

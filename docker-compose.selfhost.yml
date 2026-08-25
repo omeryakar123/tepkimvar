@@ -1,0 +1,89 @@
+# itirazvar — Coolify'SIZ self-host (tek sunucu, docker compose).
+# Kullanım:  cp .env.selfhost.example .env.selfhost  ->  doldur  ->
+#   docker compose -f docker-compose.selfhost.yml --env-file .env.selfhost up -d --build
+#
+# Caddy 80/443'ü dinler, TLS'i Let's Encrypt'ten OTOMATİK alır (DNS'in
+# sunucuya işaret etmesi yeterli). App, Postgres ve MinIO dışarı açılmaz.
+
+services:
+  app:
+    build:
+      context: .
+      args:
+        VITE_SITE_URL: "https://${DOMAIN}"
+        VITE_GOOGLE_ENABLED: "${VITE_GOOGLE_ENABLED:-false}"
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_started
+    environment:
+      DATABASE_URL: "postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/postgres"
+      BETTER_AUTH_SECRET: "${BETTER_AUTH_SECRET}"
+      BETTER_AUTH_URL: "https://${DOMAIN}"
+      TRUSTED_ORIGINS: "https://${DOMAIN}"
+      SITE_URL: "https://${DOMAIN}"
+      VITE_SITE_URL: "https://${DOMAIN}"
+      INTERNAL_API_URL: "http://localhost:3000"
+      PORT: "3000"
+      S3_ENDPOINT: "http://minio:9000"
+      S3_ACCESS_KEY_ID: "${MINIO_ROOT_USER}"
+      S3_SECRET_ACCESS_KEY: "${MINIO_ROOT_PASSWORD}"
+      S3_BUCKET: "itirazvar"
+      S3_REGION: "us-east-1"
+      RESEND_API_KEY: "${RESEND_API_KEY:-}"
+      EMAIL_FROM: "itirazvar <noreply@${DOMAIN}>"
+      GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID:-}"
+      GOOGLE_CLIENT_SECRET: "${GOOGLE_CLIENT_SECRET:-}"
+
+  postgres:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+    volumes:
+      # postgres:18 imajında veri dizini /var/lib/postgresql altına taşındı;
+      # üst dizini bağlamak sürüm yükseltmelerinde de güvenli.
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: "${MINIO_ROOT_USER}"
+      MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD}"
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: "${DOMAIN}"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - app
+
+volumes:
+  pgdata:
+  minio-data:
+  caddy-data:
+  caddy-config:

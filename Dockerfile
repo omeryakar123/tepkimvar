@@ -12,6 +12,13 @@ RUN bun install --frozen-lockfile
 # Kaynak
 COPY . .
 
+# VITE_* değişkenleri build sırasında bundle'a gömülür. Coolify bunları
+# otomatik enjekte eder; saf Docker'da --build-arg ile ver (compose halleder).
+ARG VITE_SITE_URL
+ARG VITE_GOOGLE_ENABLED
+ENV VITE_SITE_URL=$VITE_SITE_URL
+ENV VITE_GOOGLE_ENABLED=$VITE_GOOGLE_ENABLED
+
 # Nitro'yu Node sunucusu olarak build et (varsayılan cloudflare DEĞİL).
 ENV NITRO_PRESET=node-server
 ENV SERVER_PRESET=node-server
