@@ -36,7 +36,7 @@ function AdminLayout() {
     <div className="min-h-screen bg-canvas flex">
       <aside className="hidden lg:flex w-64 shrink-0 flex-col bg-card border-r border-rule sticky top-0 h-screen">
         <Link to="/" className="flex items-center px-5 h-16 border-b border-rule">
-          <span className="font-display font-black text-[18px] tracking-tight">itirazvar<span className="text-brand">.</span></span>
+          <span className="font-display font-black text-[18px] tracking-tight">tepkimvar<span className="text-brand">.</span></span>
           <span className="ml-auto text-[9px] uppercase tracking-wider font-bold bg-ink text-paper dark:bg-surface dark:text-ink px-1.5 py-0.5 rounded">Admin</span>
         </Link>
         <nav className="flex-1 p-3 space-y-1 text-[13.5px]">

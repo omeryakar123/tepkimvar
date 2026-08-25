@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import type {} from "@tanstack/react-start";
 
 // Coolify'da SITE_URL env'i ile kendi domainini ver.
-const BASE_URL = process.env.SITE_URL || "https://itirazvarplus.com";
+const BASE_URL = process.env.SITE_URL || "https://tepkimvarplus.com";
 
 interface SitemapEntry {
   path: string;

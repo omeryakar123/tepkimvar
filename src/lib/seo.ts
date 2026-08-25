@@ -2,14 +2,14 @@
  * SEO yardımcıları — meta/OG/canonical/JSON-LD üretimi.
  * Domain'i Coolify'da SITE_URL (sunucu) / VITE_SITE_URL (client) ile ver.
  */
-export const SITE_NAME = "itirazvar";
+export const SITE_NAME = "tepkimvar";
 export const SITE_URL =
   (typeof process !== "undefined" ? process.env.SITE_URL : undefined) ||
   (import.meta.env?.VITE_SITE_URL as string | undefined) ||
-  "https://itirazvarplus.com";
+  "https://tepkimvarplus.com";
 
 /** Sayfaya özel görsel verilmediğinde kullanılan varsayılan OG görseli. */
-export const DEFAULT_OG_IMAGE = "/itiraz1.png";
+export const DEFAULT_OG_IMAGE = "/tepkim1.png";
 
 export function absUrl(path: string): string {
   return `${SITE_URL.replace(/\/$/, "")}${path.startsWith("/") ? path : `/${path}`}`;

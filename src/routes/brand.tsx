@@ -44,7 +44,7 @@ function BrandLayout() {
       <aside className="hidden lg:flex w-64 shrink-0 flex-col bg-card border-r border-rule sticky top-0 h-screen">
         <Link to="/" className="flex items-center gap-2 px-5 h-16 border-b border-rule">
           <span className="grid place-items-center size-8 rounded-lg bg-brand text-brand-foreground font-black text-[15px]">i</span>
-          <span className="font-display font-black text-[18px] tracking-tight">itirazvar<span className="text-brand">.</span></span>
+          <span className="font-display font-black text-[18px] tracking-tight">tepkimvar<span className="text-brand">.</span></span>
           <span className="ml-auto text-[9px] uppercase tracking-wider font-bold bg-brand text-brand-foreground px-1.5 py-0.5 rounded">Brand</span>
         </Link>
         <div className="px-5 py-3 border-b border-rule">

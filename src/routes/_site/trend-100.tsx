@@ -12,9 +12,9 @@ export const Route = createFileRoute("/_site/trend-100")({
     kategori: typeof s.kategori === "string" ? s.kategori : undefined,
   }),
   head: () => {
-    const title = "Trend 100 — En Çok Konuşulan Markalar | itirazvar.";
+    const title = "Trend 100 — En Çok Konuşulan Markalar | tepkimvar.";
     const description = "Türkiye'nin en çok şikayet alan ve gündemde olan 100 markası. Kategoriye göre filtreleyin.";
-    const url = "https://itirazvar.lovable.app/trend-100";
+    const url = "https://tepkimvar.lovable.app/trend-100";
     return {
       meta: [
         { title },

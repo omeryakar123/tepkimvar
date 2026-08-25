@@ -10,7 +10,7 @@ import { seoHead } from "@/lib/seo";
 export const Route = createFileRoute("/_site/trendler")({
   head: () => ({
     ...seoHead({
-      title: "Trend Şikayetler — Gündemdeki Müşteri Şikayetleri | itirazvar",
+      title: "Trend Şikayetler — Gündemdeki Müşteri Şikayetleri | tepkimvar",
       description: "Şu an en çok konuşulan müşteri şikayetleri: en çok görüntülenen ve desteklenen güncel şikayetleri takip edin.",
       path: "/trendler",
     }),

@@ -2,6 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AuthForm } from "@/components/auth-form";
 
 export const Route = createFileRoute("/(auth)/register")({
-  head: () => ({ meta: [{ title: "Üye Ol — itirazvar" }] }),
+  head: () => ({ meta: [{ title: "Üye Ol — tepkimvar" }] }),
   component: () => <AuthForm variant="user" initialMode="register" />,
 });

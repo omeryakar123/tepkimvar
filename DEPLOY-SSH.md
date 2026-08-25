@@ -1,4 +1,4 @@
-# itirazvar — Coolify'sız kurulum (SSH + Docker Compose)
+# tepkimvar — Coolify'sız kurulum (SSH + Docker Compose)
 
 Tek sunucuda app + Postgres + MinIO + Caddy (otomatik HTTPS). Coolify gerekmez.
 
@@ -14,9 +14,9 @@ curl -fsSL https://get.docker.com | sh
 
 ## 2. Projeyi çek
 ```bash
-git clone <REPO_URL> itirazvar && cd itirazvar
+git clone <REPO_URL> tepkimvar && cd tepkimvar
 ```
-(Ya da yereldekini kopyala: `rsync -av --exclude node_modules --exclude .output . root@SUNUCU:/opt/itirazvar/`)
+(Ya da yereldekini kopyala: `rsync -av --exclude node_modules --exclude .output . root@SUNUCU:/opt/tepkimvar/`)
 
 ## 3. Env doldur
 ```bash

@@ -14,9 +14,9 @@ async function sendOtpEmail(email: string, otp: string, type: string) {
     return;
   }
   // Gönderen adresi: Resend'de DOĞRULANMIŞ domain olmalı. Domain'i EMAIL_FROM
-  // ile ver (ör. "itirazvar <noreply@itirazvarplus.com>"). Doğrulanmamış domain
+  // ile ver (ör. "tepkimvar <noreply@tepkimvarplus.com>"). Doğrulanmamış domain
   // Resend tarafından 403 ile reddedilir.
-  const from = process.env.EMAIL_FROM || "itirazvar <noreply@itirazvarplus.com>";
+  const from = process.env.EMAIL_FROM || "tepkimvar <noreply@tepkimvarplus.com>";
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },

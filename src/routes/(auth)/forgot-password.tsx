@@ -6,7 +6,7 @@ import { OtpInput } from "@/components/otp-input";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/(auth)/forgot-password")({
-  head: () => ({ meta: [{ title: "Şifremi Unuttum — itirazvar" }] }),
+  head: () => ({ meta: [{ title: "Şifremi Unuttum — tepkimvar" }] }),
   component: ForgotPasswordPage,
 });
 
@@ -57,7 +57,7 @@ function ForgotPasswordPage() {
       <div className="w-full max-w-md">
         <Link to="/" className="flex items-center gap-2 justify-center mb-8">
           <span className="grid place-items-center size-9 rounded-lg bg-brand text-brand-foreground font-black text-base">i</span>
-          <span className="font-display font-black text-[22px] tracking-tight text-ink">itirazvar<span className="text-brand">.</span></span>
+          <span className="font-display font-black text-[22px] tracking-tight text-ink">tepkimvar<span className="text-brand">.</span></span>
         </Link>
         <div className="bg-card rounded-2xl ring-1 ring-rule p-7">
           {step === "done" ? (

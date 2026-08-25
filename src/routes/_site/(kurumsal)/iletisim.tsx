@@ -3,15 +3,15 @@ import { useState } from "react";
 import { Mail, MapPin, Send } from "lucide-react";
 import { seoHead, breadcrumbLd } from "@/lib/seo";
 
-const CONTACT_EMAIL = "iletisim@itirazvarplus.com";
-const TELEGRAM_URL = "https://t.me/itirazvarplus";
+const CONTACT_EMAIL = "iletisim@tepkimvarplus.com";
+const TELEGRAM_URL = "https://t.me/tepkimvarplus";
 
 export const Route = createFileRoute("/_site/(kurumsal)/iletisim")({
   head: () => ({
     ...seoHead({
-      title: "İletişim — itirazvar",
+      title: "İletişim — tepkimvar",
       description:
-        "itirazvar ekibine ulaşın: soru, öneri, iş birliği ve marka başvuruları için e-posta veya Telegram üzerinden iletişime geçin.",
+        "tepkimvar ekibine ulaşın: soru, öneri, iş birliği ve marka başvuruları için e-posta veya Telegram üzerinden iletişime geçin.",
       path: "/iletisim",
     }),
     scripts: [
@@ -33,7 +33,7 @@ function Page() {
   function submit(e: React.FormEvent) {
     e.preventDefault();
     const body = `${message}\n\n— ${name || "İsimsiz"}`;
-    const url = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject || "itirazvar iletişim")}&body=${encodeURIComponent(body)}`;
+    const url = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject || "tepkimvar iletişim")}&body=${encodeURIComponent(body)}`;
     window.location.href = url;
   }
 
@@ -57,7 +57,7 @@ function Page() {
               <Send className="size-5" />
             </div>
             <div className="text-xs uppercase tracking-widest text-navy-mid">Telegram</div>
-            <div className="mt-1 font-semibold text-ink">@itirazvarplus</div>
+            <div className="mt-1 font-semibold text-ink">@tepkimvarplus</div>
           </a>
           <div className="bg-card rounded-2xl ring-1 ring-rule p-6">
             <div className="size-10 rounded-xl bg-brand-soft text-brand grid place-items-center mb-3">

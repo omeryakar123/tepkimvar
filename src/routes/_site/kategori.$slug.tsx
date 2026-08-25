@@ -25,7 +25,7 @@ export const Route = createFileRoute("/_site/kategori/$slug")({
     const path = `/kategori/${params.slug}`;
     const name = loaderData?.cat?.name ?? slugToTitle(params.slug);
     const count = loaderData?.complaints?.total ?? 0;
-    const title = `${name} Şikayetleri ve Firmaları — itirazvar`;
+    const title = `${name} Şikayetleri ve Firmaları — tepkimvar`;
     const description = clamp(
       `${name} kategorisinde ${count} müşteri şikayeti. Firmaların çözüm oranları, marka yanıtları ve puanları.`,
       155,

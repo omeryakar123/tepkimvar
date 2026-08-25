@@ -6,8 +6,8 @@ import { fetchPlatformStats } from "@/lib/data";
 export const Route = createFileRoute("/_site/(kurumsal)/seffaflik-raporu")({
   head: () => ({
     ...seoHead({
-      title: "Şeffaflık Raporu — itirazvar",
-      description: "itirazvar Şeffaflık Raporu: üye, marka ve şikayet sayıları, çözüm oranları ve moderasyon süreçlerine dair gerçek platform verileri.",
+      title: "Şeffaflık Raporu — tepkimvar",
+      description: "tepkimvar Şeffaflık Raporu: üye, marka ve şikayet sayıları, çözüm oranları ve moderasyon süreçlerine dair gerçek platform verileri.",
       path: "/seffaflik-raporu",
     }),
   }),
@@ -32,7 +32,7 @@ function Page() {
     <div>
       <div className="bg-gradient-to-br from-dark via-navy to-brand/30 text-white py-16">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <p className="text-white/60 text-xs uppercase tracking-widest">itirazvar.</p>
+          <p className="text-white/60 text-xs uppercase tracking-widest">tepkimvar.</p>
           <h1 className="text-4xl sm:text-5xl font-display font-black mt-2">Şeffaflık Raporu</h1>
           <p className="text-white/70 mt-3 max-w-2xl">Her yıl olduğu gibi bu yıl da müşterilerimize ve markalara ilişkin verileri şeffafça paylaşıyoruz.</p>
         </div>

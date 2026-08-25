@@ -31,7 +31,7 @@ export const Route = createFileRoute("/_site/markalar")({
   },
   head: ({ loaderData }) => {
     const total = loaderData?.first?.total ?? 0;
-    const title = "Markalar Dizini — Firma Şikayetleri ve Puanları | itirazvar";
+    const title = "Markalar Dizini — Firma Şikayetleri ve Puanları | tepkimvar";
     const description = clamp(
       `${total > 0 ? total + " marka" : "Markalar"}: müşteri şikayetleri, çözüm oranları ve puanlar. Kategoriye göre filtreleyin, puana göre sıralayın.`,
       155,

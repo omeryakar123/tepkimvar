@@ -14,13 +14,13 @@ export const Route = createFileRoute("/_site/blog/$slug")({
     const path = `/blog/${params.slug}`;
     if (!p) {
       return seoHead({
-        title: "Yazı bulunamadı — itirazvar",
+        title: "Yazı bulunamadı — tepkimvar",
         description: "Aradığınız yazı yayında değil.",
         path,
         noindex: true,
       });
     }
-    const title = p.seo_title || `${p.title} | itirazvar Blog`;
+    const title = p.seo_title || `${p.title} | tepkimvar Blog`;
     const description = clamp(p.seo_description || p.excerpt || p.body, 155);
     return {
       ...seoHead({
@@ -41,7 +41,7 @@ export const Route = createFileRoute("/_site/blog/$slug")({
           datePublished: p.published_at,
           inLanguage: "tr-TR",
           ...(p.cover_url ? { image: p.cover_url } : {}),
-          publisher: { "@type": "Organization", name: "itirazvar" },
+          publisher: { "@type": "Organization", name: "tepkimvar" },
         }),
         breadcrumbLd([
           { name: "Ana Sayfa", path: "/" },

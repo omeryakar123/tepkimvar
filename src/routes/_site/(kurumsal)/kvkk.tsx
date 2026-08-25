@@ -5,7 +5,7 @@ const SECTIONS: { h: string; p: string[] }[] = [
   {
     h: "1. Veri Sorumlusu",
     p: [
-      "6698 sayılı Kişisel Verilerin Korunması Kanunu (\"KVKK\") uyarınca itirazvar (\"Platform\"), veri sorumlusu sıfatıyla kişisel verilerinizi aşağıda açıklanan kapsamda işlemektedir.",
+      "6698 sayılı Kişisel Verilerin Korunması Kanunu (\"KVKK\") uyarınca tepkimvar (\"Platform\"), veri sorumlusu sıfatıyla kişisel verilerinizi aşağıda açıklanan kapsamda işlemektedir.",
     ],
   },
   {
@@ -36,7 +36,7 @@ const SECTIONS: { h: string; p: string[] }[] = [
     h: "6. Haklarınız (KVKK m.11)",
     p: [
       "Kişisel verilerinizin işlenip işlenmediğini öğrenme, işlenmişse buna ilişkin bilgi talep etme, işleme amacını ve amacına uygun kullanılıp kullanılmadığını öğrenme, eksik veya yanlış işlenmişse düzeltilmesini isteme, silinmesini veya yok edilmesini talep etme, otomatik sistemlerle analiz sonucu aleyhinize bir sonucun ortaya çıkmasına itiraz etme ve zarara uğramanız halinde giderilmesini talep etme haklarına sahipsiniz.",
-      "Taleplerinizi iletisim@itirazvarplus.com adresine iletebilirsiniz. Başvurularınız en geç 30 gün içinde ücretsiz olarak sonuçlandırılır.",
+      "Taleplerinizi iletisim@tepkimvarplus.com adresine iletebilirsiniz. Başvurularınız en geç 30 gün içinde ücretsiz olarak sonuçlandırılır.",
     ],
   },
 ];
@@ -44,9 +44,9 @@ const SECTIONS: { h: string; p: string[] }[] = [
 export const Route = createFileRoute("/_site/(kurumsal)/kvkk")({
   head: () => ({
     ...seoHead({
-      title: "KVKK Aydınlatma Metni — itirazvar",
+      title: "KVKK Aydınlatma Metni — tepkimvar",
       description:
-        "itirazvar KVKK Aydınlatma Metni: hangi kişisel verilerin hangi amaçlarla işlendiği, saklama süreleri ve KVKK kapsamındaki haklarınız.",
+        "tepkimvar KVKK Aydınlatma Metni: hangi kişisel verilerin hangi amaçlarla işlendiği, saklama süreleri ve KVKK kapsamındaki haklarınız.",
       path: "/kvkk",
     }),
   }),

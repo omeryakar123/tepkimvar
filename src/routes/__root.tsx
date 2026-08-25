@@ -78,15 +78,15 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "itirazvar — Sesinizi Duyurun, Çözümü Takip Edin" },
+      { title: "tepkimvar — Sesinizi Duyurun, Çözümü Takip Edin" },
       {
         name: "description",
         content:
           "Türkiye'nin güvenilir şikayet ve çözüm platformu. Firmaları araştırın, sorunlarınızı paylaşın, çözüm süreçlerini takip edin.",
       },
-      { name: "author", content: "itirazvar" },
-      { property: "og:site_name", content: "itirazvar." },
-      { property: "og:title", content: "itirazvar — Sesinizi Duyurun, Çözümü Takip Edin" },
+      { name: "author", content: "tepkimvar" },
+      { property: "og:site_name", content: "tepkimvar." },
+      { property: "og:title", content: "tepkimvar — Sesinizi Duyurun, Çözümü Takip Edin" },
       {
         property: "og:description",
         content:
@@ -95,7 +95,7 @@ export const Route = createRootRoute({
       { property: "og:type", content: "website" },
       { property: "og:locale", content: "tr_TR" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "itirazvar — Sesinizi Duyurun, Çözümü Takip Edin" },
+      { name: "twitter:title", content: "tepkimvar — Sesinizi Duyurun, Çözümü Takip Edin" },
       { name: "twitter:description", content: "Türkiye'nin güvenilir şikayet ve çözüm platformu." },
     ],
     links: [
@@ -113,7 +113,7 @@ export const Route = createRootRoute({
         children: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "WebSite",
-          name: "itirazvar.",
+          name: "tepkimvar.",
           url: SITE_URL,
           inLanguage: "tr-TR",
           potentialAction: {
@@ -128,7 +128,7 @@ export const Route = createRootRoute({
         children: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "Organization",
-          name: "itirazvar.",
+          name: "tepkimvar.",
           url: SITE_URL,
           description: "Türkiye'nin bağımsız müşteri deneyimi ve şikayet çözüm platformu.",
         }),

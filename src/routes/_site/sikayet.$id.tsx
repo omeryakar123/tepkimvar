@@ -24,7 +24,7 @@ export const Route = createFileRoute("/_site/sikayet/$id")({
     if (!c) {
       return {
         ...seoHead({
-          title: "Şikayet bulunamadı — itirazvar",
+          title: "Şikayet bulunamadı — tepkimvar",
           description: "Aradığınız şikayet yayında değil veya kaldırılmış olabilir.",
           path: `/sikayet/${params.id}`,
           noindex: true,
@@ -32,7 +32,7 @@ export const Route = createFileRoute("/_site/sikayet/$id")({
       };
     }
     const code = c.publicId ?? params.id;
-    const title = `${c.title} — ${c.companyName} şikayeti | itirazvar`;
+    const title = `${c.title} — ${c.companyName} şikayeti | tepkimvar`;
     const description = clamp(c.body, 155);
     const path = `/sikayet/${code}`;
 

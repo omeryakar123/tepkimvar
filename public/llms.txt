@@ -1,8 +1,8 @@
-# itirazvar.
+# tepkimvar.
 
 > Türkiye'nin bağımsız müşteri deneyimi ve şikayet çözüm platformu. Kullanıcılar markalara sorunlarını iletir, çözüm süreçlerini takip eder; markalar ise doğrulanmış profillerle yanıt verir.
 
-itirazvar., müşterilerle markalar arasında köprü görevi üstlenen bir çözüm platformudur. Milyonlarca ziyaretçinin alışverişleri öncesi karar vermelerine yardımcı olur; markaların müşteri memnuniyetini artırmasına imkan tanır.
+tepkimvar., müşterilerle markalar arasında köprü görevi üstlenen bir çözüm platformudur. Milyonlarca ziyaretçinin alışverişleri öncesi karar vermelerine yardımcı olur; markaların müşteri memnuniyetini artırmasına imkan tanır.
 
 ## Pages
 

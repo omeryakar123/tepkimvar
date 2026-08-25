@@ -5,7 +5,7 @@ const SECTIONS: { h: string; p: string[] }[] = [
   {
     h: "1. Genel",
     p: [
-      "itirazvar olarak kullanıcılarımızın gizliliğini önemsiyoruz. Bu politika; hangi verileri topladığımızı, nasıl kullandığımızı ve haklarınızı açıklar. Platformu kullanarak bu politikayı kabul etmiş sayılırsınız.",
+      "tepkimvar olarak kullanıcılarımızın gizliliğini önemsiyoruz. Bu politika; hangi verileri topladığımızı, nasıl kullandığımızı ve haklarınızı açıklar. Platformu kullanarak bu politikayı kabul etmiş sayılırsınız.",
     ],
   },
   {
@@ -41,7 +41,7 @@ const SECTIONS: { h: string; p: string[] }[] = [
   {
     h: "7. İletişim",
     p: [
-      "Gizlilikle ilgili soru ve talepleriniz için iletisim@itirazvarplus.com adresine yazabilirsiniz. Ayrıntılı bilgi için KVKK Aydınlatma Metni'ni inceleyebilirsiniz.",
+      "Gizlilikle ilgili soru ve talepleriniz için iletisim@tepkimvarplus.com adresine yazabilirsiniz. Ayrıntılı bilgi için KVKK Aydınlatma Metni'ni inceleyebilirsiniz.",
     ],
   },
 ];
@@ -49,9 +49,9 @@ const SECTIONS: { h: string; p: string[] }[] = [
 export const Route = createFileRoute("/_site/(kurumsal)/gizlilik")({
   head: () => ({
     ...seoHead({
-      title: "Gizlilik Politikası — itirazvar",
+      title: "Gizlilik Politikası — tepkimvar",
       description:
-        "itirazvar Gizlilik Politikası: hangi verileri topladığımız, nasıl koruduğumuz, çerez kullanımı ve anonim şikayet hakkınız.",
+        "tepkimvar Gizlilik Politikası: hangi verileri topladığımız, nasıl koruduğumuz, çerez kullanımı ve anonim şikayet hakkınız.",
       path: "/gizlilik",
     }),
   }),

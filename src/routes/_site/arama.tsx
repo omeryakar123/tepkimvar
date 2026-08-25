@@ -14,7 +14,7 @@ export const Route = createFileRoute("/_site/arama")({
   validateSearch: searchSchema,
   head: () => ({
     ...seoHead({
-      title: "Arama — itirazvar",
+      title: "Arama — tepkimvar",
       description: "Marka, şikayet veya şikayet kodu arayın; sonuçlara hızla ulaşın.",
       path: "/arama",
     }),

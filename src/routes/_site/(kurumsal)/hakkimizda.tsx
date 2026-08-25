@@ -28,9 +28,9 @@ export const Route = createFileRoute("/_site/(kurumsal)/hakkimizda")({
   loader: async () => ({ stats: await fetchPlatformStats().catch(() => null) }),
   head: () => ({
     ...seoHead({
-      title: "Hakkımızda — itirazvar | Türkiye'nin Bağımsız Şikayet Platformu",
+      title: "Hakkımızda — tepkimvar | Türkiye'nin Bağımsız Şikayet Platformu",
       description:
-        "itirazvar, tüketici ile marka arasında köprü kuran bağımsız şikayet çözüm platformudur. Şikayetini yaz, markadan resmi yanıt al, çözüm sürecini şeffafça takip et.",
+        "tepkimvar, tüketici ile marka arasında köprü kuran bağımsız şikayet çözüm platformudur. Şikayetini yaz, markadan resmi yanıt al, çözüm sürecini şeffafça takip et.",
       path: "/hakkimizda",
     }),
     scripts: [
@@ -127,7 +127,7 @@ function Page() {
       {/* HERO */}
       <div className="relative h-64 bg-gradient-to-br from-dark via-navy to-brand/40 grid place-items-center">
         <div className="text-center px-6">
-          <p className="text-white/60 text-xs uppercase tracking-widest mb-2">itirazvar.</p>
+          <p className="text-white/60 text-xs uppercase tracking-widest mb-2">tepkimvar.</p>
           <h1 className="text-white text-3xl sm:text-5xl font-display font-black">
             Türkiye'nin bağımsız
             <br />
@@ -143,7 +143,7 @@ function Page() {
           alışveriş kararını gerçek deneyimlere göre verebildiği bir Türkiye için çalışıyoruz.
         </p>
         <p>
-          itirazvar, müşterilerle markalar arasında köprü görevi üstlenen bağımsız bir çözüm
+          tepkimvar, müşterilerle markalar arasında köprü görevi üstlenen bağımsız bir çözüm
           platformudur. Yaşanan her sorunun bir muhatabı olduğuna inanırız: şikayetler burada
           kaybolmaz, markanın önüne gider; verilen her yanıt ve üretilen her çözüm herkese açık
           şekilde kayıt altına alınır. Böylece hem tüketicinin mağduriyeti giderilir hem de
@@ -171,7 +171,7 @@ function Page() {
             vardır.
           </p>
           <p>
-            itirazvar bu kopukluğu ortadan kaldırmak için kuruldu. Şikayetini buraya yazdığında
+            tepkimvar bu kopukluğu ortadan kaldırmak için kuruldu. Şikayetini buraya yazdığında
             iki şey birden olur: sorunun <b className="text-ink">kamuya açık bir kayda</b> dönüşür
             ve <b className="text-ink">doğrudan markanın önüne</b> gider. Kamuya açıklık markayı
             çözüm üretmeye teşvik eder; kayıt altına alınmış süreç ise diğer tüketicilere yol
@@ -327,7 +327,7 @@ function Page() {
             <ShieldCheck className="size-7 text-white" />
           </div>
           <p className="text-lg">
-            Bir ürün veya hizmet almadan önce itirazvar'daki müşteri deneyimlerini okuyanların oranı
+            Bir ürün veya hizmet almadan önce tepkimvar'daki müşteri deneyimlerini okuyanların oranı
           </p>
           <div className="text-brand text-5xl font-black mt-4">%95</div>
           <div className="mt-8 flex flex-wrap justify-center gap-3">

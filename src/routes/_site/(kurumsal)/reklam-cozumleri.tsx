@@ -9,8 +9,8 @@ const userDesk = { url: "/reklam-desk.jpg" };
 export const Route = createFileRoute("/_site/(kurumsal)/reklam-cozumleri")({
   head: () => ({
     ...seoHead({
-      title: "Reklam Çözümleri — itirazvar",
-      description: "Milyonların alışveriş kararlarını aldığı itirazvar'da hedef kitlenize kolayca ulaşın. Premium, hedefli ve programatik reklam modelleri.",
+      title: "Reklam Çözümleri — tepkimvar",
+      description: "Milyonların alışveriş kararlarını aldığı tepkimvar'da hedef kitlenize kolayca ulaşın. Premium, hedefli ve programatik reklam modelleri.",
       path: "/reklam-cozumleri",
     }),
   }),
@@ -62,7 +62,7 @@ function AdsPage() {
         <div className="px-6 sm:px-10 lg:px-16 py-16 lg:py-24 bg-paper">
           <h1 className="font-display font-black text-[36px] sm:text-[46px] leading-[1.05] tracking-[-0.02em] text-ink">
             Milyonların alışveriş kararlarını aldığı{" "}
-            <span className="text-brand">itirazvar'da</span>{" "}
+            <span className="text-brand">tepkimvar'da</span>{" "}
             hedef kitlenize kolayca ulaşın.
           </h1>
           <p className="mt-5 text-[14.5px] text-navy leading-relaxed max-w-md">
@@ -109,7 +109,7 @@ function AdsPage() {
             <div className="absolute -bottom-4 left-8 size-16 rounded-full bg-brand" />
           </div>
           <div>
-            <h2 className="font-display font-bold text-[24px] text-ink">itirazvar Reklamları Neden Tercih Ediliyor?</h2>
+            <h2 className="font-display font-bold text-[24px] text-ink">tepkimvar Reklamları Neden Tercih Ediliyor?</h2>
             <p className="mt-4 text-[14px] text-navy leading-relaxed">
               Ziyaretçilerin %88'i satın alma kararı vermeden önce markayla ilgili tüketici deneyimi arar.
               Etkili bir şekilde şikayetleri ve teşekkürleri yöneterek marka itibarınızı güçlendirin.
@@ -146,7 +146,7 @@ function AdsPage() {
                     ))}
                   </ul>
                   <div className="mt-6">
-                    <a href="https://t.me/itirazvarplus" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-full bg-brand text-brand-foreground px-5 h-10 text-[13px] font-semibold">
+                    <a href="https://t.me/tepkimvarplus" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-full bg-brand text-brand-foreground px-5 h-10 text-[13px] font-semibold">
                       İletişime Geç <ArrowRight className="size-4" />
                     </a>
                   </div>
@@ -160,9 +160,9 @@ function AdsPage() {
       {/* Purple CTA */}
       <section className="bg-[oklch(0.62_0.18_285)] text-white">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 py-16 text-center">
-          <h2 className="font-display font-bold text-[22px]">itirazvar Pro üyelik ile hem memnuniyeti hem de müşterilerinizi artırın.</h2>
+          <h2 className="font-display font-bold text-[22px]">tepkimvar Pro üyelik ile hem memnuniyeti hem de müşterilerinizi artırın.</h2>
           <p className="mt-3 text-[13px] text-white/85">Çözüm sunan markalar arasına katılmak için Pro üyelik özelliklerinden faydalanın.</p>
-          <a href="https://t.me/itirazvarplus" target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex items-center gap-2 rounded-full bg-card text-[oklch(0.62_0.18_285)] px-6 h-11 text-[13px] font-semibold">
+          <a href="https://t.me/tepkimvarplus" target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex items-center gap-2 rounded-full bg-card text-[oklch(0.62_0.18_285)] px-6 h-11 text-[13px] font-semibold">
             Pro Üyelik için İletişime Geç
           </a>
         </div>

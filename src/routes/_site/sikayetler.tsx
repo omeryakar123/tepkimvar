@@ -26,7 +26,7 @@ export const Route = createFileRoute("/_site/sikayetler")({
   },
   head: ({ loaderData }) => {
     const total = loaderData?.first?.total ?? 0;
-    const title = "Şikayetler — Güncel Müşteri Şikayetleri | itirazvar";
+    const title = "Şikayetler — Güncel Müşteri Şikayetleri | tepkimvar";
     const description = clamp(
       `Türkiye'nin en güncel ${total > 0 ? total + " " : ""}müşteri şikayeti. Kategoriye, duruma ve markaya göre filtreleyin; marka yanıtlarını ve çözüm süreçlerini takip edin.`,
       155,

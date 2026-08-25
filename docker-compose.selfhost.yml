@@ -1,4 +1,4 @@
-# itirazvar — Coolify'SIZ self-host (tek sunucu, docker compose).
+# tepkimvar — Coolify'SIZ self-host (tek sunucu, docker compose).
 # Kullanım:  cp .env.selfhost.example .env.selfhost  ->  doldur  ->
 #   docker compose -f docker-compose.selfhost.yml --env-file .env.selfhost up -d --build
 #
@@ -33,7 +33,7 @@ services:
       S3_BUCKET: "itirazvar"
       S3_REGION: "us-east-1"
       RESEND_API_KEY: "${RESEND_API_KEY:-}"
-      EMAIL_FROM: "itirazvar <noreply@${DOMAIN}>"
+      EMAIL_FROM: "tepkimvar <noreply@${DOMAIN}>"
       GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID:-}"
       GOOGLE_CLIENT_SECRET: "${GOOGLE_CLIENT_SECRET:-}"
 

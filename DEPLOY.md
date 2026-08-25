@@ -1,4 +1,4 @@
-# itirazvar — Coolify Deploy Rehberi
+# tepkimvar — Coolify Deploy Rehberi
 
 Uygulama: **TanStack Start + Nitro (node-server) + Drizzle/Postgres + BetterAuth + S3/MinIO**.
 Build ve migration `Dockerfile` içinde otomatik; sen sadece servisleri ve env'leri kurarsın.
@@ -14,7 +14,7 @@ Build ve migration `Dockerfile` içinde otomatik; sen sadece servisleri ve env'l
 ## 2. Uygulama servisi ayarı
 - **Build Pack:** Dockerfile (repo kökündeki `Dockerfile` otomatik bulunur).
 - **Port:** `3000` (Nitro node-server bunu dinler).
-- **Domain:** `itirazvar.com` bağla, Coolify otomatik HTTPS (Let's Encrypt) verir.
+- **Domain:** `tepkimvar.com` bağla, Coolify otomatik HTTPS (Let's Encrypt) verir.
 - **Health check path:** `/robots.txt` (hafif, hızlı 200 döner).
 
 ## 3. Environment Variables (Coolify → Environment)
@@ -23,10 +23,10 @@ Build ve migration `Dockerfile` içinde otomatik; sen sadece servisleri ve env'l
 ```
 DATABASE_URL=postgresql://...        # Coolify Postgres servisinden
 BETTER_AUTH_SECRET=<openssl rand -base64 32 ile ÜRET>
-BETTER_AUTH_URL=https://itirazvar.com
-TRUSTED_ORIGINS=https://itirazvar.com
-SITE_URL=https://itirazvar.com
-VITE_SITE_URL=https://itirazvar.com
+BETTER_AUTH_URL=https://tepkimvar.com
+TRUSTED_ORIGINS=https://tepkimvar.com
+SITE_URL=https://tepkimvar.com
+VITE_SITE_URL=https://tepkimvar.com
 INTERNAL_API_URL=http://localhost:3000
 PORT=3000
 S3_ENDPOINT=<minio/r2 endpoint>
@@ -46,7 +46,7 @@ GOOGLE_CLIENT_ID=<...>
 GOOGLE_CLIENT_SECRET=<...>
 VITE_GOOGLE_ENABLED=true
 ```
-Google Cloud Console → OAuth client → redirect URI: `https://itirazvar.com/api/auth/callback/google`
+Google Cloud Console → OAuth client → redirect URI: `https://tepkimvar.com/api/auth/callback/google`
 
 ## 4. Deploy
 1. Repo'yu Coolify'a bağla (GitHub veya git push).
@@ -72,7 +72,7 @@ git commit && push         # Coolify redeploy -> migrate otomatik koşar
 ```
 
 ## Bağımlılıklar / dış servisler (senin sağlaman gerekenler)
-- **Domain + DNS:** `itirazvar.com` A kaydı Coolify sunucusuna.
+- **Domain + DNS:** `tepkimvar.com` A kaydı Coolify sunucusuna.
 - **Resend hesabı:** e-posta doğrulama/OTP için (domain doğrulaması gerekir).
 - **Google OAuth (ops.):** kendi Client ID/Secret'ın.
 - **S3/MinIO:** Coolify MinIO ya da Cloudflare R2 (R2 önerilir: egress ücretsiz).

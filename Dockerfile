@@ -1,4 +1,4 @@
-# itirazvar — production image (TanStack Start + Nitro node-server)
+# tepkimvar — production image (TanStack Start + Nitro node-server)
 # Çok aşamalı: bun ile build, sonra ince bir bun runtime.
 
 # ---------- 1) Bağımlılıklar + build ----------

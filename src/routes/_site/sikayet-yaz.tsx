@@ -15,7 +15,7 @@ type Category = { id: string; name: string };
 export const Route = createFileRoute("/_site/sikayet-yaz")({
   head: () => ({
     ...seoHead({
-      title: "Şikayet Yaz — Sesini Duyur | itirazvar",
+      title: "Şikayet Yaz — Sesini Duyur | tepkimvar",
       description: "Yaşadığınız sorunu birkaç dakikada yazın, markadan resmi yanıt alın. Dilerseniz anonim paylaşın; çözüm sürecini adım adım takip edin.",
       path: "/sikayet-yaz",
     }),

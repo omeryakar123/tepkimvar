@@ -93,7 +93,7 @@ const THANKS = [
 const CITIES = ["İstanbul", "Ankara", "İzmir", "Bursa", "Antalya", "Adana", "Konya", "Mersin", "Gaziantep"];
 const pickStatus = () => { const r = Math.random(); return r < 0.30 ? "approved" : r < 0.60 ? "answered" : r < 0.85 ? "resolved" : "in_review"; };
 
-const users = await sql`SELECT id FROM "user" WHERE email LIKE ${"%@demo.itirazvarplus.com"}`;
+const users = await sql`SELECT id FROM "user" WHERE email LIKE ${"%@demo.tepkimvarplus.com"}`;
 const uids = users.map((u) => u.id);
 
 const brands = await sql`

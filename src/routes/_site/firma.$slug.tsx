@@ -57,14 +57,14 @@ export const Route = createFileRoute("/_site/firma/$slug")({
     const path = `/firma/${params.slug}`;
     if (!b) {
       return seoHead({
-        title: "Firma bulunamadı — itirazvar",
+        title: "Firma bulunamadı — tepkimvar",
         description: "Aradığınız firma bulunamadı.",
         path,
         noindex: true,
       });
     }
     const c = b.company;
-    const title = `${c.name} Şikayetleri ve Çözümleri — itirazvar`;
+    const title = `${c.name} Şikayetleri ve Çözümleri — tepkimvar`;
     const description = clamp(
       b.raw.seo_description ??
         (c.about

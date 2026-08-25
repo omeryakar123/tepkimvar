@@ -19,7 +19,7 @@ async function main() {
   await db.delete(schema.complaints);
   await db.delete(schema.brands);
   await db.delete(schema.categories);
-  await db.delete(schema.user).where(eq(schema.user.email, "seed@itirazvar.local"));
+  await db.delete(schema.user).where(eq(schema.user.email, "seed@tepkimvar.local"));
 
   // --- Kategoriler ---
   const cats = [
@@ -46,7 +46,7 @@ async function main() {
   // --- Seed kullanıcı + profil ---
   const [seedUser] = await db
     .insert(schema.user)
-    .values({ name: "Test Kullanıcı", email: "seed@itirazvar.local", emailVerified: true })
+    .values({ name: "Test Kullanıcı", email: "seed@tepkimvar.local", emailVerified: true })
     .returning();
   await db.insert(schema.profiles).values({
     id: seedUser.id,

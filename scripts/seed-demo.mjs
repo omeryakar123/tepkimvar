@@ -81,7 +81,7 @@ async function main() {
   // 2) Demo kullanıcılar (user + profiles), yoksa oluştur
   const userIds = [];
   for (const [full, uname] of NAMES) {
-    const email = `${uname}@demo.itirazvarplus.com`;
+    const email = `${uname}@demo.tepkimvarplus.com`;
     let [u] = await sql`SELECT id FROM "user" WHERE email=${email}`;
     if (!u) {
       [u] = await sql`INSERT INTO "user" (name, email, email_verified) VALUES (${full}, ${email}, true) RETURNING id`;

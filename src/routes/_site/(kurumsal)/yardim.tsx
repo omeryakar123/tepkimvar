@@ -11,7 +11,7 @@ const groups = [
       { q: "Nasıl üye olurum?", a: "Sağ üstteki 'Giriş / Üye Ol' bağlantısından e-postanızla saniyeler içinde üye olabilirsiniz. Google hesabınızla da giriş yapabilirsiniz." },
       { q: "Şifremi unuttum, ne yapmalıyım?", a: "Giriş ekranındaki 'Şifremi Unuttum' bağlantısını kullanın; e-postanıza 6 haneli doğrulama kodu gönderilir." },
       { q: "Üyelik ücretli mi?", a: "Hayır. Şikayet yazmak, yorum yapmak ve markaları puanlamak tamamen ücretsizdir." },
-      { q: "Hesabımı nasıl silerim?", a: "Profil sayfanızdaki ayarlardan hesabınızı kapatabilir veya iletisim@itirazvarplus.com adresine yazarak silinmesini talep edebilirsiniz." },
+      { q: "Hesabımı nasıl silerim?", a: "Profil sayfanızdaki ayarlardan hesabınızı kapatabilir veya iletisim@tepkimvarplus.com adresine yazarak silinmesini talep edebilirsiniz." },
     ],
   },
   {
@@ -49,9 +49,9 @@ const groups = [
 export const Route = createFileRoute("/_site/(kurumsal)/yardim")({
   head: () => ({
     ...seoHead({
-      title: "Yardım ve SSS — itirazvar",
+      title: "Yardım ve SSS — tepkimvar",
       description:
-        "itirazvar yardım merkezi: üyelik, şikayet yazma, çözüm süreci ve marka hesapları hakkında sıkça sorulan sorular ve cevapları.",
+        "tepkimvar yardım merkezi: üyelik, şikayet yazma, çözüm süreci ve marka hesapları hakkında sıkça sorulan sorular ve cevapları.",
       path: "/yardim",
     }),
     scripts: [

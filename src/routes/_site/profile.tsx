@@ -10,7 +10,7 @@ import { PhoneInput } from "@/components/phone-input";
 import { toE164Tr, fromE164 } from "@/lib/phone";
 
 export const Route = createFileRoute("/_site/profile")({
-  head: () => ({ meta: [{ title: "Profilim — itirazvar" }] }),
+  head: () => ({ meta: [{ title: "Profilim — tepkimvar" }] }),
   validateSearch: (s: Record<string, unknown>): { sekme?: "mesajlar" } => ({
     sekme: s.sekme === "mesajlar" ? "mesajlar" : undefined,
   }),

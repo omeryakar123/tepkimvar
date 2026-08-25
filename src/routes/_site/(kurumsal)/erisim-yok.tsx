@@ -5,7 +5,7 @@ import { seoHead } from "@/lib/seo";
 export const Route = createFileRoute("/_site/(kurumsal)/erisim-yok")({
   head: () => ({
     ...seoHead({
-      title: "Erişim Yok — itirazvar",
+      title: "Erişim Yok — tepkimvar",
       description: "Bu sayfayı görüntülemek için yetkiniz yok.",
       path: "/erisim-yok",
       noindex: true,

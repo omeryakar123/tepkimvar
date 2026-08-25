@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_site/blog/")({
     await fetchBlogList(deps.sayfa, PAGE_SIZE).catch(() => ({ items: [], total: 0 })),
   head: ({ loaderData }) => ({
     ...seoHead({
-      title: "Blog — Tüketici Hakları ve Rehberler | itirazvar",
+      title: "Blog — Tüketici Hakları ve Rehberler | tepkimvar",
       description: clamp(
         `Tüketici hakları, şikayet süreçleri ve marka rehberleri. ${loaderData?.total ?? 0} yazı.`,
         155,

@@ -4,7 +4,7 @@ import { seoHead } from "@/lib/seo";
 const SECTIONS: { h: string; p: string }[] = [
   {
     h: "1. Taraflar ve Kapsam",
-    p: "Bu koşullar, itirazvar platformunu (\"Platform\") kullanan tüm üyeler ve ziyaretçiler için geçerlidir. Platformu kullanarak bu koşulları okuduğunuzu ve kabul ettiğinizi beyan etmiş olursunuz.",
+    p: "Bu koşullar, tepkimvar platformunu (\"Platform\") kullanan tüm üyeler ve ziyaretçiler için geçerlidir. Platformu kullanarak bu koşulları okuduğunuzu ve kabul ettiğinizi beyan etmiş olursunuz.",
   },
   {
     h: "2. Üyelik",
@@ -24,24 +24,24 @@ const SECTIONS: { h: string; p: string }[] = [
   },
   {
     h: "6. Fikri Mülkiyet",
-    p: "Platformun tasarımı, yazılımı ve markası itirazvar'a aittir. Kullanıcılar, yayımladıkları içeriğin platformda görüntülenmesi için itirazvar'a münhasır olmayan kullanım hakkı tanır.",
+    p: "Platformun tasarımı, yazılımı ve markası tepkimvar'a aittir. Kullanıcılar, yayımladıkları içeriğin platformda görüntülenmesi için tepkimvar'a münhasır olmayan kullanım hakkı tanır.",
   },
   {
     h: "7. İçerik Kaldırma ve İtiraz",
-    p: "Hakkınızda hukuka aykırı içerik bulunduğunu düşünüyorsanız, ilgili içeriği 'Raporla' özelliğiyle veya iletisim@itirazvarplus.com üzerinden bildirebilirsiniz. Bildirimler moderasyon ekibince incelenir.",
+    p: "Hakkınızda hukuka aykırı içerik bulunduğunu düşünüyorsanız, ilgili içeriği 'Raporla' özelliğiyle veya iletisim@tepkimvarplus.com üzerinden bildirebilirsiniz. Bildirimler moderasyon ekibince incelenir.",
   },
   {
     h: "8. Değişiklikler",
-    p: "itirazvar bu koşulları güncelleyebilir. Güncel sürüm her zaman bu sayfada yayınlanır; önemli değişiklikler üyelere ayrıca duyurulabilir.",
+    p: "tepkimvar bu koşulları güncelleyebilir. Güncel sürüm her zaman bu sayfada yayınlanır; önemli değişiklikler üyelere ayrıca duyurulabilir.",
   },
 ];
 
 export const Route = createFileRoute("/_site/(kurumsal)/kullanim-kosullari")({
   head: () => ({
     ...seoHead({
-      title: "Kullanım Koşulları — itirazvar",
+      title: "Kullanım Koşulları — tepkimvar",
       description:
-        "itirazvar Kullanım Koşulları: üyelik kuralları, şikayet içerik standartları, moderasyon, marka yanıtları ve sorumluluklar.",
+        "tepkimvar Kullanım Koşulları: üyelik kuralları, şikayet içerik standartları, moderasyon, marka yanıtları ve sorumluluklar.",
       path: "/kullanim-kosullari",
     }),
   }),

@@ -35,7 +35,7 @@ export const Route = createFileRoute("/_site/")({
   },
   head: () => {
     const base = seoHead({
-      title: "itirazvar — Şikayetini Yaz, Firmadan Resmi Yanıt Al",
+      title: "tepkimvar — Şikayetini Yaz, Firmadan Resmi Yanıt Al",
       description:
         "Türkiye'nin bağımsız şikayet platformu. Marka ve hizmetler hakkındaki gerçek deneyimleri keşfet, şikayetini paylaş, firmalardan resmi yanıt ve çözüm al.",
       path: "/",
@@ -48,15 +48,15 @@ export const Route = createFileRoute("/_site/")({
         jsonLd({
           "@context": "https://schema.org",
           "@type": "Organization",
-          name: "itirazvar",
+          name: "tepkimvar",
           url: absUrl("/"),
-          logo: absUrl("/itiraz1.png"),
-          sameAs: ["https://t.me/itirazvarplus"],
+          logo: absUrl("/tepkim1.png"),
+          sameAs: ["https://t.me/tepkimvarplus"],
         }),
         jsonLd({
           "@context": "https://schema.org",
           "@type": "WebSite",
-          name: "itirazvar",
+          name: "tepkimvar",
           url: absUrl("/"),
           potentialAction: {
             "@type": "SearchAction",
@@ -398,14 +398,14 @@ function Home() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-16 grid md:grid-cols-2 gap-10 items-center">
           <div>
             <div className="inline-flex items-center gap-2 text-[12px] font-bold uppercase tracking-wider text-brand mb-3">
-              <Award className="size-4" /> itirazvar Ödülleri
+              <Award className="size-4" /> tepkimvar Ödülleri
             </div>
             <h2 className="font-display font-black text-[32px] text-ink leading-tight tracking-tight">
               Çözüme değer verenler ödüllendirilir.
             </h2>
             <p className="mt-3 text-[14px] text-navy leading-relaxed max-w-md">
               Her yıl, en yüksek çözüm oranına sahip markaları ve en hızlı yanıt
-              veren firmaları itirazvar Ödülleri ile taçlandırıyoruz.
+              veren firmaları tepkimvar Ödülleri ile taçlandırıyoruz.
             </p>
             <Link
               to="/markalar"
@@ -431,7 +431,7 @@ function Home() {
       <section>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-16">
           <h2 className="text-center font-display font-bold text-[24px] text-ink mb-10">
-            Sayılarla itirazvar
+            Sayılarla tepkimvar
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
@@ -582,7 +582,7 @@ function Home() {
               className="relative w-full max-w-[380px]"
             >
               <motion.img
-                src="/itiraz1.png"
+                src="/tepkim1.png"
                 alt="Tereddüt Yok — markanın skorunu sorgula"
                 className="w-full h-auto rounded-3xl ring-1 ring-rule shadow-lift"
                 animate={reduceMotion ? undefined : { y: [0, -8, 0] }}

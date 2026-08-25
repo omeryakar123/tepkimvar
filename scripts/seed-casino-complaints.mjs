@@ -64,7 +64,7 @@ const brands = await sql`
   ORDER BY b.slug`;
 console.log(`Hedef marka: ${brands.length}`);
 
-const users = await sql`SELECT id FROM "user" WHERE email LIKE ${"%@demo.itirazvarplus.com"}`;
+const users = await sql`SELECT id FROM "user" WHERE email LIKE ${"%@demo.tepkimvarplus.com"}`;
 if (!users.length) { console.error("Demo kullanıcı yok — önce seed-demo çalıştırılmalı"); process.exit(1); }
 const uids = users.map((u) => u.id);
 

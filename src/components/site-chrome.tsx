@@ -16,7 +16,7 @@ export function SiteNav() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 h-16 flex items-center gap-6">
         <Link to="/" className="flex items-center shrink-0">
           <span className="font-display font-black text-[22px] tracking-tight text-ink leading-none">
-            itirazvar<span className="text-brand">.</span>
+            tepkimvar<span className="text-brand">.</span>
           </span>
         </Link>
 
@@ -125,7 +125,7 @@ export function SiteFooter() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 py-14">
         <div className="flex items-center justify-between mb-10">
           <Link to="/" className="font-display font-black text-[22px] tracking-tight text-paper dark:text-ink">
-            itirazvar<span className="text-brand">.</span>
+            tepkimvar<span className="text-brand">.</span>
           </Link>
           <div className="hidden md:flex items-center gap-4 text-[13px]">
             {topLinks.map(([t, to]) => (
@@ -155,7 +155,7 @@ export function SiteFooter() {
           ))}
         </div>
         <div className="mt-12 pt-6 border-t border-paper/10 dark:border-rule flex flex-col md:flex-row gap-3 justify-between text-[12px] text-paper/60 dark:text-navy-mid">
-          <span>© 2026 itirazvar — Tüm hakları saklıdır</span>
+          <span>© 2026 tepkimvar — Tüm hakları saklıdır</span>
           <div className="flex gap-6">
             <Link to="/kullanim-kosullari" className="hover:text-paper dark:hover:text-ink">Kullanım Koşulları</Link>
             <Link to="/gizlilik" className="hover:text-paper dark:hover:text-ink">Gizlilik</Link>

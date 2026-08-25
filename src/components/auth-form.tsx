@@ -108,7 +108,7 @@ export function AuthForm({ variant = "user", initialMode = "login" }: { variant?
         <Link to="/" className="flex items-center gap-2 justify-center mb-8">
           <span className="grid place-items-center size-9 rounded-lg bg-brand text-brand-foreground font-black text-base">i</span>
           <span className="font-display font-black text-[22px] tracking-tight text-ink">
-            itirazvar<span className="text-brand">.</span>
+            tepkimvar<span className="text-brand">.</span>
           </span>
           {variant !== "user" && (
             <span className="ml-2 text-[10px] uppercase tracking-wider font-bold bg-ink text-paper dark:bg-surface dark:text-ink px-2 py-0.5 rounded-full">{t.brand}</span>
