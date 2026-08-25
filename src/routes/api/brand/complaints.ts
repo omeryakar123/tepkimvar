@@ -11,6 +11,7 @@ import {
   requireBrandAccess,
   requireUser,
 } from "@/lib/server/guard";
+import { refreshBrandAggregates } from "@/lib/server/brand-stats";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -153,6 +154,8 @@ export const Route = createFileRoute("/api/brand/complaints")({
             .set({ status, updatedAt: new Date() })
             .where(eq(schema.complaints.id, c.id));
 
+          await refreshBrandAggregates(c.brandId);
+
           await recordStatusChange({
             complaintId: c.id,
             fromStatus: c.status,
@@ -236,6 +239,10 @@ export const Route = createFileRoute("/api/brand/complaints")({
               ...firstResponse,
             })
             .where(eq(schema.complaints.id, c.id));
+
+          // İlk yanıt süresi yazıldı: markanın ortalama yanıt süresi ve
+          // bekleyen/yanıtlanan sayaçları tazelenir.
+          await refreshBrandAggregates(c.brandId);
 
           await recordStatusChange({
             complaintId: c.id,

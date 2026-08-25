@@ -15,7 +15,7 @@ import {
   Users,
   Check,
 } from "lucide-react";
-import type { Company, Complaint } from "@/lib/mock-data";
+import { formatRating, type Company, type Complaint } from "@/lib/mock-data";
 import {
   fetchBrandsList,
   fetchCategoriesWithCount,
@@ -504,7 +504,7 @@ function Home() {
                   <TrendingUp className="inline size-4 text-brand" />
                 </div>
                 <div className="text-right text-[13px] font-bold text-ink tabular-nums">
-                  {b.rating.toFixed(2)}
+                  {formatRating(b.rating, b.ratingCount)}
                 </div>
               </Link>
             ))}

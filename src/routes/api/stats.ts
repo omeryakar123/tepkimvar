@@ -1,8 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { eq, sql } from "drizzle-orm";
+import { eq, notInArray, sql } from "drizzle-orm";
 import { db, schema } from "@/db";
 
 // Public: platform istatistikleri (count sorguları).
+// Reddedilen/spam kayıtlar toplamdan düşülür — marka sayaçlarıyla aynı kural
+// (lib/server/brand-stats.ts). Aksi halde platform çözüm oranı spam kayıtlarla
+// sulanıp marka sayfalarındaki oranlarla çelişiyordu.
+const IGNORED_STATUSES = ["rejected", "spam"] as const;
 export const Route = createFileRoute("/api/stats")({
   server: {
     handlers: {
@@ -13,7 +17,10 @@ export const Route = createFileRoute("/api/stats")({
           [{ count: bTotal }],
           [{ count: uTotal }],
         ] = await Promise.all([
-          db.select({ count: sql<number>`count(*)` }).from(schema.complaints),
+          db
+            .select({ count: sql<number>`count(*)` })
+            .from(schema.complaints)
+            .where(notInArray(schema.complaints.status, IGNORED_STATUSES)),
           db
             .select({ count: sql<number>`count(*)` })
             .from(schema.complaints)

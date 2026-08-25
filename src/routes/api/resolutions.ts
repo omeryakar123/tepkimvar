@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { HttpError, errorResponse, rateLimit, requireUser } from "@/lib/server/guard";
 import { publish } from "@/lib/server/events";
 import { recordStatusChange } from "@/lib/server/history";
+import { refreshBrandAggregates } from "@/lib/server/brand-stats";
 
 // Public: bir şikayetin çözüm kaydı (varsa) — tekil ResolutionRow ya da null.
 export const Route = createFileRoute("/api/resolutions")({
@@ -56,6 +57,11 @@ export const Route = createFileRoute("/api/resolutions")({
             .limit(1);
           if (!c) throw new HttpError(404, "Şikayet bulunamadı");
           if (c.userId !== user.id) throw new HttpError(403, "Yalnızca şikayet sahibi kapatabilir");
+          // Reddedilmiş/spam/arşiv kayıt "çözüldü" yapılamaz: aksi halde
+          // moderasyon kararı kullanıcı tarafından geçersiz kılınır ve marka
+          // ortalamasına hak edilmemiş bir puan eklenirdi.
+          if (c.status === "rejected" || c.status === "spam" || c.status === "archived")
+            throw new HttpError(409, "Bu şikayet kapatılamaz");
 
           const [existing] = await db
             .select({ id: schema.complaintResolutions.id })
@@ -77,19 +83,10 @@ export const Route = createFileRoute("/api/resolutions")({
             .set({ status: "resolved", rating, updatedAt: new Date() })
             .where(eq(schema.complaints.id, c.id));
 
-          // Puan markanın yıldızına yansır: kayan ortalama ile harmanla.
-          //   yeni_rating = (rating * rating_count + puan) / (rating_count + 1)
-          // Ayrıca çözülen sayacı ve çözüm oranı güncellenir. Tek UPDATE = atomik.
-          await db
-            .update(schema.brands)
-            .set({
-              rating: sql`round(((${schema.brands.rating} * ${schema.brands.ratingCount}) + ${rating})::numeric / (${schema.brands.ratingCount} + 1), 2)`,
-              ratingCount: sql`${schema.brands.ratingCount} + 1`,
-              complaintsResolved: sql`${schema.brands.complaintsResolved} + 1`,
-              resolutionRate: sql`least(100, round((${schema.brands.complaintsResolved} + 1)::numeric / greatest(${schema.brands.totalComplaints}, 1) * 100))::int`,
-              updatedAt: new Date(),
-            })
-            .where(eq(schema.brands.id, c.brandId));
+          // Çözüm puanı markanın yıldız ortalamasına girer; çözülen/bekleyen
+          // sayaçları ve çözüm oranı da bu markanın satırlarından yeniden
+          // hesaplanır.
+          await refreshBrandAggregates(c.brandId);
 
           await recordStatusChange({
             complaintId: c.id,

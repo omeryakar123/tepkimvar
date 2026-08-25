@@ -3,6 +3,7 @@ import { desc, eq } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { audit } from "@/lib/server/audit";
 import { HttpError, errorResponse, requireStaff } from "@/lib/server/guard";
+import { refreshBrandAggregates } from "@/lib/server/brand-stats";
 
 /** Super admin escalation incelemesi. Personel dışına kapalı. */
 
@@ -79,6 +80,7 @@ export const Route = createFileRoute("/api/admin/escalations")({
             .select({
               id: schema.complaintEscalations.id,
               complaintId: schema.complaintEscalations.complaintId,
+              brandId: schema.complaintEscalations.brandId,
             })
             .from(schema.complaintEscalations)
             .where(eq(schema.complaintEscalations.id, b.id))
@@ -132,6 +134,9 @@ export const Route = createFileRoute("/api/admin/escalations")({
               .set({ status: "in_review", updatedAt: new Date() })
               .where(eq(schema.complaints.id, cId));
           }
+
+          // Silme/spam/arşiv gibi aksiyonlar şikayeti sayaçlardan çıkarır.
+          await refreshBrandAggregates(esc.brandId);
 
           await audit(request, user.id, {
             action: `escalation.${action}`,

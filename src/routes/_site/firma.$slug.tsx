@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { ComplaintCard } from "@/components/cards";
 import {
+  formatRating,
   formatResponseTime,
   type Company,
   type Complaint,
@@ -90,14 +91,16 @@ export const Route = createFileRoute("/_site/firma/$slug")({
             : {}),
           ...(c.website ? { sameAs: [c.website] } : {}),
           ...(c.about ? { description: clamp(c.about, 300) } : {}),
-          ...(c.verified && c.rating > 0
+          // aggregateRating yalnızca GERÇEK oy varsa yayınlanır. Oy sayısı
+          // şikayet sayısından türetilmez; ikisi farklı şeylerdir.
+          ...((b.raw.rating_count ?? 0) > 0 && c.rating > 0
             ? {
                 aggregateRating: {
                   "@type": "AggregateRating",
                   ratingValue: c.rating,
                   bestRating: 5,
                   worstRating: 1,
-                  ratingCount: b.raw.rating_count ?? c.totalComplaints ?? 1,
+                  ratingCount: b.raw.rating_count,
                 },
               }
             : {}),
@@ -148,8 +151,10 @@ function CompanyPage() {
       });
       if (res.ok) {
         const d = (await res.json()) as { rating: number | null };
-        if (d.rating != null) setMyRating(d.rating);
+        setMyRating(d.rating ?? 0);
       }
+    } else {
+      setMyRating(0);
     }
   }
   useEffect(() => {
@@ -198,6 +203,21 @@ function CompanyPage() {
       setMyRating(value);
       load();
     }
+  }
+
+  async function removeRating() {
+    if (!raw) return;
+    const res = await fetch(`/api/brand-ratings?brandId=${raw.id}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+    if (!res.ok) {
+      toast.error("Oy kaldırılamadı");
+      return;
+    }
+    toast.success("Oyunuz kaldırıldı");
+    setMyRating(0);
+    load();
   }
 
   async function uploadBrandImage(file: File, kind: "logo" | "cover") {
@@ -403,8 +423,18 @@ function CompanyPage() {
                     ))}
                   </div>
                   <span className="text-[12px] text-navy-mid">
-                    {myRating ? "Oyunuz kaydedildi" : "Bu firmaya oy verin"}
+                    {(raw.rating_count ?? 0) > 0
+                      ? `${formatRating(raw.rating, raw.rating_count)} / 5 · ${raw.rating_count} oy`
+                      : "Bu firmaya ilk oyu siz verin"}
                   </span>
+                  {myRating > 0 && (
+                    <button
+                      onClick={removeRating}
+                      className="text-[12px] text-navy-mid underline hover:text-brand"
+                    >
+                      Oyumu kaldır
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div className="mt-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-warning-soft text-warning text-[12px] ring-1 ring-warning/30">
@@ -452,9 +482,7 @@ function CompanyPage() {
             {[
               {
                 label: "Puan",
-                value: company.verified
-                  ? Number(raw.rating ?? 0).toFixed(1)
-                  : "—",
+                value: formatRating(raw.rating, raw.rating_count),
                 tone: "text-brand",
               },
               {
@@ -473,7 +501,7 @@ function CompanyPage() {
               },
               {
                 label: "Ort. Yanıt",
-                value: formatResponseTime(raw.avg_response_minutes ?? 60),
+                value: formatResponseTime(raw.avg_response_minutes),
               },
             ].map((s) => (
               <div key={s.label} className="bg-surface/60 rounded-xl p-3">
@@ -609,7 +637,7 @@ function CompanyPage() {
                 />
                 <Row
                   label="Ortalama yanıt süresi"
-                  value={formatResponseTime(raw.avg_response_minutes ?? 60)}
+                  value={formatResponseTime(raw.avg_response_minutes)}
                 />
                 <Row
                   label="Toplam şikayet"

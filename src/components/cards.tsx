@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { BadgeCheck, Eye, MessageSquare, ChevronRight, Clock } from "lucide-react";
 import type { Company, Complaint } from "@/lib/mock-data";
-import { formatResponseTime, statusClasses, statusLabel } from "@/lib/mock-data";
+import { formatCompactCount, formatRating, formatResponseTime, statusClasses, statusLabel } from "@/lib/mock-data";
 import { brandLogoUrl } from "@/lib/logo";
 
 const avatarPalette = [
@@ -62,8 +62,10 @@ export function CompanyCard({ company }: { company: Company }) {
           <p className="text-[12px] text-navy-mid">{company.categoryName}</p>
         </div>
         <div className="text-right shrink-0">
-          <div className="font-bold text-lg leading-none text-ink">{company.rating.toFixed(1)}</div>
-          <div className="text-[10px] uppercase tracking-wider text-navy-mid mt-1">/ 5.0</div>
+          <div className="font-bold text-lg leading-none text-ink">{formatRating(company.rating, company.ratingCount)}</div>
+          <div className="text-[10px] uppercase tracking-wider text-navy-mid mt-1">
+            {company.ratingCount > 0 ? `${company.ratingCount} oy` : "puan yok"}
+          </div>
         </div>
       </div>
 
@@ -74,7 +76,7 @@ export function CompanyCard({ company }: { company: Company }) {
         </div>
         <div className="border-x border-rule">
           <div className="text-[10px] uppercase tracking-wider text-navy-mid">Şikayet</div>
-          <div className="font-bold text-[13px] mt-0.5 tabular-nums">{(company.totalComplaints / 1000).toFixed(1)}k</div>
+          <div className="font-bold text-[13px] mt-0.5 tabular-nums">{formatCompactCount(company.totalComplaints)}</div>
         </div>
         <div>
           <div className="text-[10px] uppercase tracking-wider text-navy-mid">Yanıt</div>

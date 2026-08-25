@@ -4,6 +4,7 @@ import { db, schema } from "@/db";
 import { toDbComplaint, type BrandNested, type DbComplaintShape } from "@/lib/db-shapes";
 import { HttpError, errorResponse, rateLimit, requireUser } from "@/lib/server/guard";
 import { recordStatusChange } from "@/lib/server/history";
+import { refreshBrandAggregates } from "@/lib/server/brand-stats";
 import { moderateAndScore } from "@/lib/server/moderation";
 
 // Public: şikayet listesi. RLS gitti; moderasyon filtresi BURADA zorlanıyor.
@@ -196,15 +197,9 @@ export const Route = createFileRoute("/api/complaints")({
             note: mod.ok ? "Otomatik kontrolden geçti, yayınlandı" : "Ön kontrol uyarı verdi, incelemeye alındı",
           });
 
-          // Marka sayacı: toplam şikayet +1, çözüm oranını yeni toplama göre tazele.
-          await db
-            .update(schema.brands)
-            .set({
-              totalComplaints: sql`${schema.brands.totalComplaints} + 1`,
-              resolutionRate: sql`least(100, round(${schema.brands.complaintsResolved}::numeric / (${schema.brands.totalComplaints} + 1) * 100))::int`,
-              updatedAt: new Date(),
-            })
-            .where(eq(schema.brands.id, b.brandId));
+          // Marka sayaçları (toplam/bekleyen/çözüm oranı) şikayet satırlarından
+          // yeniden hesaplanır.
+          await refreshBrandAggregates(b.brandId);
 
           // Şüpheliyse moderatörlerin göreceği kuyruğa ekle.
           if (!mod.ok) {

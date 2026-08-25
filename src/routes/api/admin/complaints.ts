@@ -5,6 +5,7 @@ import { recordStatusChange } from "@/lib/server/history";
 import { notifyComplaintOwner } from "@/lib/server/notify";
 import { audit } from "@/lib/server/audit";
 import { HttpError, errorResponse, requireStaff } from "@/lib/server/guard";
+import { refreshBrandAggregates } from "@/lib/server/brand-stats";
 
 // schema.complaintStatus enum ile birebir. İstemciden gelen değer BURADA doğrulanır.
 const STATUSES = [
@@ -77,7 +78,7 @@ export const Route = createFileRoute("/api/admin/complaints")({
           if (!STATUSES.includes(b.status as Status)) throw new HttpError(400, "Geçersiz durum");
 
           const [before] = await db
-            .select({ status: schema.complaints.status })
+            .select({ status: schema.complaints.status, brandId: schema.complaints.brandId })
             .from(schema.complaints)
             .where(eq(schema.complaints.id, b.id))
             .limit(1);
@@ -87,6 +88,8 @@ export const Route = createFileRoute("/api/admin/complaints")({
             .update(schema.complaints)
             .set({ status: b.status as Status, updatedAt: new Date() })
             .where(eq(schema.complaints.id, b.id));
+
+          await refreshBrandAggregates(before.brandId);
 
           await recordStatusChange({
             complaintId: b.id,
@@ -126,8 +129,11 @@ export const Route = createFileRoute("/api/admin/complaints")({
           const [deleted] = await db
             .delete(schema.complaints)
             .where(eq(schema.complaints.id, b.id))
-            .returning({ id: schema.complaints.id });
+            .returning({ id: schema.complaints.id, brandId: schema.complaints.brandId });
           if (!deleted) throw new HttpError(404, "Şikayet bulunamadı");
+
+          // Silinen şikayet marka sayaçlarından da düşmeli.
+          await refreshBrandAggregates(deleted.brandId);
 
           await audit(request, user.id, {
             action: "complaint.delete",

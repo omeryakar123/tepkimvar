@@ -5,6 +5,7 @@ import { HttpError, errorResponse, rateLimit, requireUser } from "@/lib/server/g
 import { notifyComplaintOwner } from "@/lib/server/notify";
 import { publish } from "@/lib/server/events";
 import { recordStatusChange } from "@/lib/server/history";
+import { refreshBrandAggregates } from "@/lib/server/brand-stats";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -75,7 +76,7 @@ export const Route = createFileRoute("/api/complaint-replies")({
           if (body.length < 2) throw new HttpError(400, "Yanıt çok kısa");
 
           const [c] = await db
-            .select({ id: schema.complaints.id, userId: schema.complaints.userId, status: schema.complaints.status })
+            .select({ id: schema.complaints.id, userId: schema.complaints.userId, status: schema.complaints.status, brandId: schema.complaints.brandId })
             .from(schema.complaints)
             .where(eq(schema.complaints.id, b.complaintId))
             .limit(1);
@@ -104,6 +105,7 @@ export const Route = createFileRoute("/api/complaint-replies")({
               actorRole: "user",
               note: "Kullanıcı cevap yazdı",
             });
+            await refreshBrandAggregates(c.brandId);
           }
 
           await publish({ type: "complaint", complaintId: c.id });

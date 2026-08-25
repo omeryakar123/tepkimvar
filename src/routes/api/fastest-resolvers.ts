@@ -11,10 +11,17 @@ export const Route = createFileRoute("/api/fastest-resolvers")({
         const url = new URL(request.url);
         const limit = Number(url.searchParams.get("limit")) || 5;
 
+        // avg_response_minutes = 0 "ölçüm yok" demek; sıralamada en hızlı gibi
+        // görünmemesi için ölçümü olmayan markalar dışarıda bırakılır.
         const rows = await db
           .select()
           .from(schema.brands)
-          .where(and(gt(schema.brands.totalComplaints, 0)))
+          .where(
+            and(
+              gt(schema.brands.totalComplaints, 0),
+              gt(schema.brands.avgResponseMinutes, 0),
+            ),
+          )
           .orderBy(asc(schema.brands.avgResponseMinutes))
           .limit(limit);
 

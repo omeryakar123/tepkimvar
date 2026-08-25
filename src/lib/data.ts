@@ -123,11 +123,13 @@ export function brandToCompany(b: DbBrand, categoryName = "Genel", categorySlug 
     category: (categorySlug as Company["category"]) ?? "diger",
     categoryName,
     // Puan doğrulanmamış markada da gösterilir (yalnızca OY VERME widget'ı
-    // verified şartına bağlı — firma.$slug.tsx). Aksi halde listeler 0.00 dolar.
+    // verified şartına bağlı — firma.$slug.tsx). ratingCount 0 iken puan
+    // gösterilmez ("—"), çünkü ortalama henüz tanımsızdır.
     rating: Number(b.rating ?? 0),
+    ratingCount: b.rating_count ?? 0,
     totalComplaints: b.total_complaints ?? 0,
     resolutionRate: b.resolution_rate ?? 0,
-    avgResponseMinutes: b.avg_response_minutes ?? 60,
+    avgResponseMinutes: b.avg_response_minutes ?? 0,
     verified: !!b.verified,
     premium: !!b.premium,
     about: b.about ?? "",

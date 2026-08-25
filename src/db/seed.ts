@@ -4,6 +4,7 @@
  */
 import { eq } from "drizzle-orm";
 import { db, schema } from "./index";
+import { recomputeAllBrandAggregates } from "@/lib/server/brand-stats";
 
 const now = new Date();
 const daysAgo = (d: number) => new Date(now.getTime() - d * 86400_000);
@@ -33,12 +34,15 @@ async function main() {
   const catBySlug = Object.fromEntries(insertedCats.map((c) => [c.slug, c.id]));
 
   // --- Markalar ---
+  // Puan ve sayaçlar BURADA YAZILMAZ: seed sonunda gerçek satırlardan
+  // (oylar, çözüm notları, şikayetler) hesaplanır. Aksi halde ekrandaki
+  // ortalama hiçbir veriye dayanmayan bir sayı olurdu.
   const brands = [
-    { slug: "trendyol", name: "Trendyol", categoryId: catBySlug["e-ticaret"], city: "İstanbul", verified: true, premium: true, rating: "3.80", ratingCount: 1240, totalComplaints: 1240, complaintsResolved: 980, resolutionRate: 79, avgResponseMinutes: 90, about: "Türkiye'nin önde gelen e-ticaret platformu." },
-    { slug: "hepsiburada", name: "Hepsiburada", categoryId: catBySlug["e-ticaret"], city: "İstanbul", verified: true, premium: false, rating: "3.50", ratingCount: 860, totalComplaints: 860, complaintsResolved: 600, resolutionRate: 70, avgResponseMinutes: 120, about: "E-ticaret pazaryeri." },
-    { slug: "turkcell", name: "Turkcell", categoryId: catBySlug["telekomunikasyon"], city: "İstanbul", verified: true, premium: false, rating: "3.20", ratingCount: 540, totalComplaints: 540, complaintsResolved: 320, resolutionRate: 59, avgResponseMinutes: 180, about: "Mobil operatör." },
-    { slug: "aras-kargo", name: "Aras Kargo", categoryId: catBySlug["kargo"], city: "İstanbul", verified: false, premium: false, rating: "2.90", ratingCount: 410, totalComplaints: 410, complaintsResolved: 210, resolutionRate: 51, avgResponseMinutes: 240, about: "Kargo ve lojistik." },
-    { slug: "yemeksepeti", name: "Yemeksepeti", categoryId: catBySlug["market"], city: "İstanbul", verified: true, premium: false, rating: "3.60", ratingCount: 320, totalComplaints: 320, complaintsResolved: 250, resolutionRate: 78, avgResponseMinutes: 60, about: "Online yemek ve market." },
+    { slug: "trendyol", name: "Trendyol", categoryId: catBySlug["e-ticaret"], city: "İstanbul", verified: true, premium: true, about: "Türkiye'nin önde gelen e-ticaret platformu." },
+    { slug: "hepsiburada", name: "Hepsiburada", categoryId: catBySlug["e-ticaret"], city: "İstanbul", verified: true, premium: false, about: "E-ticaret pazaryeri." },
+    { slug: "turkcell", name: "Turkcell", categoryId: catBySlug["telekomunikasyon"], city: "İstanbul", verified: true, premium: false, about: "Mobil operatör." },
+    { slug: "aras-kargo", name: "Aras Kargo", categoryId: catBySlug["kargo"], city: "İstanbul", verified: false, premium: false, about: "Kargo ve lojistik." },
+    { slug: "yemeksepeti", name: "Yemeksepeti", categoryId: catBySlug["market"], city: "İstanbul", verified: true, premium: false, about: "Online yemek ve market." },
   ];
   const insertedBrands = await db.insert(schema.brands).values(brands).returning();
   const brandBySlug = Object.fromEntries(insertedBrands.map((b) => [b.slug, b]));
@@ -69,6 +73,9 @@ async function main() {
   ];
 
   let seq = 1001;
+  const minutesBetween = (from: Date, to: Date) =>
+    Math.max(1, Math.round((to.getTime() - from.getTime()) / 60_000));
+
   const rows = complaints.map((c) => {
     const brand = brandBySlug[c.brand];
     const code = `SK-${seq++}`;
@@ -91,10 +98,23 @@ async function main() {
       brandResponse: c.brandResponse ?? null,
       brandResponseAt: c.brandResponseAt ?? null,
       brandResponseBy: c.brandResponse ? seedUser.id : null,
+      // Ortalama yanıt süresi bu alandan hesaplanır; yanıt varsa doldurulur.
+      firstResponseAt: c.brandResponseAt ?? null,
+      firstResponseMinutes: c.brandResponseAt
+        ? minutesBetween(c.createdAt, c.brandResponseAt)
+        : null,
       createdAt: c.createdAt,
     };
   });
-  await db.insert(schema.complaints).values(rows);
+  const insertedComplaints = await db
+    .insert(schema.complaints)
+    .values(rows)
+    .returning({
+      id: schema.complaints.id,
+      brandId: schema.complaints.brandId,
+      status: schema.complaints.status,
+      rating: schema.complaints.rating,
+    });
 
   // --- Hacim: sayfalama/filtreleri gerçekten test edebilmek için toplu kayıt ---
   // (PAGE_SIZE 12; Trendyol tek başına birkaç sayfa olacak kadar alıyor.)
@@ -124,6 +144,9 @@ async function main() {
       const status = STATUSES[i % STATUSES.length];
       const code = `SK-${seq++}`;
       const anon = i % 5 === 0;
+      const createdAt = daysAgo(2 + (i % 40));
+      const answered = status === "answered" || status === "resolved";
+      const respondedAt = answered ? daysAgo(i % 9) : null;
       bulk.push({
         userId: seedUser.id,
         brandId: brand.id,
@@ -140,17 +163,57 @@ async function main() {
         anonName: anon ? "Anonim" : null,
         publicId: code,
         shortId: code.toLowerCase(),
-        brandResponse: status === "answered" || status === "resolved" ? "Konuyu inceledik, ilgili birim sizinle iletişime geçecek." : null,
-        brandResponseAt: status === "answered" || status === "resolved" ? daysAgo(i % 9) : null,
-        brandResponseBy: status === "answered" || status === "resolved" ? seedUser.id : null,
-        createdAt: daysAgo(2 + (i % 40)),
+        brandResponse: answered ? "Konuyu inceledik, ilgili birim sizinle iletişime geçecek." : null,
+        brandResponseAt: respondedAt,
+        brandResponseBy: answered ? seedUser.id : null,
+        firstResponseAt: respondedAt,
+        // Yanıt tarihi kayıt tarihinden önce düşerse süre negatif olmasın.
+        firstResponseMinutes:
+          respondedAt && respondedAt > createdAt ? minutesBetween(createdAt, respondedAt) : null,
+        createdAt,
       });
     }
   }
-  await db.insert(schema.complaints).values(bulk);
+  const insertedBulk = await db.insert(schema.complaints).values(bulk).returning({
+    id: schema.complaints.id,
+    brandId: schema.complaints.brandId,
+    status: schema.complaints.status,
+    rating: schema.complaints.rating,
+  });
+
+  // --- Çözüm notları: markanın yıldız ortalamasının ilk kaynağı ---
+  const resolved = [...insertedComplaints, ...insertedBulk].filter(
+    (c) => c.status === "resolved" && c.rating != null,
+  );
+  if (resolved.length > 0) {
+    await db.insert(schema.complaintResolutions).values(
+      resolved.map((c) => ({
+        complaintId: c.id,
+        brandId: c.brandId,
+        userId: seedUser.id,
+        resolutionRating: c.rating as number,
+        thanksMessage: "Sorun çözüldü, ilgilenen ekibe teşekkürler.",
+      })),
+    );
+  }
+
+  // --- Marka oyları (kullanıcı başına tek oy) ---
+  const votes: Record<string, number> = {
+    trendyol: 4, hepsiburada: 3, turkcell: 3, "aras-kargo": 2, yemeksepeti: 4,
+  };
+  await db.insert(schema.brandRatings).values(
+    Object.entries(votes).map(([slug, rating]) => ({
+      brandId: brandBySlug[slug].id,
+      userId: seedUser.id,
+      rating,
+    })),
+  );
+
+  // Puan ve sayaçlar yalnızca burada, gerçek satırlardan yazılır.
+  const refreshed = await recomputeAllBrandAggregates();
 
   console.log(
-    `Bitti: ${insertedCats.length} kategori, ${insertedBrands.length} marka, ${rows.length + bulk.length} şikayet, 1 kullanıcı.`,
+    `Bitti: ${insertedCats.length} kategori, ${insertedBrands.length} marka, ${rows.length + bulk.length} şikayet, ${resolved.length} çözüm notu, 1 kullanıcı. ${refreshed} markanın puanı hesaplandı.`,
   );
   process.exit(0);
 }

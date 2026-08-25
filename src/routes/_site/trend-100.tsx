@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Trophy, TrendingUp, Star } from "lucide-react";
 import { BrandAvatar } from "@/components/cards";
-import type { Company } from "@/lib/mock-data";
+import { formatRating, type Company } from "@/lib/mock-data";
 import { fetchBrandsList, fetchCategoriesWithCount } from "@/lib/data";
 
 type Search = { kategori?: string };
@@ -116,7 +116,7 @@ function Trend100Page() {
                       <div className="text-xs text-navy-mid truncate">{b.category} · {b.totalComplaints.toLocaleString("tr-TR")} şikayet</div>
                     </div>
                     <div className="hidden sm:flex items-center gap-1 text-sm font-semibold text-ink">
-                      <Star className="size-4 text-amber-500 fill-amber-500" /> {b.rating.toFixed(1)}
+                      <Star className="size-4 text-amber-500 fill-amber-500" /> {formatRating(b.rating, b.ratingCount)}
                     </div>
                     <div className="hidden md:block text-xs text-navy-mid w-20 text-right">%{b.resolutionRate} çözüm</div>
                   </Link>
