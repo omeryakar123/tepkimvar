@@ -9,7 +9,7 @@ export const SITE_URL =
   "https://tepkimvarplus.com";
 
 /** Sayfaya özel görsel verilmediğinde kullanılan varsayılan OG görseli. */
-export const DEFAULT_OG_IMAGE = "/tepkim1.png";
+export const DEFAULT_OG_IMAGE = "/tepkim1.jpg";
 
 export function absUrl(path: string): string {
   return `${SITE_URL.replace(/\/$/, "")}${path.startsWith("/") ? path : `/${path}`}`;

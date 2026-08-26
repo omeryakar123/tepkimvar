@@ -50,7 +50,7 @@ export const Route = createFileRoute("/_site/")({
           "@type": "Organization",
           name: "tepkimvar",
           url: absUrl("/"),
-          logo: absUrl("/tepkim1.png"),
+          logo: absUrl("/tepkim1.jpg"),
           sameAs: ["https://t.me/tepkimvarplus"],
         }),
         jsonLd({
@@ -539,10 +539,13 @@ function Home() {
         </div>
       </section>
 
-      {/* TEREDDÜT YOK */}
+      {/* TEREDDÜT YOK — md ve üzerinde bölümün tamamını kaplayan görsel banner.
+          Başlık/açıklama/buton görselin İÇİNDE yazılı; telefonda o yazılar
+          okunamayacak kadar küçüldüğü için küçük ekranda metin sürümü gösterilir
+          (metin DOM'da kaldığı için arama motorları her iki durumda da görür). */}
       <section>
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-16 grid md:grid-cols-2 gap-10 items-center">
-          <div className="order-2 md:order-1">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-16">
+          <div className="md:hidden">
             <div className="inline-flex items-center gap-2 text-[12px] font-bold uppercase tracking-wider text-brand mb-2">
               <ShieldCheck className="size-4" /> Alışverişten Önce
             </div>
@@ -560,37 +563,37 @@ function Home() {
               Tereddüt Yok, Sorgula <ArrowRight className="size-4" />
             </Link>
           </div>
-          <div className="order-1 md:order-2 relative flex justify-center md:justify-end">
+          <motion.div
+            initial={
+              reduceMotion ? { opacity: 0 } : { opacity: 0, y: 32, scale: 0.97 }
+            }
+            whileInView={
+              reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }
+            }
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ type: "spring", damping: 22, stiffness: 110 }}
+            className="relative hidden md:block"
+          >
             {/* Arka ışıma */}
             <div
-              className="absolute inset-8 rounded-full bg-brand/10 blur-3xl"
+              className="absolute inset-x-16 inset-y-6 rounded-full bg-brand/10 blur-3xl"
               aria-hidden
             />
-            <motion.div
-              initial={
-                reduceMotion
-                  ? { opacity: 0 }
-                  : { opacity: 0, y: 32, scale: 0.94, rotate: -2 }
-              }
-              whileInView={
-                reduceMotion
-                  ? { opacity: 1 }
-                  : { opacity: 1, y: 0, scale: 1, rotate: 0 }
-              }
-              viewport={{ once: true, amount: 0.3 }}
-              transition={{ type: "spring", damping: 20, stiffness: 110 }}
-              className="relative w-full max-w-[380px]"
+            <Link
+              to="/markalar"
+              aria-label="Markanın skorunu sorgula — marka listesini aç"
+              className="group relative block overflow-hidden rounded-3xl ring-1 ring-rule shadow-lift focus-visible:ring-2 focus-visible:ring-brand"
             >
-              <motion.img
-                src="/tepkim1.png"
-                alt="Tereddüt Yok — markanın skorunu sorgula"
-                className="w-full h-auto rounded-3xl ring-1 ring-rule shadow-lift"
-                animate={reduceMotion ? undefined : { y: [0, -8, 0] }}
-                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+              <img
+                src="/tepkim1.jpg"
+                alt="Alışverişten önce markanın skorunu sorgula: çözüm oranı, yanıt hızı ve gerçek kullanıcı deneyimleri"
+                width={1024}
+                height={504}
+                className="block w-full h-auto transition-transform duration-500 group-hover:scale-[1.02]"
                 loading="lazy"
               />
-            </motion.div>
-          </div>
+            </Link>
+          </motion.div>
         </div>
       </section>
     </div>
