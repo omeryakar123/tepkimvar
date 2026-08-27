@@ -38,10 +38,11 @@ services:
       GOOGLE_CLIENT_SECRET: "${GOOGLE_CLIENT_SECRET:-}"
       # --env-file yalnızca compose interpolasyonu içindir; konteynere
       # geçmeyen değişkenler process.env'de görünmez (bot şablona düşer).
-      AI_API_KEY: "${AI_API_KEY:-}"
-      AI_PROVIDER: "${AI_PROVIDER:-openrouter}"
-      AI_BASE_URL: "${AI_BASE_URL:-https://openrouter.ai/api/v1}"
+      AI_API_KEY: "${AI_API_KEY:-${FAL_KEY:-}}"
+      AI_PROVIDER: "${AI_PROVIDER:-fal}"
+      AI_BASE_URL: "${AI_BASE_URL:-https://fal.run/openrouter/router/openai/v1}"
       AI_MODEL: "${AI_MODEL:-openai/gpt-4o-mini}"
+      FAL_KEY: "${FAL_KEY:-}"
       AI_HTTP_REFERER: "${AI_HTTP_REFERER:-https://${DOMAIN}}"
       AI_APP_TITLE: "${AI_APP_TITLE:-tepkimvar}"
       AI_TIMEOUT_MS: "${AI_TIMEOUT_MS:-30000}"
