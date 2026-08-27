@@ -1,20 +1,17 @@
 /**
  * Sağlayıcıdan bağımsız AI istemcisi (SUNUCU TARAFI).
  *
- * NEDEN ELLE: Projede daha önce hiç AI entegrasyonu yoktu (`moderation.ts`
- * kural tabanlı bir ön filtredir, AI değil) ve bağımlılık listesinde hiçbir AI
- * SDK'sı bulunmuyor. "Gereksiz dependency ekleme" kuralına uymak için OpenAI
- * ile UYUMLU `/chat/completions` sözleşmesine düz `fetch` ile konuşuyoruz.
- * Bu sözleşmeyi OpenAI, OpenRouter, Groq, Together, DeepSeek, vLLM ve Ollama
- * (`/v1`) aynı şekilde konuşur — sağlayıcı değiştirmek için tek env yeter.
+ * Varsayılan sağlayıcı OpenRouter (`AI_PROVIDER=openrouter`): GPT-4o-mini
+ * OpenAI kotası olmadan kullanılır. Doğrudan OpenAI için `AI_PROVIDER=openai`.
  *
  * ANAHTAR YOKSA: `isAiConfigured()` false döner ve bot şablon tabanlı yerel
- * üretime düşer (bkz. prompts.ts). Yani özellik anahtarsız da çalışır, sistem
- * asla AI hatası yüzünden çökmez.
+ * üretime düşer (bkz. prompts.ts).
  */
 
 export type AiRole = "system" | "user" | "assistant";
 export type AiMessage = { role: AiRole; content: string };
+
+export type AiProvider = "openrouter" | "openai" | "custom";
 
 export class AiError extends Error {
   /** Geçici hata mı? (429 / 5xx / timeout / ağ) — retry edilebilir. */
@@ -30,12 +27,29 @@ export class AiError extends Error {
 }
 
 type AiConfig = {
+  provider: AiProvider;
   baseUrl: string;
   apiKey: string;
   model: string;
   timeoutMs: number;
   maxRetries: number;
   jsonMode: boolean;
+  /** OpenRouter istek başlıkları (ranking / attribution). */
+  extraHeaders: Record<string, string>;
+};
+
+const PROVIDER_PRESETS: Record<
+  Exclude<AiProvider, "custom">,
+  { baseUrl: string; model: string }
+> = {
+  openrouter: {
+    baseUrl: "https://openrouter.ai/api/v1",
+    model: "openai/gpt-4o-mini",
+  },
+  openai: {
+    baseUrl: "https://api.openai.com/v1",
+    model: "gpt-4o-mini",
+  },
 };
 
 function env(key: string): string {
@@ -47,16 +61,46 @@ function num(key: string, fallback: number): number {
   return Number.isFinite(v) && v > 0 ? v : fallback;
 }
 
+function resolveProvider(): AiProvider {
+  const raw = env("AI_PROVIDER").toLowerCase();
+  if (raw === "openai" || raw === "openrouter" || raw === "custom") return raw;
+  // Eski kurulumlar: base URL'den tahmin et.
+  const base = env("AI_BASE_URL").toLowerCase();
+  if (base.includes("openrouter.ai")) return "openrouter";
+  if (base.includes("api.openai.com")) return "openai";
+  return "openrouter";
+}
+
 function readConfig(): AiConfig | null {
   const apiKey = env("AI_API_KEY");
   if (!apiKey) return null;
+
+  const provider = resolveProvider();
+  const preset = provider !== "custom" ? PROVIDER_PRESETS[provider] : null;
+
+  const baseUrl = (
+    env("AI_BASE_URL") || preset?.baseUrl || PROVIDER_PRESETS.openrouter.baseUrl
+  ).replace(/\/+$/, "");
+
+  const model = env("AI_MODEL") || preset?.model || PROVIDER_PRESETS.openrouter.model;
+
+  const extraHeaders: Record<string, string> = {};
+  if (provider === "openrouter" || baseUrl.includes("openrouter.ai")) {
+    const referer = env("AI_HTTP_REFERER") || env("SITE_URL") || "https://tepkimvar.com";
+    const title = env("AI_APP_TITLE") || "tepkimvar";
+    extraHeaders["HTTP-Referer"] = referer;
+    extraHeaders["X-Title"] = title;
+  }
+
   return {
-    baseUrl: (env("AI_BASE_URL") || "https://api.openai.com/v1").replace(/\/+$/, ""),
+    provider,
+    baseUrl,
     apiKey,
-    model: env("AI_MODEL") || "gpt-4o-mini",
+    model,
     timeoutMs: num("AI_TIMEOUT_MS", 30_000),
     maxRetries: Math.min(5, num("AI_MAX_RETRIES", 2)),
     jsonMode: env("AI_JSON_MODE") !== "false",
+    extraHeaders,
   };
 }
 
@@ -67,16 +111,29 @@ export function isAiConfigured(): boolean {
 /** Bot çalıştırma kaydına yazılan sağlayıcı etiketi. */
 export function aiProviderLabel(): string {
   const cfg = readConfig();
-  return cfg ? cfg.model : "template-fallback";
+  if (!cfg) return "template-fallback";
+  if (cfg.provider === "openrouter") return `openrouter/${cfg.model}`;
+  if (cfg.provider === "openai") return `openai/${cfg.model}`;
+  return cfg.model;
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+function providerName(provider: AiProvider): string {
+  if (provider === "openrouter") return "OpenRouter";
+  if (provider === "openai") return "OpenAI";
+  return "AI sağlayıcı";
+}
+
 /**
- * OpenAI 429 hem gerçek rate-limit hem `insufficient_quota` döner.
- * Kota/fatura kalıcıdır — retry etmek hem süreyi hem kotayı boşa harcar.
+ * 429 hem rate-limit hem `insufficient_quota` dönebilir.
+ * Kota/fatura kalıcıdır — retry etmek boşa harcar.
  */
-function classifyHttpError(status: number, detail: string): { message: string; retryable: boolean } {
+function classifyHttpError(
+  provider: AiProvider,
+  status: number,
+  detail: string,
+): { message: string; retryable: boolean } {
   let type = "";
   let apiMessage = "";
   try {
@@ -96,16 +153,23 @@ function classifyHttpError(status: number, detail: string): { message: string; r
     blob.includes("exceeded your current quota");
 
   if (quota) {
+    const hint =
+      provider === "openrouter"
+        ? "openrouter.ai → Credits sayfasından bakiye ekleyin veya AI_PROVIDER=openai ile doğrudan OpenAI deneyin."
+        : "platform.openai.com → Billing’de API kredisi ekleyin veya AI_PROVIDER=openrouter ile OpenRouter kullanın.";
     return {
-      message:
-        "OpenAI hesabında kullanılabilir API kredisi yok (insufficient_quota). Usage 0 normaldir — reddedilen istek sayılmaz. ChatGPT Plus API kredisi vermez. platform.openai.com → Settings → Billing’de kredi bakiyesi ve ödeme yöntemi; Limits’te proje/aylık bütçe $0 olmamalı. Kredi eklendiyse birkaç dakika bekleyin.",
+      message: `${providerName(provider)} kotası / kredisi yok (insufficient_quota). ${hint}`,
       retryable: false,
     };
   }
 
   if (status === 401 || status === 403) {
+    const keyHint =
+      provider === "openrouter"
+        ? "OpenRouter anahtarı sk-or-v1-... formatında olmalı (openrouter.ai/keys)."
+        : "OpenAI anahtarı sk-... veya sk-proj-... formatında olmalı.";
     return {
-      message: `AI API anahtarı reddedildi (${status}). AI_API_KEY değerini kontrol edin.`,
+      message: `${providerName(provider)} API anahtarı reddedildi (${status}). AI_API_KEY değerini kontrol edin. ${keyHint}`,
       retryable: false,
     };
   }
@@ -113,7 +177,7 @@ function classifyHttpError(status: number, detail: string): { message: string; r
   const retryable = status === 408 || status === 429 || status >= 500;
   const short = apiMessage || detail.slice(0, 240);
   return {
-    message: `AI isteği başarısız (${status}): ${short}`,
+    message: `${providerName(provider)} isteği başarısız (${status}): ${short}`,
     retryable,
   };
 }
@@ -129,10 +193,8 @@ function backoffMs(attempt: number, retryAfter: string | null): number {
 
 type ChatOptions = {
   messages: AiMessage[];
-  /** Yaratıcılık. Şikayet üretiminde yüksek, yanıt üretiminde düşük tutuyoruz. */
   temperature?: number;
   maxTokens?: number;
-  /** true ise sağlayıcıdan JSON nesnesi istenir. */
   json?: boolean;
 };
 
@@ -141,16 +203,10 @@ type ChatCompletionResponse = {
   error?: { message?: string };
 };
 
-/**
- * Tek bir sohbet tamamlama isteği. Geçici hatalarda `maxRetries` kadar
- * yeniden dener; kalıcı hatada AiError fırlatır (çağıran yakalar, loglar).
- */
 export async function chatComplete(opts: ChatOptions): Promise<string> {
   const cfg = readConfig();
   if (!cfg) throw new AiError("AI yapılandırılmadı (AI_API_KEY yok)");
 
-  // Bazı sağlayıcılar bilinmeyen alanları 400 ile reddeder; ilk 400'de
-  // response_format'ı düşürüp bir kez daha deniyoruz.
   let useJsonMode = cfg.jsonMode && opts.json === true;
   let lastError: AiError | null = null;
 
@@ -165,6 +221,7 @@ export async function chatComplete(opts: ChatOptions): Promise<string> {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${cfg.apiKey}`,
+          ...cfg.extraHeaders,
         },
         body: JSON.stringify({
           model: cfg.model,
@@ -180,11 +237,11 @@ export async function chatComplete(opts: ChatOptions): Promise<string> {
 
         if (res.status === 400 && useJsonMode) {
           useJsonMode = false;
-          attempt--; // bu deneme "harcanmış" sayılmasın
+          attempt--;
           continue;
         }
 
-        const classified = classifyHttpError(res.status, detail);
+        const classified = classifyHttpError(cfg.provider, res.status, detail);
         lastError = new AiError(classified.message, {
           retryable: classified.retryable,
           status: res.status,
@@ -211,7 +268,6 @@ export async function chatComplete(opts: ChatOptions): Promise<string> {
         if (!e.retryable || attempt === cfg.maxRetries) throw e;
         lastError = e;
       } else {
-        // AbortError (timeout) ve ağ hataları: geçici kabul edilir.
         const aborted = e instanceof Error && e.name === "AbortError";
         lastError = new AiError(
           aborted ? `AI isteği ${cfg.timeoutMs}ms içinde yanıt vermedi` : String(e),
@@ -228,10 +284,6 @@ export async function chatComplete(opts: ChatOptions): Promise<string> {
   throw lastError ?? new AiError("AI isteği başarısız");
 }
 
-/**
- * Modelin döndürdüğü metinden JSON çıkarır. Modeller sık sık ```json bloğu
- * veya açıklama cümlesi ekler; bu yüzden ilk `{`–son `}` aralığını alıyoruz.
- */
 export function parseJsonLoose<T>(raw: string): T {
   const cleaned = raw.replace(/^\s*```(?:json)?/i, "").replace(/```\s*$/, "").trim();
   const start = cleaned.indexOf("{");
@@ -244,7 +296,6 @@ export function parseJsonLoose<T>(raw: string): T {
   }
 }
 
-/** JSON bekleyen çağrılar için kısayol. */
 export async function chatCompleteJson<T>(opts: ChatOptions): Promise<T> {
   const raw = await chatComplete({ ...opts, json: true });
   return parseJsonLoose<T>(raw);

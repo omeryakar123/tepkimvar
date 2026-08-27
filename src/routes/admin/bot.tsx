@@ -401,7 +401,7 @@ function AdminBotPage() {
               ) : (
                 <>
                   <b>AI_API_KEY tanımlı değil.</b> Bot çalışır ama metinler şablon üreticiden
-                  gelir; model çıktısı için ortam değişkenini girin.
+                  gelir. OpenRouter anahtarı (sk-or-v1-…) için <b>AI_API_KEY</b> girin.
                 </>
               )}
             </span>

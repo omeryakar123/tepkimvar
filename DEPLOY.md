@@ -52,9 +52,10 @@ Google Cloud Console → OAuth client → redirect URI: `https://tepkimvar.com/a
 Environment Variables'a yazmazsan panel "AI_API_KEY tanımlı değil" der ve
 bot şablon metin üretir.
 ```
-AI_API_KEY=<OpenAI / OpenRouter anahtarı>
-AI_BASE_URL=https://api.openai.com/v1
-AI_MODEL=gpt-4o-mini
+AI_PROVIDER=openrouter
+AI_API_KEY=<OpenRouter sk-or-v1-... anahtarı — openrouter.ai/keys>
+AI_BASE_URL=https://openrouter.ai/api/v1
+AI_MODEL=openai/gpt-4o-mini
 CRON_SECRET=<openssl rand -hex 32>
 SYNTHETIC_CONTENT_PUBLIC=false
 ```
