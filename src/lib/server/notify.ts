@@ -61,3 +61,23 @@ export async function notifyComplaintOwner(
   // Açık sekmeler zil rozetini anında tazelesin.
   await publish({ type: "complaint", complaintId });
 }
+
+/** Marka temsilcilerine bildirim (kullanıcı yanıtı, anket vb.). */
+export async function notifyBrandMembers(
+  brandId: string,
+  input: Omit<NotifyInput, "userId"> & { skipUserIds?: string[] },
+): Promise<void> {
+  const members = await db
+    .select({ userId: schema.brandMembers.userId })
+    .from(schema.brandMembers)
+    .where(eq(schema.brandMembers.brandId, brandId));
+
+  const skip = new Set(input.skipUserIds ?? []);
+  if (input.skipIfSameAs) skip.add(input.skipIfSameAs);
+
+  await Promise.all(
+    members
+      .filter((m) => !skip.has(m.userId))
+      .map((m) => notify({ ...input, userId: m.userId })),
+  );
+}

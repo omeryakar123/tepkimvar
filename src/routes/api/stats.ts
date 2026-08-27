@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { eq, notInArray, sql } from "drizzle-orm";
 import { db, schema } from "@/db";
+import { publicPlatformStats } from "@/lib/public-stats";
 
 // Public: platform istatistikleri (count sorguları).
 // Reddedilen/spam kayıtlar toplamdan düşülür — marka sayaçlarıyla aynı kural
@@ -34,13 +35,15 @@ export const Route = createFileRoute("/api/stats")({
 
         const totalComplaints = Number(cTotal);
         const resolvedComplaints = Number(cResolved);
-        return Response.json({
-          totalComplaints,
-          resolvedComplaints,
-          resolutionRate: totalComplaints ? (resolvedComplaints * 100) / totalComplaints : 0,
-          totalCompanies: Number(bTotal),
-          totalUsers: Number(uTotal),
-        });
+        return Response.json(
+          publicPlatformStats({
+            totalComplaints,
+            resolvedComplaints,
+            resolutionRate: totalComplaints ? (resolvedComplaints * 100) / totalComplaints : 0,
+            totalCompanies: Number(bTotal),
+            totalUsers: Number(uTotal),
+          }),
+        );
       },
     },
   },

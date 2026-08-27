@@ -37,6 +37,7 @@ import { Route as ApiHistoryRouteImport } from './routes/api/history'
 import { Route as ApiFastestResolversRouteImport } from './routes/api/fastest-resolvers'
 import { Route as ApiEscalationsRouteImport } from './routes/api/escalations'
 import { Route as ApiConversationsRouteImport } from './routes/api/conversations'
+import { Route as ApiCorporateRegisterRouteImport } from './routes/api/corporate-register'
 import { Route as ApiComplaintsRouteImport } from './routes/api/complaints'
 import { Route as ApiComplaintRepliesRouteImport } from './routes/api/complaint-replies'
 import { Route as ApiCommentsRouteImport } from './routes/api/comments'
@@ -73,6 +74,7 @@ import { Route as SiteAramaRouteImport } from './routes/_site/arama'
 import { Route as authVerifyEmailRouteImport } from './routes/(auth)/verify-email'
 import { Route as authResetPasswordRouteImport } from './routes/(auth)/reset-password'
 import { Route as authRegisterRouteImport } from './routes/(auth)/register'
+import { Route as authRegisterKurumsalRouteImport } from './routes/(auth)/register/kurumsal'
 import { Route as authLoginRouteImport } from './routes/(auth)/login'
 import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
 import { Route as SiteBlogIndexRouteImport } from './routes/_site/blog.index'
@@ -122,6 +124,7 @@ import { Route as SitekurumsalIletisimRouteImport } from './routes/_site/(kurums
 import { Route as SitekurumsalHakkimizdaRouteImport } from './routes/_site/(kurumsal)/hakkimizda'
 import { Route as SitekurumsalGizlilikRouteImport } from './routes/_site/(kurumsal)/gizlilik'
 import { Route as SitekurumsalErisimYokRouteImport } from './routes/_site/(kurumsal)/erisim-yok'
+import { Route as ApiAdminBrandsIdMembersRouteImport } from './routes/api/admin/brands/$id/members'
 import { Route as ApiAdminBrandsIdRouteImport } from './routes/api/admin/brands/$id'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -261,6 +264,11 @@ const ApiEscalationsRoute = ApiEscalationsRouteImport.update({
 const ApiConversationsRoute = ApiConversationsRouteImport.update({
   id: '/api/conversations',
   path: '/api/conversations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCorporateRegisterRoute = ApiCorporateRegisterRouteImport.update({
+  id: '/api/corporate-register',
+  path: '/api/corporate-register',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiComplaintsRoute = ApiComplaintsRouteImport.update({
@@ -436,6 +444,11 @@ const authVerifyEmailRoute = authVerifyEmailRouteImport.update({
 const authResetPasswordRoute = authResetPasswordRouteImport.update({
   id: '/(auth)/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const authRegisterKurumsalRoute = authRegisterKurumsalRouteImport.update({
+  id: '/(auth)/register/kurumsal',
+  path: '/register/kurumsal',
   getParentRoute: () => rootRouteImport,
 } as any)
 const authRegisterRoute = authRegisterRouteImport.update({
@@ -696,6 +709,11 @@ const ApiAdminBrandsIdRoute = ApiAdminBrandsIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => ApiAdminBrandsRoute,
 } as any)
+const ApiAdminBrandsIdMembersRoute = ApiAdminBrandsIdMembersRouteImport.update({
+  id: '/members',
+  path: '/members',
+  getParentRoute: () => ApiAdminBrandsIdRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof SiteIndexRoute
@@ -706,6 +724,7 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof authForgotPasswordRoute
   '/login': typeof authLoginRoute
   '/register': typeof authRegisterRoute
+  '/register/kurumsal': typeof authRegisterKurumsalRoute
   '/reset-password': typeof authResetPasswordRoute
   '/verify-email': typeof authVerifyEmailRoute
   '/arama': typeof SiteAramaRoute
@@ -732,6 +751,7 @@ export interface FileRoutesByFullPath {
   '/api/audit': typeof ApiAuditRoute
   '/api/blog': typeof ApiBlogRoute
   '/api/brand-ratings': typeof ApiBrandRatingsRoute
+  '/api/corporate-register': typeof ApiCorporateRegisterRoute
   '/api/complaint-rating': typeof ApiComplaintRatingRoute
   '/api/cron/complaint-bot': typeof ApiCronComplaintBotRoute
   '/api/brand-resolutions': typeof ApiBrandResolutionsRoute
@@ -810,7 +830,7 @@ export interface FileRoutesByFullPath {
   '/api/files/$': typeof ApiFilesSplatRoute
   '/api/me/complaints': typeof ApiMeComplaintsRoute
   '/blog/': typeof SiteBlogIndexRoute
-  '/api/admin/brands/$id': typeof ApiAdminBrandsIdRoute
+  '/api/admin/brands/$id': typeof ApiAdminBrandsIdRouteWithChildren
 }
 export interface FileRoutesByTo {
   '/robots.txt': typeof RobotsDottxtRoute
@@ -818,6 +838,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof authForgotPasswordRoute
   '/login': typeof authLoginRoute
   '/register': typeof authRegisterRoute
+  '/register/kurumsal': typeof authRegisterKurumsalRoute
   '/reset-password': typeof authResetPasswordRoute
   '/verify-email': typeof authVerifyEmailRoute
   '/arama': typeof SiteAramaRoute
@@ -844,6 +865,7 @@ export interface FileRoutesByTo {
   '/api/audit': typeof ApiAuditRoute
   '/api/blog': typeof ApiBlogRoute
   '/api/brand-ratings': typeof ApiBrandRatingsRoute
+  '/api/corporate-register': typeof ApiCorporateRegisterRoute
   '/api/complaint-rating': typeof ApiComplaintRatingRoute
   '/api/cron/complaint-bot': typeof ApiCronComplaintBotRoute
   '/api/brand-resolutions': typeof ApiBrandResolutionsRoute
@@ -923,7 +945,7 @@ export interface FileRoutesByTo {
   '/api/files/$': typeof ApiFilesSplatRoute
   '/api/me/complaints': typeof ApiMeComplaintsRoute
   '/blog': typeof SiteBlogIndexRoute
-  '/api/admin/brands/$id': typeof ApiAdminBrandsIdRoute
+  '/api/admin/brands/$id': typeof ApiAdminBrandsIdRouteWithChildren
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -961,6 +983,7 @@ export interface FileRoutesById {
   '/api/audit': typeof ApiAuditRoute
   '/api/blog': typeof ApiBlogRoute
   '/api/brand-ratings': typeof ApiBrandRatingsRoute
+  '/api/corporate-register': typeof ApiCorporateRegisterRoute
   '/api/complaint-rating': typeof ApiComplaintRatingRoute
   '/api/cron/complaint-bot': typeof ApiCronComplaintBotRoute
   '/api/brand-resolutions': typeof ApiBrandResolutionsRoute
@@ -1040,7 +1063,7 @@ export interface FileRoutesById {
   '/api/files/$': typeof ApiFilesSplatRoute
   '/api/me/complaints': typeof ApiMeComplaintsRoute
   '/_site/blog/': typeof SiteBlogIndexRoute
-  '/api/admin/brands/$id': typeof ApiAdminBrandsIdRoute
+  '/api/admin/brands/$id': typeof ApiAdminBrandsIdRouteWithChildren
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -1053,6 +1076,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
+    | '/register/kurumsal'
     | '/reset-password'
     | '/verify-email'
     | '/arama'
@@ -1165,6 +1189,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
+    | '/register/kurumsal'
     | '/reset-password'
     | '/verify-email'
     | '/arama'
@@ -1398,11 +1423,13 @@ export interface RootRouteChildren {
   authForgotPasswordRoute: typeof authForgotPasswordRoute
   authLoginRoute: typeof authLoginRoute
   authRegisterRoute: typeof authRegisterRoute
+  authRegisterKurumsalRoute: typeof authRegisterKurumsalRoute
   authResetPasswordRoute: typeof authResetPasswordRoute
   authVerifyEmailRoute: typeof authVerifyEmailRoute
   ApiAuditRoute: typeof ApiAuditRoute
   ApiBlogRoute: typeof ApiBlogRoute
   ApiBrandRatingsRoute: typeof ApiBrandRatingsRoute
+  ApiCorporateRegisterRoute: typeof ApiCorporateRegisterRoute
   ApiComplaintRatingRoute: typeof ApiComplaintRatingRoute
   ApiCronComplaintBotRoute: typeof ApiCronComplaintBotRoute
   ApiBrandResolutionsRoute: typeof ApiBrandResolutionsRoute
@@ -2418,12 +2445,24 @@ const ApiMeRouteChildren: ApiMeRouteChildren = {
 
 const ApiMeRouteWithChildren = ApiMeRoute._addFileChildren(ApiMeRouteChildren)
 
+interface ApiAdminBrandsIdRouteChildren {
+  ApiAdminBrandsIdMembersRoute: typeof ApiAdminBrandsIdMembersRoute
+}
+
+const ApiAdminBrandsIdRouteChildren: ApiAdminBrandsIdRouteChildren = {
+  ApiAdminBrandsIdMembersRoute: ApiAdminBrandsIdMembersRoute,
+}
+
+const ApiAdminBrandsIdRouteWithChildren = ApiAdminBrandsIdRoute._addFileChildren(
+  ApiAdminBrandsIdRouteChildren,
+)
+
 interface ApiAdminBrandsRouteChildren {
-  ApiAdminBrandsIdRoute: typeof ApiAdminBrandsIdRoute
+  ApiAdminBrandsIdRoute: typeof ApiAdminBrandsIdRouteWithChildren
 }
 
 const ApiAdminBrandsRouteChildren: ApiAdminBrandsRouteChildren = {
-  ApiAdminBrandsIdRoute: ApiAdminBrandsIdRoute,
+  ApiAdminBrandsIdRoute: ApiAdminBrandsIdRouteWithChildren,
 }
 
 const ApiAdminBrandsRouteWithChildren = ApiAdminBrandsRoute._addFileChildren(
@@ -2439,11 +2478,13 @@ const rootRouteChildren: RootRouteChildren = {
   authForgotPasswordRoute: authForgotPasswordRoute,
   authLoginRoute: authLoginRoute,
   authRegisterRoute: authRegisterRoute,
+  authRegisterKurumsalRoute: authRegisterKurumsalRoute,
   authResetPasswordRoute: authResetPasswordRoute,
   authVerifyEmailRoute: authVerifyEmailRoute,
   ApiAuditRoute: ApiAuditRoute,
   ApiBlogRoute: ApiBlogRoute,
   ApiBrandRatingsRoute: ApiBrandRatingsRoute,
+  ApiCorporateRegisterRoute: ApiCorporateRegisterRoute,
   ApiComplaintRatingRoute: ApiComplaintRatingRoute,
   ApiCronComplaintBotRoute: ApiCronComplaintBotRoute,
   ApiBrandResolutionsRoute: ApiBrandResolutionsRoute,

@@ -172,6 +172,15 @@ export const Route = createFileRoute("/api/brand/complaints")({
             skipIfSameAs: user.id,
           });
 
+          if (status === "resolved") {
+            await notifyComplaintOwner(c.id, {
+              type: "system",
+              title: "Memnuniyet anketinizi doldurun",
+              body: "Şikayetiniz çözüldü. Deneyiminizi 1–5 yıldızla değerlendirin.",
+              skipIfSameAs: user.id,
+            });
+          }
+
           await db.insert(schema.auditLogs).values({
             userId: user.id,
             action: "complaint.status_change",
@@ -258,6 +267,13 @@ export const Route = createFileRoute("/api/brand/complaints")({
             type: "brand_reply",
             title: "Firma şikayetinize yanıt verdi",
             body: text.slice(0, 160),
+            skipIfSameAs: user.id,
+          });
+
+          await notifyComplaintOwner(c.id, {
+            type: "system",
+            title: "Memnuniyet anketinizi doldurun",
+            body: "Firma yanıtına göre deneyiminizi 1–5 yıldızla değerlendirin.",
             skipIfSameAs: user.id,
           });
 

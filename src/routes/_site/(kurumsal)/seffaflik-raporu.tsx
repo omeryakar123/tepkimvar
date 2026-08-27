@@ -65,8 +65,11 @@ function Page() {
         <section className="bg-card rounded-2xl ring-1 ring-rule p-8">
           <h2 className="text-xl font-display font-bold mb-6 flex items-center gap-2"><TrendingUp className="size-5 text-brand" /> Yıllık Büyüme</h2>
           <div className="grid grid-cols-5 gap-2 items-end h-40">
-            {[42, 58, 71, 84, 100].map((h, i) => (
-              <div key={i} className="flex flex-col items-center gap-2">
+            {[68, 74, 81, 89, 100].map((h, i) => (
+              <div key={i} className="flex flex-col items-center gap-2 flex-1">
+                <div className="text-[11px] font-semibold text-brand tabular-nums">
+                  {i === 4 ? "48K+" : `${Math.round((h / 100) * 48)}K`}
+                </div>
                 <div className="w-full rounded-t-md bg-gradient-to-t from-brand to-brand-2" style={{ height: `${h}%` }} />
                 <div className="text-xs text-navy-mid">{2021 + i}</div>
               </div>

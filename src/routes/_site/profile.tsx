@@ -134,7 +134,7 @@ function ProfilePage() {
     <div>
       <main className="mx-auto max-w-5xl px-4 sm:px-6 py-10">
         {/* Header card */}
-        <div className="bg-card rounded-2xl ring-1 ring-rule p-6 flex flex-col sm:flex-row sm:items-center gap-6">
+        <div className="bg-card rounded-2xl ring-1 ring-rule p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
           <AvatarUpload
             url={profile.avatarUrl}
             userId={profile.id}
@@ -152,13 +152,13 @@ function ProfilePage() {
               });
             }}
           />
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 text-center sm:text-left">
             <div className="eyebrow text-navy-mid">Profilim</div>
-            <h1 className="mt-1 font-display text-2xl sm:text-3xl font-black tracking-tight text-ink truncate">
+            <h1 className="mt-1 font-display text-lg sm:text-3xl font-black tracking-tight text-ink break-words leading-snug max-w-full">
               {profile.fullName || email}
             </h1>
-            <div className="mt-1 flex items-center gap-3 text-[12px] text-navy-mid">
-              <span>{email}</span>
+            <div className="mt-1.5 flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-3 text-[12px] text-navy-mid">
+              <span className="truncate max-w-full">{email}</span>
               <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${emailVerified ? "bg-brand-soft text-brand" : "bg-warning-soft text-warning"}`}>
                 {emailVerified ? "E-posta doğrulandı" : "E-posta doğrulanmadı"}
               </span>

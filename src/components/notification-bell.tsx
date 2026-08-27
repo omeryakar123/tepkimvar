@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Bell, Check, MessageSquare, Reply, RefreshCw } from "lucide-react";
+import { Bell, Check, ClipboardList, MessageSquare, Reply, RefreshCw } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
 type Notification = {
@@ -18,6 +18,7 @@ const ICONS: Record<string, typeof Bell> = {
   comment: MessageSquare,
   status_change: RefreshCw,
   resolution: Check,
+  system: ClipboardList,
 };
 
 function ago(iso: string): string {
@@ -57,12 +58,10 @@ export function NotificationBell() {
       return;
     }
     load();
-    // Hafif yoklama: bildirim akışı kritik değil, 60 sn yeterli.
-    const t = setInterval(load, 60_000);
+    const t = setInterval(load, 30_000);
     return () => clearInterval(t);
   }, [user, load]);
 
-  // Dışarı tıklayınca kapat
   useEffect(() => {
     if (!open) return;
     const onDown = (e: MouseEvent) => {
@@ -85,6 +84,9 @@ export function NotificationBell() {
 
   async function markOne(id: string) {
     setUnread((u) => Math.max(0, u - 1));
+    setItems((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read_at: n.read_at ?? new Date().toISOString() } : n)),
+    );
     await fetch("/api/notifications", {
       method: "PATCH",
       credentials: "include",
@@ -96,7 +98,7 @@ export function NotificationBell() {
   if (!user) return null;
 
   return (
-    <div className="relative" ref={boxRef}>
+    <div className="relative shrink-0" ref={boxRef}>
       <button
         type="button"
         onClick={() => {
@@ -115,65 +117,69 @@ export function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-[340px] card-surface shadow-lift z-50 overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-rule">
-            <span className="text-[13px] font-semibold text-ink">Bildirimler</span>
-            {unread > 0 && (
-              <button onClick={markAll} className="text-[12px] font-medium text-brand hover:underline">
-                Tümünü okundu işaretle
-              </button>
+        <>
+          <div className="fixed inset-0 z-40 sm:hidden bg-black/20" onClick={() => setOpen(false)} aria-hidden />
+          <div className="fixed left-3 right-3 top-[4.25rem] z-50 sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-2 sm:w-[340px] card-surface shadow-lift overflow-hidden max-h-[min(70vh,420px)] flex flex-col">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-rule shrink-0">
+              <span className="text-[13px] font-semibold text-ink">Bildirimler</span>
+              {unread > 0 && (
+                <button onClick={markAll} className="text-[12px] font-medium text-brand hover:underline">
+                  Tümünü okundu işaretle
+                </button>
+              )}
+            </div>
+
+            {items.length === 0 ? (
+              <p className="px-4 py-8 text-center text-[13px] text-navy-mid">Henüz bildirimin yok.</p>
+            ) : (
+              <ul className="overflow-y-auto divide-y divide-rule flex-1 min-h-0">
+                {items.map((n) => {
+                  const Icon = ICONS[n.type] ?? Bell;
+                  const unreadItem = !n.read_at;
+                  const content = (
+                    <div className={`flex gap-3 px-4 py-3 ${unreadItem ? "bg-brand-soft/40" : ""}`}>
+                      <span className="mt-0.5 grid place-items-center size-8 shrink-0 rounded-full bg-brand-soft text-brand">
+                        <Icon className="size-4" />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-[13px] font-medium text-ink break-words">{n.title}</span>
+                        {n.body && (
+                          <span className="mt-0.5 block text-[12px] text-navy-mid line-clamp-2 break-words">{n.body}</span>
+                        )}
+                        <span className="mt-1 block text-[11px] text-navy-mid">{ago(n.created_at)} önce</span>
+                      </span>
+                      {unreadItem && <span className="mt-2 size-2 shrink-0 rounded-full bg-brand" />}
+                    </div>
+                  );
+                  return (
+                    <li key={n.id}>
+                      {n.link ? (
+                        <Link
+                          to={n.link}
+                          onClick={() => {
+                            if (unreadItem) markOne(n.id);
+                            setOpen(false);
+                          }}
+                          className="block hover:bg-surface transition-colors"
+                        >
+                          {content}
+                        </Link>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => unreadItem && markOne(n.id)}
+                          className="block w-full text-left hover:bg-surface transition-colors"
+                        >
+                          {content}
+                        </button>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
             )}
           </div>
-
-          {items.length === 0 ? (
-            <p className="px-4 py-8 text-center text-[13px] text-navy-mid">Henüz bildirimin yok.</p>
-          ) : (
-            <ul className="max-h-[380px] overflow-y-auto divide-y divide-rule">
-              {items.map((n) => {
-                const Icon = ICONS[n.type] ?? Bell;
-                const unreadItem = !n.read_at;
-                const content = (
-                  <div className={`flex gap-3 px-4 py-3 ${unreadItem ? "bg-brand-soft/40" : ""}`}>
-                    <span className="mt-0.5 grid place-items-center size-8 shrink-0 rounded-full bg-brand-soft text-brand">
-                      <Icon className="size-4" />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-[13px] font-medium text-ink">{n.title}</span>
-                      {n.body && (
-                        <span className="mt-0.5 block text-[12px] text-navy-mid line-clamp-2">{n.body}</span>
-                      )}
-                      <span className="mt-1 block text-[11px] text-navy-mid">{ago(n.created_at)} önce</span>
-                    </span>
-                    {unreadItem && <span className="mt-2 size-2 shrink-0 rounded-full bg-brand" />}
-                  </div>
-                );
-                return (
-                  <li key={n.id}>
-                    {n.link ? (
-                      <Link
-                        to={n.link}
-                        onClick={() => {
-                          if (unreadItem) markOne(n.id);
-                          setOpen(false);
-                        }}
-                        className="block hover:bg-surface transition-colors"
-                      >
-                        {content}
-                      </Link>
-                    ) : (
-                      <button
-                        onClick={() => unreadItem && markOne(n.id)}
-                        className="block w-full text-left hover:bg-surface transition-colors"
-                      >
-                        {content}
-                      </button>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </div>
+        </>
       )}
     </div>
   );

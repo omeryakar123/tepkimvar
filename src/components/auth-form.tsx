@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "@tanstack/react-router";
-import { Loader2, Mail, Lock, User as UserIcon } from "lucide-react";
+import { Loader2, Mail, Lock, User as UserIcon, Building2 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { highestRoleRedirect, type AppRole } from "@/hooks/use-auth";
 import { PhoneInput } from "@/components/phone-input";
@@ -15,7 +15,15 @@ const titles: Record<Variant, { login: string; sub: string; brand: string }> = {
   brand: { login: "Firma Paneli Girişi", sub: "Firma yetkilisi hesabınla giriş yap.", brand: "Brand" },
 };
 
-export function AuthForm({ variant = "user", initialMode = "login" }: { variant?: Variant; initialMode?: Mode }) {
+export function AuthForm({
+  variant = "user",
+  initialMode = "login",
+  corporate = false,
+}: {
+  variant?: Variant;
+  initialMode?: Mode;
+  corporate?: boolean;
+}) {
   const navigate = useNavigate();
   const [mode, setMode] = useState<Mode>(initialMode);
   const [email, setEmail] = useState("");
@@ -26,6 +34,10 @@ export function AuthForm({ variant = "user", initialMode = "login" }: { variant?
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [companyName, setCompanyName] = useState("");
+  const [companyWebsite, setCompanyWebsite] = useState("");
+  const [brandSlug, setBrandSlug] = useState("");
+  const [companyMessage, setCompanyMessage] = useState("");
 
   const allowedRolesForVariant: AppRole[] =
     variant === "admin" ? ["admin", "super_admin"] : variant === "brand" ? ["brand"] : ["user", "admin", "super_admin", "brand"];
@@ -54,6 +66,7 @@ export function AuthForm({ variant = "user", initialMode = "login" }: { variant?
       if (!toE164Tr(phone)) return setErr("Geçerli bir telefon numarası giriniz.");
       if (password.length < 6) return setErr("Şifre en az 6 karakter olmalı.");
       if (password !== password2) return setErr("Şifreler eşleşmiyor.");
+      if (corporate && !companyName.trim()) return setErr("Firma adı zorunludur.");
     }
     setLoading(true);
     try {
@@ -66,6 +79,28 @@ export function AuthForm({ variant = "user", initialMode = "login" }: { variant?
           phone: e164,
         });
         if (error) throw new Error(error.message);
+        if (corporate) {
+          const corpRes = await fetch("/api/corporate-register", {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              companyName: companyName.trim(),
+              contactName: fullName.trim(),
+              email: email.toLowerCase(),
+              phone: e164,
+              website: companyWebsite.trim() || null,
+              brandSlug: brandSlug.trim() || null,
+              message: companyMessage.trim() || null,
+            }),
+          });
+          if (!corpRes.ok) {
+            const j = (await corpRes.json().catch(() => ({}))) as { error?: string };
+            throw new Error(j.error ?? "Kurumsal talep gönderilemedi");
+          }
+          setMsg("Talebiniz alındı. Ekibimiz marka yetkisi için sizinle iletişime geçecek.");
+          return;
+        }
         await postLoginRedirect();
         return;
       } else {
@@ -108,10 +143,14 @@ export function AuthForm({ variant = "user", initialMode = "login" }: { variant?
 
         <div className="bg-card rounded-2xl ring-1 ring-rule p-7">
           <h1 className="text-xl font-semibold tracking-tight text-ink">
-            {mode === "register" ? "Yeni hesap oluştur" : t.login}
+            {corporate ? "Kurumsal kayıt" : mode === "register" ? "Yeni hesap oluştur" : t.login}
           </h1>
           <p className="text-[13px] text-navy-mid mt-1">
-            {mode === "register" ? "Birkaç saniyede başla." : t.sub}
+            {corporate
+              ? "Marka yönetimi veya sahiplik talebi için kayıt olun. Ekibimiz sizinle iletişime geçer."
+              : mode === "register"
+                ? "Birkaç saniyede başla."
+                : t.sub}
           </p>
 
           {err && <div className="mt-4 text-[13px] text-danger bg-danger-soft border border-danger-soft rounded-lg px-3 py-2">{err}</div>}
@@ -129,6 +168,20 @@ export function AuthForm({ variant = "user", initialMode = "login" }: { variant?
             {mode === "register" && (
               <Field icon={Lock} type="password" placeholder="Şifre tekrar" value={password2} onChange={setPassword2} required minLength={6} />
             )}
+            {mode === "register" && corporate && (
+              <>
+                <Field icon={Building2} type="text" placeholder="Firma adı *" value={companyName} onChange={setCompanyName} required />
+                <Field icon={Building2} type="text" placeholder="Firma web sitesi" value={companyWebsite} onChange={setCompanyWebsite} />
+                <Field icon={Building2} type="text" placeholder="Mevcut marka slug (varsa)" value={brandSlug} onChange={setBrandSlug} />
+                <textarea
+                  value={companyMessage}
+                  onChange={(e) => setCompanyMessage(e.target.value)}
+                  placeholder="Yetki talebi / iletişim notunuz"
+                  rows={3}
+                  className="w-full rounded-lg ring-1 ring-rule bg-card p-3 text-sm placeholder:text-navy-mid focus:outline-none focus:ring-2 focus:ring-brand/40 resize-none"
+                />
+              </>
+            )}
 
             <button
               type="submit"
@@ -136,7 +189,7 @@ export function AuthForm({ variant = "user", initialMode = "login" }: { variant?
               className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-brand text-brand-foreground font-medium h-11 text-sm hover:brightness-110 transition disabled:opacity-60"
             >
               {loading && <Loader2 className="size-4 animate-spin" />}
-              {mode === "register" ? "Kayıt Ol" : "Giriş Yap"}
+              {mode === "register" ? (corporate ? "Kayıt Ol ve Talep Gönder" : "Kayıt Ol") : "Giriş Yap"}
             </button>
           </form>
 
@@ -170,6 +223,12 @@ export function AuthForm({ variant = "user", initialMode = "login" }: { variant?
               <p>
                 Zaten üye misin?{" "}
                 <button onClick={() => setMode("login")} className="text-brand font-medium hover:underline">Giriş yap</button>
+                {!corporate && (
+                  <>
+                    {" · "}
+                    <Link to="/register/kurumsal" className="text-brand font-medium hover:underline">Kurumsal kayıt</Link>
+                  </>
+                )}
               </p>
             )}
           </div>

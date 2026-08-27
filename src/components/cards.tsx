@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { BadgeCheck, Eye, MessageSquare, ChevronRight, Clock, Star, Send, Building2 } from "lucide-react";
 import type { Company, Complaint } from "@/lib/mock-data";
+import { displayComplaintViews } from "@/lib/display-views";
 import { formatCompactCount, formatRating, formatResponseTime, statusClasses, statusLabel } from "@/lib/mock-data";
 import { brandLogoUrl } from "@/lib/logo";
 import { toast } from "sonner";
@@ -152,7 +153,7 @@ export function BrandProfileComplaintCard({
 
       <div className="flex items-center justify-between pt-4 mt-4 border-t border-rule text-[12px] text-navy-mid">
         <div className="flex items-center gap-4">
-          <span className="inline-flex items-center gap-1.5"><Eye className="size-3.5" /> {complaint.views.toLocaleString("tr-TR")}</span>
+          <span className="inline-flex items-center gap-1.5"><Eye className="size-3.5" /> {displayComplaintViews(complaint.id, complaint.views).toLocaleString("tr-TR")}</span>
           <span className="inline-flex items-center gap-1.5"><MessageSquare className="size-3.5" /> {complaint.comments}</span>
         </div>
         <Link to="/sikayet/$id" params={{ id: complaint.id }} className="text-brand hover:underline text-[12px] font-medium">

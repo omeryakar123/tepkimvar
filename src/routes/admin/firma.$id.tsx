@@ -196,7 +196,75 @@ function AdminBrandEditPage() {
           {b.premium && <button onClick={cancelPremium} className="h-9 px-3 rounded-lg ring-1 ring-rule text-[12px] font-semibold hover:bg-surface">İptal et</button>}
         </div>
       </Section>
+
+      <BrandMembersSection brandId={b.id} />
     </div>
+  );
+}
+
+type Member = { id: string; user_id: string; role: string; full_name: string | null; email: string | null };
+
+function BrandMembersSection({ brandId }: { brandId: string }) {
+  const [members, setMembers] = useState<Member[]>([]);
+  const [email, setEmail] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function loadMembers() {
+    const data = await apiGet<{ items: Member[] }>(`/api/admin/brands/${brandId}/members`);
+    if (data?.items) setMembers(data.items);
+  }
+
+  useEffect(() => { loadMembers(); }, [brandId]);
+
+  async function assign() {
+    if (!email.trim()) return;
+    setBusy(true);
+    const ok = await apiSend(`/api/admin/brands/${brandId}/members`, "POST", { email: email.trim() });
+    setBusy(false);
+    if (!ok) return;
+    toast.success("Kullanıcı firmaya atandı");
+    setEmail("");
+    loadMembers();
+  }
+
+  async function revoke(userId: string) {
+    if (!confirm("Bu kullanıcının firma erişimini kaldırmak istiyor musunuz?")) return;
+    const ok = await apiSend(`/api/admin/brands/${brandId}/members`, "DELETE", { userId });
+    if (!ok) return;
+    toast.success("Erişim kaldırıldı");
+    loadMembers();
+  }
+
+  return (
+    <Section title="Firma temsilcileri">
+      <p className="text-[12px] text-navy-mid mb-3">Kullanıcıya brand paneli erişimi verin veya kaldırın. Atama otomatik olarak <b>brand</b> rolünü de ekler.</p>
+      <div className="flex gap-2 flex-wrap mb-4">
+        <input
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="kullanici@email.com"
+          className="flex-1 min-w-[200px] h-10 rounded-lg ring-1 ring-rule px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40"
+        />
+        <button onClick={assign} disabled={busy} className="h-10 px-4 rounded-lg bg-brand text-brand-foreground text-[13px] font-semibold disabled:opacity-60">
+          Ata
+        </button>
+      </div>
+      {members.length === 0 ? (
+        <p className="text-[13px] text-navy-mid">Henüz temsilci yok.</p>
+      ) : (
+        <ul className="divide-y divide-rule rounded-xl ring-1 ring-rule overflow-hidden">
+          {members.map((m) => (
+            <li key={m.id} className="flex items-center justify-between gap-3 px-4 py-3 bg-card text-[13px]">
+              <div className="min-w-0">
+                <div className="font-medium text-ink truncate">{m.full_name || "—"}</div>
+                <div className="text-navy-mid truncate">{m.email}</div>
+              </div>
+              <button onClick={() => revoke(m.user_id)} className="shrink-0 text-[12px] text-danger hover:underline">Kaldır</button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Section>
   );
 }
 
