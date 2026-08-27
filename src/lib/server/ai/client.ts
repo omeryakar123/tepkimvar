@@ -72,6 +72,52 @@ export function aiProviderLabel(): string {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+/**
+ * OpenAI 429 hem gerçek rate-limit hem `insufficient_quota` döner.
+ * Kota/fatura kalıcıdır — retry etmek hem süreyi hem kotayı boşa harcar.
+ */
+function classifyHttpError(status: number, detail: string): { message: string; retryable: boolean } {
+  let type = "";
+  let apiMessage = "";
+  try {
+    const parsed = JSON.parse(detail) as {
+      error?: { type?: string; code?: string; message?: string };
+    };
+    type = (parsed.error?.type ?? parsed.error?.code ?? "").toLowerCase();
+    apiMessage = (parsed.error?.message ?? "").trim();
+  } catch {
+    /* gövde JSON değilse ham metne bakılır */
+  }
+
+  const blob = `${type} ${apiMessage} ${detail}`.toLowerCase();
+  const quota =
+    type === "insufficient_quota" ||
+    blob.includes("insufficient_quota") ||
+    blob.includes("exceeded your current quota");
+
+  if (quota) {
+    return {
+      message:
+        "OpenAI kotası doldu (insufficient_quota). platform.openai.com → Billing’den kredi ekleyin veya AI_BASE_URL ile başka sağlayıcı kullanın.",
+      retryable: false,
+    };
+  }
+
+  if (status === 401 || status === 403) {
+    return {
+      message: `AI API anahtarı reddedildi (${status}). AI_API_KEY değerini kontrol edin.`,
+      retryable: false,
+    };
+  }
+
+  const retryable = status === 408 || status === 429 || status >= 500;
+  const short = apiMessage || detail.slice(0, 240);
+  return {
+    message: `AI isteği başarısız (${status}): ${short}`,
+    retryable,
+  };
+}
+
 /** 429/503 için sağlayıcının önerdiği bekleme; yoksa jitter'lı exponential. */
 function backoffMs(attempt: number, retryAfter: string | null): number {
   if (retryAfter) {
@@ -138,9 +184,9 @@ export async function chatComplete(opts: ChatOptions): Promise<string> {
           continue;
         }
 
-        const retryable = res.status === 408 || res.status === 429 || res.status >= 500;
-        lastError = new AiError(`AI isteği başarısız (${res.status}): ${detail}`, {
-          retryable,
+        const classified = classifyHttpError(res.status, detail);
+        lastError = new AiError(classified.message, {
+          retryable: classified.retryable,
           status: res.status,
         });
         if (!retryable || attempt === cfg.maxRetries) throw lastError;
