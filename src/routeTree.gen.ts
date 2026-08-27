@@ -28,6 +28,8 @@ import { Route as ApiSearchRouteImport } from './routes/api/search'
 import { Route as ApiResolutionsRouteImport } from './routes/api/resolutions'
 import { Route as ApiReportsRouteImport } from './routes/api/reports'
 import { Route as ApiProfileRouteImport } from './routes/api/profile'
+import { Route as ApiOtpVerifyRouteImport } from './routes/api/otp/verify'
+import { Route as ApiOtpSendRouteImport } from './routes/api/otp/send'
 import { Route as ApiNotificationsRouteImport } from './routes/api/notifications'
 import { Route as ApiMessagesRouteImport } from './routes/api/messages'
 import { Route as ApiMeRouteImport } from './routes/api/me'
@@ -214,6 +216,16 @@ const ApiReportsRoute = ApiReportsRouteImport.update({
 const ApiProfileRoute = ApiProfileRouteImport.update({
   id: '/api/profile',
   path: '/api/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiOtpVerifyRoute = ApiOtpVerifyRouteImport.update({
+  id: '/api/otp/verify',
+  path: '/api/otp/verify',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiOtpSendRoute = ApiOtpSendRouteImport.update({
+  id: '/api/otp/send',
+  path: '/api/otp/send',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiNotificationsRoute = ApiNotificationsRouteImport.update({
@@ -736,6 +748,8 @@ export interface FileRoutesByFullPath {
   '/api/me': typeof ApiMeRouteWithChildren
   '/api/messages': typeof ApiMessagesRoute
   '/api/notifications': typeof ApiNotificationsRoute
+  '/api/otp/send': typeof ApiOtpSendRoute
+  '/api/otp/verify': typeof ApiOtpVerifyRoute
   '/api/profile': typeof ApiProfileRoute
   '/api/reports': typeof ApiReportsRoute
   '/api/resolutions': typeof ApiResolutionsRoute
@@ -846,6 +860,8 @@ export interface FileRoutesByTo {
   '/api/me': typeof ApiMeRouteWithChildren
   '/api/messages': typeof ApiMessagesRoute
   '/api/notifications': typeof ApiNotificationsRoute
+  '/api/otp/send': typeof ApiOtpSendRoute
+  '/api/otp/verify': typeof ApiOtpVerifyRoute
   '/api/profile': typeof ApiProfileRoute
   '/api/reports': typeof ApiReportsRoute
   '/api/resolutions': typeof ApiResolutionsRoute
@@ -961,6 +977,8 @@ export interface FileRoutesById {
   '/api/me': typeof ApiMeRouteWithChildren
   '/api/messages': typeof ApiMessagesRoute
   '/api/notifications': typeof ApiNotificationsRoute
+  '/api/otp/send': typeof ApiOtpSendRoute
+  '/api/otp/verify': typeof ApiOtpVerifyRoute
   '/api/profile': typeof ApiProfileRoute
   '/api/reports': typeof ApiReportsRoute
   '/api/resolutions': typeof ApiResolutionsRoute
@@ -1077,6 +1095,8 @@ export interface FileRouteTypes {
     | '/api/me'
     | '/api/messages'
     | '/api/notifications'
+    | '/api/otp/send'
+    | '/api/otp/verify'
     | '/api/profile'
     | '/api/reports'
     | '/api/resolutions'
@@ -1187,6 +1207,8 @@ export interface FileRouteTypes {
     | '/api/me'
     | '/api/messages'
     | '/api/notifications'
+    | '/api/otp/send'
+    | '/api/otp/verify'
     | '/api/profile'
     | '/api/reports'
     | '/api/resolutions'
@@ -1301,6 +1323,8 @@ export interface FileRouteTypes {
     | '/api/me'
     | '/api/messages'
     | '/api/notifications'
+    | '/api/otp/send'
+    | '/api/otp/verify'
     | '/api/profile'
     | '/api/reports'
     | '/api/resolutions'
@@ -1395,6 +1419,8 @@ export interface RootRouteChildren {
   ApiMeRoute: typeof ApiMeRouteWithChildren
   ApiMessagesRoute: typeof ApiMessagesRoute
   ApiNotificationsRoute: typeof ApiNotificationsRoute
+  ApiOtpSendRoute: typeof ApiOtpSendRoute
+  ApiOtpVerifyRoute: typeof ApiOtpVerifyRoute
   ApiProfileRoute: typeof ApiProfileRoute
   ApiReportsRoute: typeof ApiReportsRoute
   ApiResolutionsRoute: typeof ApiResolutionsRoute
@@ -1571,6 +1597,20 @@ declare module '@tanstack/react-router' {
       path: '/api/notifications'
       fullPath: '/api/notifications'
       preLoaderRoute: typeof ApiNotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/otp/send': {
+      id: '/api/otp/send'
+      path: '/api/otp/send'
+      fullPath: '/api/otp/send'
+      preLoaderRoute: typeof ApiOtpSendRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/otp/verify': {
+      id: '/api/otp/verify'
+      path: '/api/otp/verify'
+      fullPath: '/api/otp/verify'
+      preLoaderRoute: typeof ApiOtpVerifyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/messages': {
@@ -2420,6 +2460,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiMeRoute: ApiMeRouteWithChildren,
   ApiMessagesRoute: ApiMessagesRoute,
   ApiNotificationsRoute: ApiNotificationsRoute,
+  ApiOtpSendRoute: ApiOtpSendRoute,
+  ApiOtpVerifyRoute: ApiOtpVerifyRoute,
   ApiProfileRoute: ApiProfileRoute,
   ApiReportsRoute: ApiReportsRoute,
   ApiResolutionsRoute: ApiResolutionsRoute,

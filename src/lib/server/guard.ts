@@ -98,6 +98,15 @@ export async function requireBrandAccess(userId: string, brandId: string): Promi
 // replica çalıştırırsan Redis'e taşınmalı.
 const buckets = new Map<string, { count: number; resetAt: number }>();
 
+/** İstek IP'si (proxy arkasında x-forwarded-for / x-real-ip). */
+export function clientIp(request: Request): string {
+  return (
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    request.headers.get("x-real-ip")?.trim() ||
+    "unknown"
+  );
+}
+
 export function rateLimit(key: string, limit: number, windowMs: number): void {
   const now = Date.now();
   const b = buckets.get(key);

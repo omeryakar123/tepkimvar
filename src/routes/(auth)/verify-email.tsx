@@ -2,9 +2,9 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Loader2, CheckCircle2, Mail } from "lucide-react";
 import { z } from "zod";
-import { authClient } from "@/lib/auth-client";
 import { useAuth, highestRoleRedirect, type AppRole } from "@/hooks/use-auth";
 import { OtpInput } from "@/components/otp-input";
+import { apiSendSignupOtp, apiVerifySignupOtp } from "@/lib/otp-client";
 import { toast } from "sonner";
 
 const searchSchema = z.object({ email: z.string().email().optional() });
@@ -38,9 +38,9 @@ function VerifyEmailPage() {
     e?.preventDefault();
     if (code.length !== 6) return;
     setVerifying(true); setErr(null);
-    const { error } = await authClient.emailOtp.verifyEmail({ email, otp: code });
+    const { error } = await apiVerifySignupOtp(email, code);
     setVerifying(false);
-    if (error) { setErr(error.message ?? "Doğrulama başarısız"); return; }
+    if (error) { setErr(error ?? "Doğrulama başarısız"); return; }
     setSuccess(true);
     setTimeout(async () => {
       const res = await fetch("/api/me", { credentials: "include" });
@@ -53,9 +53,9 @@ function VerifyEmailPage() {
   async function resend() {
     if (cooldown > 0 || !email) return;
     setResending(true);
-    const { error } = await authClient.emailOtp.sendVerificationOtp({ email, type: "email-verification" });
+    const { error } = await apiSendSignupOtp(email);
     setResending(false);
-    if (error) { toast.error(error.message ?? "Gönderilemedi"); return; }
+    if (error) { toast.error(error); return; }
     toast.success("Yeni kod gönderildi.");
     setCode(""); setCooldown(60);
   }

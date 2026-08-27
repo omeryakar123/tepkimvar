@@ -2,38 +2,7 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { emailOTP } from "better-auth/plugins";
 import { db, schema } from "@/db";
-
-// OTP e-postasını Resend ile gönder. RESEND_API_KEY yoksa (lokal geliştirme)
-// kodu konsola yazar — böylece Resend olmadan da test edebilirsin.
-async function sendOtpEmail(email: string, otp: string, type: string) {
-  const subject =
-    type === "forget-password" ? "Şifre sıfırlama kodun" : "E-posta doğrulama kodun";
-  const key = process.env.RESEND_API_KEY;
-  if (!key) {
-    console.log(`[OTP:${type}] ${email} -> ${otp}`);
-    return;
-  }
-  // Gönderen adresi: Resend'de DOĞRULANMIŞ domain olmalı. Domain'i EMAIL_FROM
-  // ile ver (ör. "tepkimvar <noreply@tepkimvarplus.com>"). Doğrulanmamış domain
-  // Resend tarafından 403 ile reddedilir.
-  const from = process.env.EMAIL_FROM || "tepkimvar <noreply@tepkimvarplus.com>";
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      from,
-      to: email,
-      subject,
-      html: `<p>Doğrulama kodun: <b style="font-size:22px;letter-spacing:3px">${otp}</b></p><p>Kod 10 dakika geçerlidir.</p>`,
-    }),
-  });
-  if (!res.ok) {
-    const detail = await res.text().catch(() => "");
-    // Sessizce yutma: hata prod loglarında görünsün ve akış "başarılı" sanılmasın.
-    console.error(`[Resend] OTP gönderilemedi (${res.status}) from="${from}" to="${email}": ${detail}`);
-    throw new Error(`E-posta gönderilemedi (${res.status})`);
-  }
-}
+import { sendOtpEmail } from "@/lib/server/email";
 
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL || "http://localhost:8080",
@@ -115,9 +84,13 @@ export const auth = betterAuth({
     emailOTP({
       otpLength: 6,
       expiresIn: 600,
-      sendVerificationOnSignUp: true,
+      // Kayıt OTP'si hash'li email_otps + /api/otp/* ile gönderilir.
+      sendVerificationOnSignUp: false,
       async sendVerificationOTP({ email, otp, type }) {
-        await sendOtpEmail(email, otp, type);
+        if (type === "email-verification" || type === "sign-in") {
+          throw new Error("Kayıt doğrulaması için /api/otp kullanın.");
+        }
+        await sendOtpEmail(email, otp, "forget-password");
       },
     }),
   ],
