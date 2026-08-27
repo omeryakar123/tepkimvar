@@ -61,6 +61,12 @@ Migration'lar başlangıçta otomatik uygulanır.
 
 ## Notlar
 - RESEND_API_KEY boşsa OTP kodları `logs app` çıktısına yazılır (test için yeterli).
+- `.env.selfhost` içindeki `AI_API_KEY` / `CRON_SECRET` ancak `docker-compose.selfhost.yml`
+  `environment:` bloğunda listelenirse konteynere girer. Anahtarı ekledikten sonra
+  rebuild gerekmez, konteyneri yenilemek yeter:
+  `docker compose -f docker-compose.selfhost.yml --env-file .env.selfhost up -d --force-recreate`
+- Konteynerde anahtarın göründüğünü doğrula:
+  `docker compose -f docker-compose.selfhost.yml --env-file .env.selfhost exec app printenv AI_API_KEY`
 - Google girişi için Google Console'a redirect URI ekle:
   `https://DOMAIN/api/auth/callback/google`
 - Yedek: `pgdata` ve `minio-data` volume'ları. Dump almak için:

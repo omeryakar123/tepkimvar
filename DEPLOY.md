@@ -48,6 +48,18 @@ VITE_GOOGLE_ENABLED=true
 ```
 Google Cloud Console → OAuth client → redirect URI: `https://tepkimvar.com/api/auth/callback/google`
 
+**Opsiyonel (AI Complaint Bot):** Coolify `.env.selfhost` okumaz; bunları
+Environment Variables'a yazmazsan panel "AI_API_KEY tanımlı değil" der ve
+bot şablon metin üretir.
+```
+AI_API_KEY=<OpenAI / OpenRouter anahtarı>
+AI_BASE_URL=https://api.openai.com/v1
+AI_MODEL=gpt-4o-mini
+CRON_SECRET=<openssl rand -hex 32>
+SYNTHETIC_CONTENT_PUBLIC=false
+```
+Coolify'da runtime değişkenidir (VITE_ değil); kaydettikten sonra **Restart** yeter, rebuild şart değil.
+
 ## 4. Deploy
 1. Repo'yu Coolify'a bağla (GitHub veya git push).
 2. Yukarıdaki env'leri gir.
