@@ -98,7 +98,7 @@ function classifyHttpError(status: number, detail: string): { message: string; r
   if (quota) {
     return {
       message:
-        "OpenAI kotası doldu (insufficient_quota). platform.openai.com → Billing’den kredi ekleyin veya AI_BASE_URL ile başka sağlayıcı kullanın.",
+        "OpenAI hesabında kullanılabilir API kredisi yok (insufficient_quota). Usage 0 normaldir — reddedilen istek sayılmaz. ChatGPT Plus API kredisi vermez. platform.openai.com → Settings → Billing’de kredi bakiyesi ve ödeme yöntemi; Limits’te proje/aylık bütçe $0 olmamalı. Kredi eklendiyse birkaç dakika bekleyin.",
       retryable: false,
     };
   }
