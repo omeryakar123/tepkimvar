@@ -13,7 +13,6 @@ import {
   FileText,
   Eye,
   Users,
-  Check,
 } from "lucide-react";
 import { formatRating, type Company, type Complaint } from "@/lib/mock-data";
 import {
@@ -23,6 +22,11 @@ import {
   fetchPlatformStats,
 } from "@/lib/data";
 import { BrandAvatar } from "@/components/cards";
+import { LiveFeed } from "@/components/live-feed";
+import { MobileCarousel } from "@/components/mobile-carousel";
+
+/** Canlı akış ve ana sayfa verileri yenileme aralığı (30 dk). */
+const HOME_REFRESH_MS = 30 * 60 * 1000;
 
 export const Route = createFileRoute("/_site/")({
   // SSR: ana sayfa içeriği sunucuda üretilir.
@@ -82,16 +86,43 @@ function Home() {
     totalCompanies: 0,
     totalUsers: 0,
   });
+  const [feedLoading, setFeedLoading] = useState(true);
   const [search, setSearch] = useState("");
   const navigate = useNavigate();
   const reduceMotion = useReducedMotion();
 
   useEffect(() => {
-    fetchComplaintsList({ limit: 6, sortBy: "recent" }).then(setFeatured);
-    fetchComplaintsList({ limit: 2, sortBy: "trending" }).then(setTalked);
-    fetchBrandsList({ limit: 5, sortBy: "resolution" }).then(setTop);
-    fetchBrandsList({ limit: 10, sortBy: "complaints" }).then(setTrend100);
-    fetchPlatformStats().then(setStats);
+    let cancelled = false;
+
+    async function loadHomeData() {
+      setFeedLoading(true);
+      try {
+        const [recent, trending, topBrands, trendBrands, platformStats] = await Promise.all([
+          fetchComplaintsList({ limit: 6, sortBy: "recent" }),
+          fetchComplaintsList({ limit: 6, sortBy: "trending" }),
+          fetchBrandsList({ limit: 5, sortBy: "resolution" }),
+          fetchBrandsList({ limit: 10, sortBy: "complaints" }),
+          fetchPlatformStats(),
+        ]);
+        if (cancelled) return;
+        setFeatured(recent);
+        setTalked(trending.length > 0 ? trending : recent.slice(0, 4));
+        setTop(topBrands);
+        setTrend100(trendBrands);
+        setStats(platformStats);
+      } catch {
+        /* sessiz — bir sonraki yenilemede tekrar dener */
+      } finally {
+        if (!cancelled) setFeedLoading(false);
+      }
+    }
+
+    loadHomeData();
+    const timer = window.setInterval(loadHomeData, HOME_REFRESH_MS);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
   }, []);
 
   function doSearch(e: React.FormEvent) {
@@ -121,14 +152,14 @@ function Home() {
 
       {/* HERO */}
       <section className="relative overflow-hidden md:hero-glow">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-16 lg:py-24 grid lg:grid-cols-[1.05fr_1fr] gap-12 lg:gap-16 items-center">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-16 lg:py-24 grid lg:grid-cols-[1.05fr_1fr] gap-8 lg:gap-16 items-center">
           <div className="animate-fade-up">
             <span className="inline-flex items-center gap-2 rounded-full bg-brand-soft text-brand px-3 h-7 text-[12px] font-semibold ring-1 ring-brand/15">
               <ShieldCheck className="size-3.5" />
               Bağımsız şikayet platformu
             </span>
 
-            <h1 className="mt-5 font-display font-black text-[44px] sm:text-[58px] lg:text-[64px] leading-[1.02] tracking-[-0.03em] text-ink">
+            <h1 className="mt-5 font-display font-black text-[32px] sm:text-[58px] lg:text-[64px] leading-[1.02] tracking-[-0.03em] text-ink">
               Sesini duyur,
               <br />
               <span className="text-gradient-brand">çözümü takip et.</span>
@@ -139,16 +170,16 @@ function Home() {
               firmalardan resmi yanıt al. Her adım şeffaf ve takip edilebilir.
             </p>
 
-            <form onSubmit={doSearch} className="mt-8 max-w-xl">
-              <div className="flex items-center bg-card rounded-full shadow-pop ring-1 ring-rule pl-5 pr-1.5 h-14 focus-within:ring-2 focus-within:ring-brand/40 transition">
+            <form onSubmit={doSearch} className="mt-6 sm:mt-8 max-w-xl">
+              <div className="flex items-center bg-card rounded-full shadow-pop ring-1 ring-rule pl-4 sm:pl-5 pr-1.5 h-12 sm:h-14 focus-within:ring-2 focus-within:ring-brand/40 transition">
                 <Search className="size-5 text-navy-mid shrink-0" />
                 <input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Marka, model, ürün ara…"
-                  className="flex-1 bg-transparent border-0 px-3 text-[15px] text-ink placeholder:text-navy-mid focus:outline-none"
+                  className="flex-1 bg-transparent border-0 px-2 sm:px-3 text-[14px] sm:text-[15px] text-ink placeholder:text-navy-mid focus:outline-none min-w-0"
                 />
-                <button className="shrink-0 rounded-full bg-brand text-brand-foreground px-8 h-11 text-[14px] font-semibold hover:bg-brand-hover transition">
+                <button className="shrink-0 rounded-full bg-brand text-brand-foreground px-5 sm:px-8 h-9 sm:h-11 text-[13px] sm:text-[14px] font-semibold hover:bg-brand-hover transition">
                   Ara
                 </button>
               </div>
@@ -190,87 +221,62 @@ function Home() {
                 </div>
               ))}
             </dl>
+
+            {/* Mobil canlı akış — masaüstünde sağ kolonda */}
+            <div className="mt-8 lg:hidden">
+              <LiveFeed items={featured} loading={feedLoading} compact />
+            </div>
           </div>
 
-          {/* Canlı akış — gerçek şikayetler */}
+          {/* Canlı akış — masaüstü */}
           <div className="relative hidden lg:block">
-            <div
-              className="absolute -inset-6 rounded-[32px] bg-brand/5 blur-2xl"
-              aria-hidden
-            />
-            <div className="relative card-surface shadow-lift p-5">
-              <div className="flex items-center justify-between px-1 pb-4 border-b border-rule">
-                <div className="flex items-center gap-2">
-                  <span className="relative flex size-2">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand opacity-60" />
-                    <span className="relative inline-flex size-2 rounded-full bg-brand" />
-                  </span>
-                  <span className="text-[13px] font-semibold text-ink">
-                    Canlı akış
-                  </span>
-                </div>
-                <Link
-                  to="/sikayetler"
-                  className="text-[12px] font-medium text-brand hover:underline"
-                >
-                  Tümü
-                </Link>
-              </div>
-
-              <ul className="divide-y divide-rule">
-                {(featured.length ? featured : []).slice(0, 4).map((c) => (
-                  <li key={c.id} className="py-3.5">
-                    <Link
-                      to="/sikayet/$id"
-                      params={{ id: c.publicId ?? c.id }}
-                      className="group flex gap-3"
-                    >
-                      <span className="mt-0.5 grid place-items-center size-9 shrink-0 rounded-full bg-brand-soft text-brand text-[11px] font-bold">
-                        {c.userInitials}
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="flex items-center gap-2 text-[11.5px] text-navy-mid">
-                          <span className="font-semibold text-brand truncate">
-                            {c.companyName}
-                          </span>
-                          <span aria-hidden>·</span>
-                          <span className="shrink-0">{c.createdAgo}</span>
-                        </span>
-                        <span className="mt-0.5 block text-[13.5px] font-medium text-ink truncate group-hover:text-brand transition-colors">
-                          {c.title}
-                        </span>
-                      </span>
-                      {c.companyReply && (
-                        <span className="shrink-0 self-center inline-flex items-center gap-1 rounded-full bg-success-soft text-success px-2 h-6 text-[10.5px] font-bold">
-                          <Check className="size-3" /> Yanıtlandı
-                        </span>
-                      )}
-                    </Link>
-                  </li>
-                ))}
-                {featured.length === 0 &&
-                  [0, 1, 2, 3].map((i) => (
-                    <li key={i} className="py-3.5 flex gap-3">
-                      <span className="size-9 rounded-full skeleton shrink-0" />
-                      <span className="flex-1 space-y-2 py-1">
-                        <span className="block h-2.5 w-24 skeleton" />
-                        <span className="block h-3 w-full skeleton" />
-                      </span>
-                    </li>
-                  ))}
-              </ul>
-            </div>
+            <div className="absolute -inset-6 rounded-[32px] bg-brand/5 blur-2xl" aria-hidden />
+            <LiveFeed items={featured} loading={feedLoading} />
           </div>
         </div>
       </section>
 
-      {/* GÜNDEMDEKİ ŞİKAYETLER — 6 küçük kart */}
+      {/* GÜNDEMDEKİ ŞİKAYETLER */}
       <section className="bg-surface">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-14">
-          <h2 className="font-display font-bold text-[22px] text-ink mb-6">
-            Gündemdeki Şikayetler
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-14">
+          <div className="flex items-end justify-between gap-4 mb-5 sm:mb-6">
+            <h2 className="font-display font-bold text-[20px] sm:text-[22px] text-ink">
+              Gündemdeki Şikayetler
+            </h2>
+            <Link to="/sikayetler" className="text-[12px] font-semibold text-brand hover:underline shrink-0">
+              Tümü
+            </Link>
+          </div>
+
+          {/* Mobil: yatay carousel */}
+          <div className="md:hidden">
+            <MobileCarousel ariaLabel="Gündemdeki şikayetler">
+              {featured.map((c) => (
+                <Link
+                  key={c.id}
+                  to="/sikayet/$id"
+                  params={{ id: c.id }}
+                  className="block h-full bg-card rounded-2xl p-4 ring-1 ring-rule/50"
+                >
+                  <div className="flex gap-3">
+                    <div className="size-9 rounded-full bg-accent-purple text-paper grid place-items-center text-[12px] font-bold shrink-0">
+                      {c.userInitials}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-[12px] text-navy-mid">
+                        <b className="text-ink">{c.userName}</b>
+                        <span className="text-brand"> · {c.companyName}</span>
+                      </div>
+                      <p className="mt-1.5 text-[13px] text-navy line-clamp-3 leading-relaxed">{c.title}</p>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </MobileCarousel>
+          </div>
+
+          {/* Masaüstü: grid */}
+          <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 gap-4">
             {featured.map((c) => (
               <Link
                 key={c.id}
@@ -286,9 +292,7 @@ function Home() {
                     <b className="text-ink">{c.userName}</b> ·{" "}
                     <span className="text-brand">{c.companyName}</span>
                   </div>
-                  <p className="mt-1.5 text-[13px] text-navy line-clamp-3 leading-relaxed">
-                    {c.title}
-                  </p>
+                  <p className="mt-1.5 text-[13px] text-navy line-clamp-3 leading-relaxed">{c.title}</p>
                 </div>
               </Link>
             ))}
@@ -296,54 +300,61 @@ function Home() {
         </div>
       </section>
 
-      {/* ÇOK KONUŞULANLAR — purple band */}
+      {/* ÇOK KONUŞULANLAR */}
       <section className="relative bg-surface border-y border-rule overflow-hidden">
         <div className="absolute -right-16 -top-16 size-64 rounded-full bg-card/10" />
         <div className="absolute -left-24 bottom-0 size-48 rounded-full bg-brand/30" />
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-16 relative">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="font-display font-bold text-[22px] text-ink">
-              Çok Konuşulanlar
-            </h2>
-            <div className="flex gap-2">
-              <button className="size-9 rounded-full bg-card ring-1 ring-rule text-navy grid place-items-center hover:bg-surface hover:text-ink transition">
-                ‹
-              </button>
-              <button className="size-9 rounded-full bg-card ring-1 ring-rule text-navy grid place-items-center hover:bg-surface hover:text-ink transition">
-                ›
-              </button>
-            </div>
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-16 relative">
+          <h2 className="font-display font-bold text-[20px] sm:text-[22px] text-ink mb-5 sm:mb-6">
+            Çok Konuşulanlar
+          </h2>
+
+          <div className="md:hidden">
+            <MobileCarousel slideClassName="w-[88vw] max-w-[340px] snap-start shrink-0" ariaLabel="Çok konuşulan şikayetler">
+              {talked.map((c) => (
+                <Link
+                  key={c.id}
+                  to="/sikayet/$id"
+                  params={{ id: c.id }}
+                  className="block h-full bg-card rounded-2xl p-5 ring-1 ring-rule/40"
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="size-10 rounded-full bg-accent-purple text-paper grid place-items-center font-bold text-[13px]">
+                      {c.userInitials}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="font-semibold text-[13px] text-ink truncate">{c.userName}</div>
+                      <div className="text-[11px] text-navy-mid">{c.createdAgo}</div>
+                    </div>
+                  </div>
+                  <h3 className="font-display font-bold text-[16px] text-ink mb-2 line-clamp-2">{c.title}</h3>
+                  <p className="text-[13px] text-navy line-clamp-3 leading-relaxed">{c.body}</p>
+                  <div className="mt-3 text-[12px] font-semibold text-brand truncate">▸ {c.companyName}</div>
+                </Link>
+              ))}
+            </MobileCarousel>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {talked.map((c) => (
+
+          <div className="hidden md:grid grid-cols-2 gap-4">
+            {talked.slice(0, 4).map((c) => (
               <Link
                 key={c.id}
                 to="/sikayet/$id"
                 params={{ id: c.id }}
-                className="bg-card rounded-2xl p-6 hover:shadow-pop transition"
+                className="bg-card rounded-2xl p-6 hover:shadow-pop transition ring-1 ring-rule/40"
               >
                 <div className="flex items-center gap-3 mb-3">
                   <div className="size-10 rounded-full bg-accent-purple text-paper grid place-items-center font-bold text-[13px]">
                     {c.userInitials}
                   </div>
                   <div>
-                    <div className="font-semibold text-[13px] text-ink">
-                      {c.userName}
-                    </div>
-                    <div className="text-[11px] text-navy-mid">
-                      {c.createdAgo}
-                    </div>
+                    <div className="font-semibold text-[13px] text-ink">{c.userName}</div>
+                    <div className="text-[11px] text-navy-mid">{c.createdAgo}</div>
                   </div>
                 </div>
-                <h3 className="font-display font-bold text-[17px] text-ink mb-2 line-clamp-2">
-                  {c.title}
-                </h3>
-                <p className="text-[13px] text-navy line-clamp-3 leading-relaxed">
-                  {c.body}
-                </p>
-                <div className="mt-3 text-[12px] font-semibold text-brand">
-                  ▸ {c.companyName}
-                </div>
+                <h3 className="font-display font-bold text-[17px] text-ink mb-2 line-clamp-2">{c.title}</h3>
+                <p className="text-[13px] text-navy line-clamp-3 leading-relaxed">{c.body}</p>
+                <div className="mt-3 text-[12px] font-semibold text-brand">▸ {c.companyName}</div>
               </Link>
             ))}
           </div>
@@ -463,16 +474,41 @@ function Home() {
 
       {/* TREND 100 */}
       <section className="bg-surface">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-16">
-          <div className="text-center mb-8">
-            <h2 className="font-display font-black text-[28px] text-ink inline-flex items-center gap-2">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-16">
+          <div className="text-center mb-6 sm:mb-8">
+            <h2 className="font-display font-black text-[24px] sm:text-[28px] text-ink inline-flex items-center gap-2">
               Trend<span className="text-brand">100</span>
             </h2>
-            <p className="mt-1 text-[13px] text-navy-mid">
-              Son 7 günün en çok konuşulan markaları.
-            </p>
+            <p className="mt-1 text-[13px] text-navy-mid">Son 7 günün en çok konuşulan markaları.</p>
           </div>
-          <div className="bg-card rounded-2xl overflow-hidden ring-1 ring-rule">
+
+          {/* Mobil: kart listesi — marka adı tam okunur */}
+          <div className="md:hidden bg-card rounded-2xl ring-1 ring-rule divide-y divide-rule overflow-hidden">
+            {trend100.map((b, i) => (
+              <Link
+                key={b.slug}
+                to="/firma/$slug"
+                params={{ slug: b.slug }}
+                className="flex items-center gap-3 px-4 py-3.5 hover:bg-surface transition"
+              >
+                <span className="w-7 text-[13px] text-navy-mid font-bold tabular-nums shrink-0">{i + 1}.</span>
+                <BrandAvatar name={b.name} slug={b.slug} logoUrl={b.logoUrl} website={b.website} size={36} rounded="rounded-lg" />
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-[14px] text-ink leading-snug break-words">{b.name}</div>
+                  <div className="text-[11px] text-navy-mid mt-0.5">{b.categoryName}</div>
+                </div>
+                <div className="shrink-0 text-right">
+                  <TrendingUp className="inline size-4 text-brand mb-0.5" />
+                  <div className="text-[13px] font-bold text-ink tabular-nums">
+                    {formatRating(b.rating, b.ratingCount)}
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          {/* Masaüstü: tablo */}
+          <div className="hidden md:block bg-card rounded-2xl overflow-hidden ring-1 ring-rule">
             <div className="grid grid-cols-[48px_1fr_120px_80px] gap-4 px-5 py-3 border-b border-rule text-[11px] uppercase tracking-wider text-navy-mid font-semibold">
               <span>#</span>
               <span>Marka</span>
@@ -486,18 +522,12 @@ function Home() {
                 params={{ slug: b.slug }}
                 className="grid grid-cols-[48px_1fr_120px_80px] items-center gap-4 px-5 py-3.5 border-b border-rule hover:bg-surface transition"
               >
-                <span className="text-[13px] text-navy-mid tabular-nums">
-                  {i + 1}.
-                </span>
+                <span className="text-[13px] text-navy-mid tabular-nums">{i + 1}.</span>
                 <div className="flex items-center gap-3 min-w-0">
                   <BrandAvatar name={b.name} slug={b.slug} logoUrl={b.logoUrl} website={b.website} size={32} rounded="rounded-md" />
                   <div className="min-w-0">
-                    <div className="font-semibold text-[14px] text-ink truncate">
-                      {b.name}
-                    </div>
-                    <div className="text-[11px] text-navy-mid truncate">
-                      {b.categoryName}
-                    </div>
+                    <div className="font-semibold text-[14px] text-ink truncate">{b.name}</div>
+                    <div className="text-[11px] text-navy-mid truncate">{b.categoryName}</div>
                   </div>
                 </div>
                 <div className="text-right">
@@ -509,6 +539,7 @@ function Home() {
               </Link>
             ))}
           </div>
+
           <div className="mt-5 text-center">
             <Link
               to="/trendler"
