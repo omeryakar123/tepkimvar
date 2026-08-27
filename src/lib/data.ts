@@ -94,7 +94,6 @@ export type DbBrand = {
   cover_url: string | null;
   about: string | null;
   website: string | null;
-  city: string | null;
   category_id: string | null;
   verified: boolean;
   premium: boolean;
@@ -134,7 +133,6 @@ export function brandToCompany(b: DbBrand, categoryName = "Genel", categorySlug 
     premium: !!b.premium,
     about: b.about ?? "",
     website: b.website ?? "",
-    city: b.city ?? "—",
     logoUrl: b.logo_url,
     coverUrl: b.cover_url,
   };
@@ -151,7 +149,6 @@ export type DbComplaint = {
   rating: number | null;
   views: number;
   votes: number;
-  city: string | null;
   is_anonymous: boolean;
   anon_name: string | null;
   user_id: string | null;
@@ -186,6 +183,7 @@ export function dbComplaintToUi(c: DbComplaint): Complaint {
     views: c.views ?? 0,
     comments: 0,
     votes: c.votes ?? 0,
+    rating: c.rating ?? null,
     sentiment: (c.sentiment_score as Complaint["sentiment"]) ?? undefined,
     isHighPriority: !!c.is_high_priority,
     firstResponseMinutes: c.first_response_minutes,

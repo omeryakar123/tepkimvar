@@ -122,7 +122,6 @@ function BrandProfilePage() {
       phone: e164,
       email: brand.email,
       address: brand.address,
-      city: brand.city,
       about: brand.about,
       socials: brand.socials ?? {},
       business_hours: brand.business_hours ?? {},
@@ -278,11 +277,6 @@ function BrandProfilePage() {
             label="E-posta"
             value={brand.email ?? ""}
             onChange={(v) => setBrand({ ...brand, email: v })}
-          />
-          <Field
-            label="Şehir"
-            value={brand.city ?? ""}
-            onChange={(v) => setBrand({ ...brand, city: v })}
           />
           <Field
             label="Adres"

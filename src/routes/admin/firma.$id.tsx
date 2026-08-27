@@ -170,7 +170,6 @@ function AdminBrandEditPage() {
           <Text label="Website" value={b.website ?? ""} onChange={(v) => setB({ ...b, website: v })} />
           <Text label="Telefon" value={b.phone ?? ""} onChange={(v) => setB({ ...b, phone: v })} />
           <Text label="E-posta" value={b.email ?? ""} onChange={(v) => setB({ ...b, email: v })} />
-          <Text label="Şehir" value={b.city ?? ""} onChange={(v) => setB({ ...b, city: v })} />
           <Text label="Adres" value={b.address ?? ""} onChange={(v) => setB({ ...b, address: v })} />
         </div>
         <div className="mt-3">

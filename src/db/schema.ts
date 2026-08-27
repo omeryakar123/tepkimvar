@@ -402,6 +402,73 @@ export const brandVerificationRequests = pgTable("brand_verification_requests", 
 });
 
 /* -------------------------------------------------------------------------- */
+/*                             AI Complaint Bot                               */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Marka başına bot ayarları. Kayıt yoksa bot KAPALI sayılır (varsayılan
+ * güvenli taraf), yani mevcut markalar bu özellikten etkilenmez.
+ */
+export const brandBotConfigs = pgTable("brand_bot_configs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  brandId: uuid("brand_id")
+    .notNull()
+    .unique()
+    .references(() => brands.id, { onDelete: "cascade" }),
+  enabled: boolean("enabled").default(false).notNull(),
+  dailyTarget: integer("daily_target").default(3).notNull(),
+  minRating: smallint("min_rating").default(1).notNull(),
+  maxRating: smallint("max_rating").default(5).notNull(),
+  // {"1":10,"2":15,"3":20,"4":30,"5":25} — boşsa kod içindeki varsayılan dağılım.
+  ratingWeights: jsonb("rating_weights").default({}).notNull(),
+  language: text("language").default("tr").notNull(),
+  complaintTone: text("complaint_tone").default("natural").notNull(),
+  responseTone: text("response_tone").default("professional").notNull(),
+  // Boş dizi = tüm senaryolar kullanılabilir.
+  scenarios: text("scenarios").array().default([]).notNull(),
+  customInstructions: text("custom_instructions"),
+  similarityThreshold: numeric("similarity_threshold", { precision: 3, scale: 2 })
+    .default("0.82")
+    .notNull(),
+  lastRunAt: timestamp("last_run_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+/** Her bot çalıştırmasının denetim kaydı (cron veya manuel). */
+export const botRuns = pgTable("bot_runs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  brandId: uuid("brand_id")
+    .notNull()
+    .references(() => brands.id, { onDelete: "cascade" }),
+  // 'cron' | 'manual'
+  trigger: text("trigger").default("cron").notNull(),
+  // 'running' | 'success' | 'partial' | 'failed' | 'skipped'
+  status: text("status").default("running").notNull(),
+  startedAt: timestamp("started_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
+  targetCount: integer("target_count").default(0).notNull(),
+  complaintsGenerated: integer("complaints_generated").default(0).notNull(),
+  responsesGenerated: integer("responses_generated").default(0).notNull(),
+  duplicatesDetected: integer("duplicates_detected").default(0).notNull(),
+  errorCount: integer("error_count").default(0).notNull(),
+  errors: jsonb("errors").default([]).notNull(),
+  provider: text("provider"),
+  triggeredBy: uuid("triggered_by").references(() => user.id, {
+    onDelete: "set null",
+  }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+/* -------------------------------------------------------------------------- */
 /*                                 Complaints                                 */
 /* -------------------------------------------------------------------------- */
 
@@ -448,6 +515,19 @@ export const complaints = pgTable("complaints", {
   sentimentConfidence: numeric("sentiment_confidence"),
   isWhiteLabel: boolean("is_white_label").default(false).notNull(),
   whiteLabelSource: text("white_label_source"),
+  /* --- AI Complaint Bot alanları (insan şikayetlerinde hepsi varsayılan) --- */
+  // true ise içerik gerçek bir kullanıcıdan gelmemiştir. Yayına ve marka
+  // ortalamasına karışması SYNTHETIC_CONTENT_PUBLIC ile kontrol edilir.
+  isSynthetic: boolean("is_synthetic").default(false).notNull(),
+  // null = insan, 'ai_bot' = günlük cron, 'ai_manual' = panelden tek seferlik
+  generatedBy: text("generated_by"),
+  language: text("language").default("tr").notNull(),
+  botScenario: text("bot_scenario"),
+  botRunId: uuid("bot_run_id").references(() => botRuns.id, {
+    onDelete: "set null",
+  }),
+  // Dolu ise bot bu şikayete yanıt üretemedi; sonraki çalıştırmada denenir.
+  botError: text("bot_error"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -467,6 +547,9 @@ export const complaintReplies = pgTable("complaint_replies", {
   body: text("body").notNull(),
   isBrand: boolean("is_brand").default(false).notNull(),
   isInternal: boolean("is_internal").default(false).notNull(),
+  language: text("language"),
+  // null = insan, 'ai_bot' | 'ai_manual' = bot ürünü, 'admin_edited' = elle düzeltilmiş
+  generatedBy: text("generated_by"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),

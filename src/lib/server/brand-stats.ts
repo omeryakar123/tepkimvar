@@ -1,13 +1,18 @@
 import { sql } from "drizzle-orm";
 import { db, schema } from "@/db";
+import { isSyntheticPublic } from "@/lib/server/synthetic";
 
 /**
  * Marka puanı ve şikayet sayaçları TEK YERDEN, her zaman kaynak satırların
  * gerçek ortalaması/sayımı olarak hesaplanır.
  *
  * Puan iki kaynaktan beslenir; ikisi de kullanıcının verdiği 1-5 arası nottur:
- *   - `brand_ratings`                        → marka sayfasındaki oy (kullanıcı başına tek)
- *   - `complaint_resolutions.resolution_rating` → şikayet çözülünce verilen not
+ *   - `brand_ratings`    → marka sayfasındaki genel oy (kullanıcı başına tek)
+ *   - `complaints.rating` → ŞİKAYET BAZLI memnuniyet oyu; kullanıcı kendi
+ *     şikayetinin sonucunu yıldızlayınca yazılır (çözüm tüneli ya da
+ *     /api/complaint-rating). Her şikayet için en fazla bir oy olduğundan
+ *     `complaint_resolutions.resolution_rating` ARTIK ortalamaya katılmaz —
+ *     aynı not iki kez sayılırdı.
  *
  * Artımlı ("kayan ortalama") güncelleme bilinçli olarak kullanılmaz: oy
  * değiştiğinde, oy silindiğinde veya kullanıcı hesabı kapandığında (cascade)
@@ -16,6 +21,15 @@ import { db, schema } from "@/db";
 
 /** Reddedilen/spam kayıtlar gerçek şikayet sayılmaz. */
 const COUNTED = sql`status NOT IN ('rejected', 'spam')`;
+
+/**
+ * Bot üretimi (sentetik) şikayetler yayına kapalıyken ne puana ne sayaçlara
+ * girer; marka sayfasındaki sayılar yalnızca gerçek kullanıcı içeriğini
+ * yansıtır. SYNTHETIC_CONTENT_PUBLIC="true" ise dahil edilirler.
+ */
+function syntheticFilter() {
+  return isSyntheticPublic() ? sql`TRUE` : sql`is_synthetic = false`;
+}
 
 /** Süreci hâlâ devam eden, çözülmemiş durumlar. */
 const OPEN = sql`status IN ('pending', 'approved', 'in_review', 'answered', 'user_replied', 'super_admin_review', 'escalated')`;
@@ -48,15 +62,20 @@ type AggregateRow = {
 export async function recomputeBrandAggregates(
   brandId: string,
 ): Promise<BrandAggregates | null> {
+  const visible = syntheticFilter();
+
   const rows = (await db.execute(sql`
     WITH scores AS (
       SELECT rating::numeric AS value
         FROM brand_ratings
        WHERE brand_id = ${brandId}
       UNION ALL
-      SELECT resolution_rating::numeric AS value
-        FROM complaint_resolutions
+      SELECT rating::numeric AS value
+        FROM complaints
        WHERE brand_id = ${brandId}
+         AND rating IS NOT NULL
+         AND ${COUNTED}
+         AND ${visible}
     ),
     score AS (
       SELECT round(avg(value), 2) AS avg_value, count(*)::int AS vote_count FROM scores
@@ -69,6 +88,7 @@ export async function recomputeBrandAggregates(
         round(avg(first_response_minutes))::int AS avg_response
       FROM complaints
      WHERE brand_id = ${brandId}
+       AND ${visible}
     )
     UPDATE brands SET
       rating = coalesce((SELECT avg_value FROM score), 0),

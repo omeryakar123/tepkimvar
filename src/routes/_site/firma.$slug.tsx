@@ -6,7 +6,6 @@ import {
   Building2,
   Clock,
   Globe,
-  MapPin,
   Pencil,
   Plus,
   Sparkles,
@@ -396,11 +395,6 @@ function CompanyPage() {
                   >
                     <Globe className="size-3" /> {company.website}
                   </a>
-                )}
-                {company.city && (
-                  <span className="inline-flex items-center gap-1">
-                    <MapPin className="size-3" /> {company.city}
-                  </span>
                 )}
               </div>
 

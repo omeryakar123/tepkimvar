@@ -137,7 +137,6 @@ export const Route = createFileRoute("/api/complaints")({
             body?: string;
             brandId?: string;
             categoryId?: string | null;
-            city?: string | null;
             contactPhone?: string | null;
             isAnonymous?: boolean;
           };
@@ -170,7 +169,6 @@ export const Route = createFileRoute("/api/complaints")({
               categoryId: b.categoryId || null,
               title: title.slice(0, 200),
               body: body.slice(0, 5000),
-              city: b.city?.trim() || null,
               contactPhone: b.contactPhone || null,
               isAnonymous: !!b.isAnonymous,
               anonName: b.isAnonymous ? "Anonim" : null,

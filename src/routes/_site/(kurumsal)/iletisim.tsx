@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Mail, MapPin, Send } from "lucide-react";
+import { Mail, Send } from "lucide-react";
 import { seoHead, breadcrumbLd } from "@/lib/seo";
 
 const CONTACT_EMAIL = "iletisim@tepkimvarplus.com";
@@ -44,7 +44,7 @@ function Page() {
         <p className="text-navy-mid mb-10">
           Soru, öneri, iş birliği ve marka başvuruları için bize aşağıdaki kanallardan ulaşabilirsiniz.
         </p>
-        <div className="grid md:grid-cols-3 gap-4 mb-10">
+        <div className="grid md:grid-cols-2 gap-4 mb-10">
           <a href={`mailto:${CONTACT_EMAIL}`} className="bg-card rounded-2xl ring-1 ring-rule p-6 hover:ring-brand/40 transition">
             <div className="size-10 rounded-xl bg-brand-soft text-brand grid place-items-center mb-3">
               <Mail className="size-5" />
@@ -59,13 +59,6 @@ function Page() {
             <div className="text-xs uppercase tracking-widest text-navy-mid">Telegram</div>
             <div className="mt-1 font-semibold text-ink">@tepkimvarplus</div>
           </a>
-          <div className="bg-card rounded-2xl ring-1 ring-rule p-6">
-            <div className="size-10 rounded-xl bg-brand-soft text-brand grid place-items-center mb-3">
-              <MapPin className="size-5" />
-            </div>
-            <div className="text-xs uppercase tracking-widest text-navy-mid">Konum</div>
-            <div className="mt-1 font-semibold text-ink">İstanbul, Türkiye</div>
-          </div>
         </div>
         <form onSubmit={submit} className="bg-card rounded-2xl ring-1 ring-rule p-6 space-y-4">
           <div className="grid md:grid-cols-2 gap-4">

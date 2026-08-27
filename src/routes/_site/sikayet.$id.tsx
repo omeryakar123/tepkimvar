@@ -5,6 +5,7 @@ import { ReportButton } from "@/components/report-button";
 import { ComplaintCard } from "@/components/cards";
 import { ComplaintTimeline } from "@/components/complaint-timeline";
 import { ResolutionTunnel } from "@/components/resolution-tunnel";
+import { ComplaintRating } from "@/components/complaint-rating";
 import { statusClasses, statusLabel, type Complaint } from "@/lib/mock-data";
 import { fetchComplaintById, fetchComplaintsList, fetchComments, fetchComplaintResolution, type DbComment, type ResolutionRow } from "@/lib/data";
 import { useAuth } from "@/hooks/use-auth";
@@ -210,6 +211,18 @@ function ComplaintPage() {
 
           <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight leading-tight mb-4 text-balance">{complaint.title}</h1>
 
+          {complaint.rating ? (
+            <div className="mb-5 inline-flex items-center gap-1.5 text-sm text-navy">
+              {[1, 2, 3, 4, 5].map((n) => (
+                <Star
+                  key={n}
+                  className={`size-4 ${n <= (complaint.rating ?? 0) ? "fill-amber-400 text-amber-400" : "text-navy-mid"}`}
+                />
+              ))}
+              <span className="ml-1 text-xs text-navy-mid">Şikayet sahibinin değerlendirmesi</span>
+            </div>
+          ) : null}
+
           <div className="flex items-center gap-2 mb-6 flex-wrap">
             <Link to="/firma/$slug" params={{ slug: complaint.companySlug }} className="inline-flex items-center gap-1 text-xs px-2.5 py-1 bg-surface text-navy rounded-md font-medium hover:bg-rule">
               <Tag className="size-3" /> {complaint.companyName}
@@ -259,6 +272,10 @@ function ComplaintPage() {
             </div>
           </div>
         )}
+
+        {/* Şikayet sahibinin memnuniyet oyu — marka ortalamasını besler.
+            Kutu yalnızca sahibine görünür (karar sunucuda verilir). */}
+        <ComplaintRating complaintId={complaint.id} onChange={() => load()} />
 
         {/* Resolution stories / mark resolved */}
         {resolution ? (

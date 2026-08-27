@@ -49,6 +49,33 @@ export async function apiSend(
   }
 }
 
+/**
+ * apiSend gibi ama sunucunun döndürdüğü GÖVDEYİ verir (üretim sonucu, sayaç
+ * gibi bilgileri kullanıcıya göstermek gerektiğinde).
+ */
+export async function apiSendJson<T>(
+  url: string,
+  method: "POST" | "PATCH" | "PUT" | "DELETE",
+  body?: unknown,
+): Promise<T | null> {
+  try {
+    const res = await fetch(url, {
+      method,
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body ?? {}),
+    });
+    if (!res.ok) {
+      toast.error(await readError(res));
+      return null;
+    }
+    return (await res.json()) as T;
+  } catch {
+    toast.error("Bağlantı hatası");
+    return null;
+  }
+}
+
 /** Dosya yükleme — mevcut /api/upload ucunu kullanır, /api/files/<key> döner. */
 export async function uploadFile(
   file: File,

@@ -192,7 +192,6 @@ function ProfilePage() {
               <label className="text-[12px] font-medium text-navy-mid">Telefon</label>
               <div className="mt-1"><PhoneInput value={phone} onChange={setPhone} /></div>
             </div>
-            <Field label="Şehir" value={profile.city ?? ""} onChange={(v) => setProfile({ ...profile, city: v })} />
             <div className="sm:col-span-2">
               <label className="text-[12px] font-medium text-navy-mid">Hakkımda</label>
               <textarea rows={4} value={profile.bio ?? ""} onChange={(e) => setProfile({ ...profile, bio: e.target.value })} className="mt-1 w-full rounded-lg ring-1 ring-rule p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40" />

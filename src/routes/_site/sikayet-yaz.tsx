@@ -41,7 +41,6 @@ function WriteComplaintPage() {
   const [categoryId, setCategoryId] = useState("");
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
-  const [city, setCity] = useState("");
   const [phone, setPhone] = useState("");
   const [anonymous, setAnonymous] = useState(false);
   const [kvkk, setKvkk] = useState(false);
@@ -91,7 +90,6 @@ function WriteComplaintPage() {
           body: body.trim(),
           brandId,
           categoryId: categoryId || null,
-          city: city.trim() || null,
           contactPhone: e164,
           isAnonymous: anonymous,
         }),
@@ -191,23 +189,17 @@ function WriteComplaintPage() {
             </div>
           </div>
 
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div>
-              <label className="text-[12px] font-medium text-navy-mid">Kategori</label>
-              <div className="mt-1">
-                <Combobox
-                  options={cats.map((c) => ({ value: c.id, label: c.name }))}
-                  value={categoryId}
-                  onChange={setCategoryId}
-                  placeholder="Kategori seçin"
-                  searchPlaceholder="Kategori ara…"
-                  emptyText="Kategori bulunamadı."
-                />
-              </div>
-            </div>
-            <div>
-              <label className="text-[12px] font-medium text-navy-mid">Şehir</label>
-              <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="İstanbul" className="mt-1 w-full h-11 rounded-lg ring-1 ring-rule px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40" />
+          <div>
+            <label className="text-[12px] font-medium text-navy-mid">Kategori</label>
+            <div className="mt-1">
+              <Combobox
+                options={cats.map((c) => ({ value: c.id, label: c.name }))}
+                value={categoryId}
+                onChange={setCategoryId}
+                placeholder="Kategori seçin"
+                searchPlaceholder="Kategori ara…"
+                emptyText="Kategori bulunamadı."
+              />
             </div>
           </div>
 

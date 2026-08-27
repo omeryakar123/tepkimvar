@@ -32,7 +32,6 @@ export interface Company {
   premium?: boolean;
   about: string;
   website: string;
-  city: string;
   logoUrl?: string | null;
   coverUrl?: string | null;
 }
@@ -55,6 +54,8 @@ export interface Complaint {
   views: number;
   comments: number;
   votes: number;
+  /** Şikayet sahibinin sonuca verdiği 1-5 yıldız (yoksa tanımsız). */
+  rating?: number | null;
   sentiment?: "angry" | "sad" | "neutral" | "positive";
   isHighPriority?: boolean;
   firstResponseMinutes?: number | null;

@@ -25,7 +25,6 @@ export function toDbBrand(r: BrandRow) {
     cover_url: r.coverUrl,
     about: r.about,
     website: r.website,
-    city: r.city,
     category_id: r.categoryId,
     verified: r.verified,
     premium: r.premium,
@@ -61,7 +60,6 @@ export function toDbComplaint(c: ComplaintRow, brand: BrandNested | null) {
     rating: c.rating,
     views: c.views,
     votes: c.votes,
-    city: c.city,
     is_anonymous: c.isAnonymous,
     anon_name: c.anonName,
     // PII: real user id is stripped for anonymous complaints by the caller.

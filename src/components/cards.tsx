@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { BadgeCheck, Eye, MessageSquare, ChevronRight, Clock } from "lucide-react";
+import { BadgeCheck, Eye, MessageSquare, ChevronRight, Clock, Star } from "lucide-react";
 import type { Company, Complaint } from "@/lib/mock-data";
 import { formatCompactCount, formatRating, formatResponseTime, statusClasses, statusLabel } from "@/lib/mock-data";
 import { brandLogoUrl } from "@/lib/logo";
@@ -148,6 +148,11 @@ export function ComplaintCard({ complaint, variant = "default" }: { complaint: C
         <div className="flex items-center gap-4">
           <span className="inline-flex items-center gap-1.5"><Eye className="size-3.5" /> {complaint.views.toLocaleString("tr-TR")}</span>
           <span className="inline-flex items-center gap-1.5"><MessageSquare className="size-3.5" /> {complaint.comments}</span>
+          {complaint.rating ? (
+            <span className="inline-flex items-center gap-1 text-amber-500">
+              <Star className="size-3.5 fill-amber-400" /> {complaint.rating}
+            </span>
+          ) : null}
         </div>
         <span className="inline-flex items-center gap-1.5"><Clock className="size-3.5" /> {complaint.createdAgo}</span>
       </div>
