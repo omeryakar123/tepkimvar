@@ -1,3 +1,4 @@
+import { eq } from "drizzle-orm";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { emailOTP } from "better-auth/plugins";
@@ -36,7 +37,7 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 6,
-    requireEmailVerification: true,
+    requireEmailVerification: false,
   },
 
   // Kayıt sırasında telefon almak için user'a ek alan (profiles.phone'a kopyalanır).
@@ -62,13 +63,18 @@ export const auth = betterAuth({
       create: {
         after: async (createdUser) => {
           const u = createdUser as typeof createdUser & { phone?: string | null };
+          // E-posta OTP kapalı — yeni kayıtlar doğrulanmış sayılır.
+          await db
+            .update(schema.user)
+            .set({ emailVerified: true, updatedAt: new Date() })
+            .where(eq(schema.user.id, u.id));
           await db
             .insert(schema.profiles)
             .values({
               id: u.id,
               fullName: u.name ?? null,
               phone: u.phone ?? null,
-              emailVerified: u.emailVerified ?? false,
+              emailVerified: true,
             })
             .onConflictDoNothing();
           await db

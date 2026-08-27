@@ -5,7 +5,6 @@ import { authClient } from "@/lib/auth-client";
 import { highestRoleRedirect, type AppRole } from "@/hooks/use-auth";
 import { PhoneInput } from "@/components/phone-input";
 import { toE164Tr } from "@/lib/phone";
-import { apiSendSignupOtp } from "@/lib/otp-client";
 
 type Mode = "login" | "register" | "reset";
 type Variant = "user" | "admin" | "brand";
@@ -60,31 +59,18 @@ export function AuthForm({ variant = "user", initialMode = "login" }: { variant?
     try {
       if (mode === "register") {
         const e164 = toE164Tr(phone)!;
-        const normalizedEmail = email.toLowerCase();
-        // Kayıt sonrası hash'li OTP /api/otp/send ile gider.
         const { error } = await authClient.signUp.email({
-          email: normalizedEmail,
+          email: email.toLowerCase(),
           password,
           name: fullName,
           phone: e164,
         });
         if (error) throw new Error(error.message);
-        const send = await apiSendSignupOtp(normalizedEmail);
-        if (send.error) throw new Error(send.error);
-        navigate({ to: "/verify-email", search: { email: normalizedEmail } });
+        await postLoginRedirect();
         return;
       } else {
         const { error } = await authClient.signIn.email({ email: email.toLowerCase(), password });
-        if (error) {
-          // E-posta doğrulanmamışsa: kod gönder ve doğrulama ekranına yönlendir.
-          if (error.status === 403 || /verif|doğrula/i.test(error.message ?? "")) {
-            const send = await apiSendSignupOtp(email.toLowerCase());
-            if (send.error) throw new Error(send.error);
-            navigate({ to: "/verify-email", search: { email: email.toLowerCase() } });
-            return;
-          }
-          throw new Error(error.message);
-        }
+        if (error) throw new Error(error.message);
         await postLoginRedirect();
       }
     } catch (e2: unknown) {
