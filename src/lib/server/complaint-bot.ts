@@ -15,7 +15,6 @@ import { and, desc, eq, gte, isNotNull, sql } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { refreshBrandAggregates } from "@/lib/server/brand-stats";
 import { moderateAndScore } from "@/lib/server/moderation";
-import { isSyntheticPublic } from "@/lib/server/synthetic";
 import { AiError, aiProviderLabel, chatCompleteJson, isAiConfigured } from "@/lib/server/ai/client";
 import {
   COMPLAINT_TONES,
@@ -596,8 +595,8 @@ async function writeComplaint(input: {
       body: input.generated.body,
       status: "approved",
       rating: input.rating,
-      // Sentetik içerik varsayılan olarak yayına ÇIKMAZ (bkz. synthetic.ts).
-      isPublic: isSyntheticPublic(),
+      // Firma profilinde görünsün; sentetik bayrağı ayrı tutulur.
+      isPublic: true,
       isAnonymous: true,
       anonName: input.generated.nickname,
       isSynthetic: true,

@@ -12,7 +12,7 @@ import {
   Star,
   MessageSquare,
 } from "lucide-react";
-import { ComplaintCard } from "@/components/cards";
+import { BrandProfileComplaintCard } from "@/components/cards";
 import {
   formatRating,
   formatResponseTime,
@@ -22,7 +22,7 @@ import {
 import {
   fetchBrandBySlug,
   fetchComplaintsPaged,
-  PAGE_SIZE,
+  BRAND_PROFILE_COMPLAINTS_LIMIT,
   type DbBrand,
 } from "@/lib/data";
 import { brandLogoUrl } from "@/lib/logo";
@@ -42,12 +42,12 @@ export const Route = createFileRoute("/_site/firma/$slug")({
       fetchComplaintsPaged({
         brandSlug: params.slug,
         page: 1,
-        pageSize: PAGE_SIZE,
+        pageSize: BRAND_PROFILE_COMPLAINTS_LIMIT,
       }).catch(() => ({
         items: [] as Complaint[],
         total: 0,
         page: 1,
-        pageSize: PAGE_SIZE,
+        pageSize: BRAND_PROFILE_COMPLAINTS_LIMIT,
       })),
     ]);
     return { brand, complaints };
@@ -136,6 +136,7 @@ function CompanyPage() {
   const [verifyOpen, setVerifyOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(loaded?.complaints?.total ?? 0);
+  const [canReplyAsBrand, setCanReplyAsBrand] = useState(false);
   const logoInput = useRef<HTMLInputElement>(null);
   const coverInput = useRef<HTMLInputElement>(null);
 
@@ -162,12 +163,31 @@ function CompanyPage() {
   }, [slug, user?.id]);
 
   useEffect(() => {
-    fetchComplaintsPaged({ brandSlug: slug, page, pageSize: PAGE_SIZE }).then(
-      (r) => {
-        setComplaints(r.items);
-        setTotal(r.total);
-      },
-    );
+    if (!user || !raw?.id) {
+      setCanReplyAsBrand(false);
+      return;
+    }
+    fetch("/api/brand/memberships", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : { memberships: [] }))
+      .then((j: { memberships?: { brand_id: string }[] }) => {
+        setCanReplyAsBrand(!!j.memberships?.some((m) => m.brand_id === raw.id));
+      })
+      .catch(() => setCanReplyAsBrand(false));
+  }, [user?.id, raw?.id]);
+
+  const reloadComplaints = () => {
+    fetchComplaintsPaged({
+      brandSlug: slug,
+      page,
+      pageSize: BRAND_PROFILE_COMPLAINTS_LIMIT,
+    }).then((r) => {
+      setComplaints(r.items);
+      setTotal(r.total);
+    });
+  };
+
+  useEffect(() => {
+    reloadComplaints(); /* eslint-disable-next-line */
   }, [slug, page]);
 
   async function messageBrand() {
@@ -535,15 +555,28 @@ function CompanyPage() {
             {tab === "Şikayetler" &&
               (complaints.length > 0 ? (
                 <>
+                  <p className="text-[13px] text-navy-mid mb-2">
+                    Son {Math.min(BRAND_PROFILE_COMPLAINTS_LIMIT, complaints.length)} şikayet
+                    {total > BRAND_PROFILE_COMPLAINTS_LIMIT
+                      ? ` (${total.toLocaleString("tr-TR")} toplam)`
+                      : ""}
+                  </p>
                   {complaints.map((c) => (
-                    <ComplaintCard key={c.id} complaint={c} />
+                    <BrandProfileComplaintCard
+                      key={c.id}
+                      complaint={c}
+                      canReply={canReplyAsBrand}
+                      onReplied={reloadComplaints}
+                    />
                   ))}
-                  <Pagination
-                    page={page}
-                    pageSize={PAGE_SIZE}
-                    total={total}
-                    onChange={setPage}
-                  />
+                  {total > BRAND_PROFILE_COMPLAINTS_LIMIT && (
+                    <Pagination
+                      page={page}
+                      pageSize={BRAND_PROFILE_COMPLAINTS_LIMIT}
+                      total={total}
+                      onChange={setPage}
+                    />
+                  )}
                 </>
               ) : (
                 <div className="bg-card rounded-2xl ring-1 ring-rule p-8 text-center text-sm text-navy-mid">

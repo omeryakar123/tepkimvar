@@ -1,11 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { and, desc, eq, ilike, inArray, notInArray, sql, type SQL } from "drizzle-orm";
+import { and, desc, eq, ilike, inArray, notInArray, or, sql, type SQL } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { toDbComplaint, type BrandNested, type DbComplaintShape } from "@/lib/db-shapes";
 import { HttpError, errorResponse, rateLimit, requireUser } from "@/lib/server/guard";
 import { recordStatusChange } from "@/lib/server/history";
 import { refreshBrandAggregates } from "@/lib/server/brand-stats";
 import { moderateAndScore } from "@/lib/server/moderation";
+import { isSyntheticPublic } from "@/lib/server/synthetic";
 
 // Public: şikayet listesi. RLS gitti; moderasyon filtresi BURADA zorlanıyor.
 const HIDDEN_STATUSES = ["pending", "rejected", "spam"] as const;
@@ -25,27 +26,37 @@ export const Route = createFileRoute("/api/complaints")({
         const pageParam = p.get("page");
         const pageSize = Number(p.get("pageSize")) || 12;
 
-        // AUTHZ: is_public = true AND status NOT IN ('pending','rejected','spam')
+        // AUTHZ: yayında olan + (marka profili için) bot üretimi şikayetler.
         const conditions: SQL[] = [
-          eq(schema.complaints.isPublic, true),
           notInArray(schema.complaints.status, [...HIDDEN_STATUSES]),
         ];
 
-        if (brandSlug) conditions.push(eq(schema.brands.slug, brandSlug));
+        if (brandSlug) {
+          // Firma sayfası: is_public=true VEYA sentetik (bot) şikayetler görünür.
+          conditions.push(
+            or(
+              eq(schema.complaints.isPublic, true),
+              eq(schema.complaints.isSynthetic, true),
+            ) as SQL,
+          );
+          conditions.push(eq(schema.brands.slug, brandSlug));
+        } else {
+          conditions.push(eq(schema.complaints.isPublic, true));
+          if (!isSyntheticPublic()) {
+            conditions.push(eq(schema.complaints.isSynthetic, false));
+          }
+        }
 
-        // categoryId param takes precedence; else resolve slug -> id.
-        let categoryId = categoryIdParam;
-        if (!categoryId && categorySlug) {
+        if (categoryIdParam) conditions.push(eq(schema.complaints.categoryId, categoryIdParam));
+        else if (categorySlug) {
           const [cat] = await db
             .select({ id: schema.categories.id })
             .from(schema.categories)
             .where(eq(schema.categories.slug, categorySlug))
             .limit(1);
-          categoryId = cat?.id;
-          // Bilinmeyen slug -> hiç sonuç dönmemeli.
-          if (!categoryId) return Response.json({ items: [], total: 0 });
+          if (!cat?.id) return Response.json({ items: [], total: 0 });
+          conditions.push(eq(schema.complaints.categoryId, cat.id));
         }
-        if (categoryId) conditions.push(eq(schema.complaints.categoryId, categoryId));
 
         if (search) conditions.push(ilike(schema.complaints.title, `%${search}%`));
 

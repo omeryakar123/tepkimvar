@@ -22,12 +22,8 @@ import { isSyntheticPublic } from "@/lib/server/synthetic";
 /** Reddedilen/spam kayıtlar gerçek şikayet sayılmaz. */
 const COUNTED = sql`status NOT IN ('rejected', 'spam')`;
 
-/**
- * Bot üretimi (sentetik) şikayetler yayına kapalıyken ne puana ne sayaçlara
- * girer; marka sayfasındaki sayılar yalnızca gerçek kullanıcı içeriğini
- * yansıtır. SYNTHETIC_CONTENT_PUBLIC="true" ise dahil edilirler.
- */
-function syntheticFilter() {
+/** Bot/sentetik şikayetler marka sayacına girer; puan ortalamasına yalnızca SYNTHETIC_CONTENT_PUBLIC ile. */
+function ratingSyntheticFilter() {
   return isSyntheticPublic() ? sql`TRUE` : sql`is_synthetic = false`;
 }
 
@@ -62,7 +58,7 @@ type AggregateRow = {
 export async function recomputeBrandAggregates(
   brandId: string,
 ): Promise<BrandAggregates | null> {
-  const visible = syntheticFilter();
+  const ratingVisible = ratingSyntheticFilter();
 
   const rows = (await db.execute(sql`
     WITH scores AS (
@@ -75,7 +71,7 @@ export async function recomputeBrandAggregates(
        WHERE brand_id = ${brandId}
          AND rating IS NOT NULL
          AND ${COUNTED}
-         AND ${visible}
+         AND ${ratingVisible}
     ),
     score AS (
       SELECT round(avg(value), 2) AS avg_value, count(*)::int AS vote_count FROM scores
@@ -88,7 +84,6 @@ export async function recomputeBrandAggregates(
         round(avg(first_response_minutes))::int AS avg_response
       FROM complaints
      WHERE brand_id = ${brandId}
-       AND ${visible}
     )
     UPDATE brands SET
       rating = coalesce((SELECT avg_value FROM score), 0),

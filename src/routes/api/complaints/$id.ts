@@ -19,7 +19,7 @@ export const Route = createFileRoute("/api/complaints/$id")({
               eq(schema.complaints.shortId, id.toUpperCase()),
             ) as SQL);
 
-        // AUTHZ: is_public = true AND status NOT IN ('pending','rejected','spam')
+        // AUTHZ: yayında veya (bot üretimi + onaylı) şikayetler görüntülenebilir.
         const [row] = await db
           .select({ c: schema.complaints, b: schema.brands })
           .from(schema.complaints)
@@ -27,8 +27,11 @@ export const Route = createFileRoute("/api/complaints/$id")({
           .where(
             and(
               idMatch,
-              eq(schema.complaints.isPublic, true),
               notInArray(schema.complaints.status, [...HIDDEN_STATUSES]),
+              or(
+                eq(schema.complaints.isPublic, true),
+                eq(schema.complaints.isSynthetic, true),
+              ),
             ),
           )
           .limit(1);

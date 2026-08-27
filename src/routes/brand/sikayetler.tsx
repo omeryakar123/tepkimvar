@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Send, Paperclip, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Send, Paperclip, CheckCircle2, AlertTriangle, Star } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { EscalateModal } from "@/components/escalate-modal";
@@ -9,7 +9,16 @@ import { PAGE_SIZE } from "@/lib/data";
 import type { BrandMembership } from "@/routes/brand";
 
 type Status = "pending" | "approved" | "in_review" | "answered" | "resolved" | "rejected" | "spam" | "user_replied" | "super_admin_review" | "escalated" | "archived";
-type Complaint = { id: string; title: string; body: string; status: Status; created_at: string; short_id: string | null };
+type Complaint = {
+  id: string;
+  title: string;
+  body: string;
+  status: Status;
+  created_at: string;
+  short_id: string | null;
+  brand_response: string | null;
+  rating: number | null;
+};
 
 export const Route = createFileRoute("/brand/sikayetler")({
   component: BrandComplaintsPage,
@@ -108,8 +117,8 @@ function BrandComplaintsPage() {
     }
 
     setReply(""); setFile(null); setSending(false); toast.success("Yanıt gönderildi");
-    setItems((prev) => prev.map((c) => c.id === active.id ? { ...c, status: "answered" } : c));
-    setActive({ ...active, status: "answered" });
+    setItems((prev) => prev.map((c) => c.id === active.id ? { ...c, status: "answered", brand_response: reply.trim() } : c));
+    setActive({ ...active, status: "answered", brand_response: reply.trim() });
   }
 
   if (!brandId) return <div className="px-6 lg:px-10 py-8 text-navy-mid">Firma bağlantısı bekleniyor…</div>;
@@ -157,6 +166,18 @@ function BrandComplaintsPage() {
                 </select>
               </div>
               <p className="mt-4 text-[14px] text-navy leading-relaxed whitespace-pre-wrap">{active.body}</p>
+              {active.rating != null && active.rating > 0 ? (
+                <div className="mt-4 inline-flex items-center gap-1.5 text-amber-600 text-[13px] font-semibold">
+                  <Star className="size-4 fill-amber-400 text-amber-400" />
+                  Şikayet puanı: {active.rating}/5
+                </div>
+              ) : null}
+              {active.brand_response ? (
+                <div className="mt-4 rounded-xl bg-brand-soft/50 ring-1 ring-brand/15 p-4">
+                  <p className="text-[11px] font-semibold text-brand mb-2">Mevcut firma yanıtınız</p>
+                  <p className="text-[14px] text-navy whitespace-pre-wrap">{active.brand_response}</p>
+                </div>
+              ) : null}
             </div>
             <div className="p-6 flex-1 flex flex-col gap-3">
               <textarea value={reply} onChange={(e) => setReply(e.target.value)} rows={6} placeholder="Yanıtınızı yazın…" className="w-full rounded-lg ring-1 ring-rule p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40" />

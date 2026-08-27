@@ -112,6 +112,7 @@ export const Route = createFileRoute("/api/brand/complaints")({
               created_at: schema.complaints.createdAt,
               short_id: schema.complaints.shortId,
               brand_response: schema.complaints.brandResponse,
+              rating: schema.complaints.rating,
             })
             .from(schema.complaints)
             .where(where)

@@ -201,6 +201,8 @@ export async function fetchCategoriesWithCount() {
 }
 
 export const PAGE_SIZE = 12;
+/** Firma profil sayfasında en fazla gösterilecek şikayet. */
+export const BRAND_PROFILE_COMPLAINTS_LIMIT = 6;
 
 export async function fetchComplaintsList(opts: { limit?: number; brandSlug?: string; categorySlug?: string; sortBy?: "recent" | "trending"; search?: string } = {}) {
   await ensureCategoryCache();
