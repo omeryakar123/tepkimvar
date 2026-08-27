@@ -14,7 +14,7 @@ import {
 import {
   getBotConfig,
   saveBotConfig,
-  todayStart,
+  sqlTodayStart,
   type BotConfigPatch,
 } from "@/lib/server/complaint-bot";
 
@@ -75,7 +75,7 @@ export const Route = createFileRoute("/api/admin/bot/config")({
                 and(
                   eq(schema.complaints.brandId, brandId),
                   eq(schema.complaints.isSynthetic, true),
-                  gte(schema.complaints.createdAt, todayStart()),
+                  gte(schema.complaints.createdAt, sqlTodayStart()),
                 ),
               );
 
@@ -102,7 +102,7 @@ export const Route = createFileRoute("/api/admin/bot/config")({
                 SELECT count(*) FROM complaints c
                  WHERE c.brand_id = ${schema.brandBotConfigs.brandId}
                    AND c.is_synthetic = true
-                   AND c.created_at >= ${todayStart()}
+                   AND c.created_at >= ${sqlTodayStart()}
               )`,
             })
             .from(schema.brandBotConfigs)

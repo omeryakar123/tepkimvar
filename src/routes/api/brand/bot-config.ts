@@ -12,7 +12,7 @@ import {
 import {
   getBotConfig,
   saveBotConfig,
-  todayStart,
+  sqlTodayStart,
   type BotConfigPatch,
 } from "@/lib/server/complaint-bot";
 import { COMPLAINT_TONES, LANGUAGES, RESPONSE_TONES, SCENARIOS } from "@/lib/server/ai/prompts";
@@ -48,7 +48,7 @@ export const Route = createFileRoute("/api/brand/bot-config")({
               and(
                 eq(schema.complaints.brandId, brandId),
                 eq(schema.complaints.isSynthetic, true),
-                gte(schema.complaints.createdAt, todayStart()),
+                gte(schema.complaints.createdAt, sqlTodayStart()),
               ),
             );
 

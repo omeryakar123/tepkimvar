@@ -4,6 +4,7 @@ import { db, schema } from "@/db";
 import { audit } from "@/lib/server/audit";
 import { HttpError, errorResponse, requireStaff } from "@/lib/server/guard";
 import { refreshBrandAggregates } from "@/lib/server/brand-stats";
+import { sqlTs } from "@/lib/server/complaint-bot";
 
 /**
  * Bot üretimi şikayet listesi / detay / yanıt düzenleme / silme.
@@ -136,14 +137,14 @@ export const Route = createFileRoute("/api/admin/bot/complaints")({
 
           const from = p.get("from");
           if (from && !Number.isNaN(Date.parse(from))) {
-            conditions.push(gte(schema.complaints.createdAt, new Date(from)));
+            conditions.push(gte(schema.complaints.createdAt, sqlTs(new Date(from))));
           }
           const to = p.get("to");
           if (to && !Number.isNaN(Date.parse(to))) {
             // Bitiş tarihi DAHİL olsun: günün sonuna kaydır.
             const end = new Date(to);
             end.setHours(23, 59, 59, 999);
-            conditions.push(lte(schema.complaints.createdAt, end));
+            conditions.push(lte(schema.complaints.createdAt, sqlTs(end)));
           }
 
           const q = p.get("q")?.trim();

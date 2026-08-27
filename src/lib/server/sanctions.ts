@@ -8,6 +8,7 @@
 import { and, desc, eq, isNull, or, gt } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { notify } from "@/lib/server/notify";
+import { sqlTs } from "@/lib/server/complaint-bot";
 
 export type SanctionType = "warning" | "ban_temp" | "ban_permanent" | "unban";
 
@@ -84,7 +85,7 @@ export async function isCurrentlyBanned(userId: string, isBannedFlag: boolean): 
         eq(schema.userSanctions.userId, userId),
         eq(schema.userSanctions.active, true),
         // kalıcı (expiresAt null) VEYA süresi henüz dolmamış
-        or(isNull(schema.userSanctions.expiresAt), gt(schema.userSanctions.expiresAt, new Date())),
+        or(isNull(schema.userSanctions.expiresAt), gt(schema.userSanctions.expiresAt, sqlTs(new Date()))),
       ),
     )
     .orderBy(desc(schema.userSanctions.createdAt))

@@ -4,7 +4,7 @@ import { db, schema } from "@/db";
 import { HttpError, errorResponse, requireStaff } from "@/lib/server/guard";
 import { isSyntheticPublic } from "@/lib/server/synthetic";
 import { aiProviderLabel, isAiConfigured } from "@/lib/server/ai/client";
-import { todayStart } from "@/lib/server/complaint-bot";
+import { sqlTodayStart } from "@/lib/server/complaint-bot";
 
 /**
  * Complaint Bot panosu sayaçları. Marka seçilirse SADECE o markanın verisi.
@@ -31,7 +31,7 @@ export const Route = createFileRoute("/api/admin/bot/stats")({
           const [row] = await db
             .select({
               total: sql<number>`count(*)`,
-              today: sql<number>`count(*) FILTER (WHERE created_at >= ${todayStart()})`,
+              today: sql<number>`count(*) FILTER (WHERE created_at >= ${sqlTodayStart()})`,
               avg_rating: sql<string | null>`round(avg(rating), 2)`,
               s1: star(1),
               s2: star(2),

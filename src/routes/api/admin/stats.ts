@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { eq, gte, sql } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { errorResponse, requireStaff } from "@/lib/server/guard";
+import { sqlTs } from "@/lib/server/complaint-bot";
 
 /** Yönetim paneli özet sayaçları. Personel dışına kapalı. */
 export const Route = createFileRoute("/api/admin/stats")({
@@ -34,7 +35,7 @@ export const Route = createFileRoute("/api/admin/stats")({
             db
               .select({ n: c })
               .from(schema.complaints)
-              .where(gte(schema.complaints.createdAt, today))
+              .where(gte(schema.complaints.createdAt, sqlTs(today)))
               .then(n),
             db
               .select({ n: c })

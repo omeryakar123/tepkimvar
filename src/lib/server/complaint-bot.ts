@@ -527,6 +527,18 @@ export function todayStart(): Date {
   return d;
 }
 
+/**
+ * postgres.js, drizzle `sql` şablonuna Date bağlayınca
+ * `Buffer.byteLength(date)` ile düşer. ISO + timestamptz cast güvenli yoldur.
+ */
+export function sqlTs(d: Date) {
+  return sql`${d.toISOString()}::timestamptz`;
+}
+
+export function sqlTodayStart() {
+  return sqlTs(todayStart());
+}
+
 const randInt = (min: number, max: number) => min + Math.floor(Math.random() * (max - min + 1));
 
 export type BotRunResult = {
@@ -716,7 +728,7 @@ export async function runBotForBrand(opts: {
         and(
           eq(schema.complaints.brandId, opts.brandId),
           eq(schema.complaints.isSynthetic, true),
-          gte(schema.complaints.createdAt, todayStart()),
+          gte(schema.complaints.createdAt, sqlTodayStart()),
         ),
       );
     const todayCount = Number(todayCountRaw);
