@@ -189,7 +189,7 @@ export async function chatComplete(opts: ChatOptions): Promise<string> {
           retryable: classified.retryable,
           status: res.status,
         });
-        if (!retryable || attempt === cfg.maxRetries) throw lastError;
+        if (!classified.retryable || attempt === cfg.maxRetries) throw lastError;
         await sleep(backoffMs(attempt, res.headers.get("retry-after")));
         continue;
       }
