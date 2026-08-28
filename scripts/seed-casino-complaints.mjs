@@ -56,11 +56,11 @@ function pickStatus() {
   return "in_review";
 }
 
-// Casino markaları: bilisim-teknoloji kategorisindeki v2 seed markaları
+// Casino / bahis seed markaları (bilisim-teknoloji + beyaz-esya-elektronik)
 const brands = await sql`
   SELECT b.id, b.slug, b.name, b.category_id FROM brands b
   JOIN categories c ON c.id = b.category_id
-  WHERE c.slug = ${"bilisim-teknoloji"} AND b.logo_url LIKE ${"/api/files/brand-logos/seed/%"}
+  WHERE c.slug IN (${"bilisim-teknoloji"}, ${"beyaz-esya-elektronik"})
   ORDER BY b.slug`;
 console.log(`Hedef marka: ${brands.length}`);
 
