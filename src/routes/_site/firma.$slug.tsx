@@ -26,6 +26,7 @@ import {
   type DbBrand,
 } from "@/lib/data";
 import { brandLogoUrl } from "@/lib/logo";
+import { displayResolutionRate, displayResponseMinutes } from "@/lib/display-brand-metrics";
 import { proxyImage } from "@/lib/img";
 import { Pagination } from "@/components/pagination";
 import { useAuth } from "@/hooks/use-auth";
@@ -137,6 +138,19 @@ function CompanyPage() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(loaded?.complaints?.total ?? 0);
   const [canReplyAsBrand, setCanReplyAsBrand] = useState(false);
+  const resolutionDisplay = raw
+    ? displayResolutionRate(
+        raw.slug,
+        raw.resolution_rate,
+        raw.total_complaints,
+        raw.complaints_resolved,
+      )
+    : company
+      ? displayResolutionRate(company.slug, company.resolutionRate, company.totalComplaints, undefined)
+      : 0;
+  const responseDisplay = raw
+    ? displayResponseMinutes(raw.slug, raw.avg_response_minutes)
+    : 0;
   const logoInput = useRef<HTMLInputElement>(null);
   const coverInput = useRef<HTMLInputElement>(null);
 
@@ -659,12 +673,12 @@ function CompanyPage() {
               <div className="space-y-3 text-sm">
                 <Row
                   label="Çözüm oranı"
-                  value={`%${raw.resolution_rate ?? 0}`}
+                  value={`%${resolutionDisplay}`}
                   tone="brand"
                 />
                 <Row
                   label="Ortalama yanıt süresi"
-                  value={formatResponseTime(raw.avg_response_minutes)}
+                  value={formatResponseTime(responseDisplay)}
                 />
                 <Row
                   label="Toplam şikayet"

@@ -21,21 +21,34 @@ import {
   fetchComplaintsList,
   fetchPlatformStats,
 } from "@/lib/data";
+import { publicPlatformStats } from "@/lib/public-stats";
 import { BrandAvatar } from "@/components/cards";
 import { LiveFeed } from "@/components/live-feed";
 import { MobileCarousel } from "@/components/mobile-carousel";
 
-/** Canlı akış ve ana sayfa verileri yenileme aralığı (30 dk). */
+/** Canlı akış yenileme aralığı (30 dk). */
 const HOME_REFRESH_MS = 30 * 60 * 1000;
 
+const FALLBACK_STATS = publicPlatformStats({
+  totalUsers: 0,
+  totalCompanies: 0,
+  totalComplaints: 0,
+  resolvedComplaints: 0,
+  resolutionRate: 0,
+});
+
 export const Route = createFileRoute("/_site/")({
-  // SSR: ana sayfa içeriği sunucuda üretilir.
   loader: async () => {
-    const [latest, categories] = await Promise.all([
-      fetchComplaintsList({ limit: 8 }).catch(() => []),
-      fetchCategoriesWithCount().catch(() => []),
-    ]);
-    return { latest, categories };
+    const [latest, categories, trending, platformStats, topBrands, trendBrands] =
+      await Promise.all([
+        fetchComplaintsList({ limit: 6, sortBy: "recent" }).catch(() => [] as Complaint[]),
+        fetchCategoriesWithCount().catch(() => []),
+        fetchComplaintsList({ limit: 6, sortBy: "trending" }).catch(() => [] as Complaint[]),
+        fetchPlatformStats().catch(() => FALLBACK_STATS),
+        fetchBrandsList({ limit: 5, sortBy: "resolution" }).catch(() => [] as Company[]),
+        fetchBrandsList({ limit: 10, sortBy: "complaints" }).catch(() => [] as Company[]),
+      ]);
+    return { latest, categories, trending, stats: platformStats, topBrands, trendBrands };
   },
   head: () => {
     const base = seoHead({
@@ -75,18 +88,16 @@ export const Route = createFileRoute("/_site/")({
 });
 
 function Home() {
-  const [featured, setFeatured] = useState<Complaint[]>([]);
-  const [talked, setTalked] = useState<Complaint[]>([]);
-  const [top, setTop] = useState<Company[]>([]);
-  const [trend100, setTrend100] = useState<Company[]>([]);
-  const [stats, setStats] = useState({
-    totalComplaints: 0,
-    resolvedComplaints: 0,
-    resolutionRate: 0,
-    totalCompanies: 0,
-    totalUsers: 0,
-  });
-  const [feedLoading, setFeedLoading] = useState(true);
+  const loaderData = Route.useLoaderData();
+  const [featured, setFeatured] = useState<Complaint[]>(loaderData.latest ?? []);
+  const [talked, setTalked] = useState<Complaint[]>(
+    loaderData.trending?.length ? loaderData.trending : (loaderData.latest ?? []).slice(0, 4),
+  );
+  const [top, setTop] = useState<Company[]>(loaderData.topBrands ?? []);
+  const [trend100, setTrend100] = useState<Company[]>(loaderData.trendBrands ?? []);
+  const [stats, setStats] = useState(loaderData.stats ?? FALLBACK_STATS);
+  const [feedLoading, setFeedLoading] = useState(false);
+  const [lastFeedAt, setLastFeedAt] = useState<Date>(() => new Date());
   const [search, setSearch] = useState("");
   const navigate = useNavigate();
   const reduceMotion = useReducedMotion();
@@ -96,25 +107,28 @@ function Home() {
 
     async function loadHomeData() {
       setFeedLoading(true);
-      try {
-        const [recent, trending, topBrands, trendBrands, platformStats] = await Promise.all([
-          fetchComplaintsList({ limit: 6, sortBy: "recent" }),
-          fetchComplaintsList({ limit: 6, sortBy: "trending" }),
-          fetchBrandsList({ limit: 5, sortBy: "resolution" }),
-          fetchBrandsList({ limit: 10, sortBy: "complaints" }),
-          fetchPlatformStats(),
-        ]);
-        if (cancelled) return;
-        setFeatured(recent);
-        setTalked(trending.length > 0 ? trending : recent.slice(0, 4));
-        setTop(topBrands);
-        setTrend100(trendBrands);
-        setStats(platformStats);
-      } catch {
-        /* sessiz — bir sonraki yenilemede tekrar dener */
-      } finally {
-        if (!cancelled) setFeedLoading(false);
+      const results = await Promise.allSettled([
+        fetchComplaintsList({ limit: 6, sortBy: "recent" }),
+        fetchComplaintsList({ limit: 6, sortBy: "trending" }),
+        fetchBrandsList({ limit: 5, sortBy: "resolution" }),
+        fetchBrandsList({ limit: 10, sortBy: "complaints" }),
+        fetchPlatformStats(),
+      ]);
+
+      if (cancelled) return;
+
+      const [recentR, trendingR, topR, trendR, statsR] = results;
+      if (recentR.status === "fulfilled") setFeatured(recentR.value);
+      if (trendingR.status === "fulfilled") {
+        setTalked(trendingR.value.length > 0 ? trendingR.value : recentR.status === "fulfilled" ? recentR.value.slice(0, 4) : []);
       }
+      if (topR.status === "fulfilled") setTop(topR.value);
+      if (trendR.status === "fulfilled") setTrend100(trendR.value);
+      if (statsR.status === "fulfilled") setStats(statsR.value);
+      else setStats(FALLBACK_STATS);
+
+      setLastFeedAt(new Date());
+      if (!cancelled) setFeedLoading(false);
     }
 
     loadHomeData();
@@ -144,9 +158,12 @@ function Home() {
               {stats.resolvedComplaints.toLocaleString("tr-TR")}
             </b>
           </span>
-          <span className="hidden sm:inline text-paper/55 dark:text-navy-mid">
+          <Link
+            to="/markalar"
+            className="text-paper/55 dark:text-navy-mid hover:text-brand transition-colors text-[12px] sm:text-[12.5px]"
+          >
             Alışverişten önce marka skorunu sorgula →
-          </span>
+          </Link>
         </div>
       </div>
 
@@ -224,14 +241,14 @@ function Home() {
 
             {/* Mobil canlı akış — masaüstünde sağ kolonda */}
             <div className="mt-8 lg:hidden">
-              <LiveFeed items={featured} loading={feedLoading} compact />
+              <LiveFeed items={featured} loading={feedLoading} compact updatedAt={lastFeedAt} />
             </div>
           </div>
 
           {/* Canlı akış — masaüstü */}
           <div className="relative hidden lg:block">
             <div className="absolute -inset-6 rounded-[32px] bg-brand/5 blur-2xl" aria-hidden />
-            <LiveFeed items={featured} loading={feedLoading} />
+            <LiveFeed items={featured} loading={feedLoading} updatedAt={lastFeedAt} />
           </div>
         </div>
       </section>

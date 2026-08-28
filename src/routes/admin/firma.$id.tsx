@@ -210,7 +210,7 @@ function BrandMembersSection({ brandId }: { brandId: string }) {
   const [busy, setBusy] = useState(false);
 
   async function loadMembers() {
-    const data = await apiGet<{ items: Member[] }>(`/api/admin/brands/${brandId}/members`);
+    const data = await apiGet<{ items: Member[] }>(`/api/admin/brand-members?brandId=${encodeURIComponent(brandId)}`);
     if (data?.items) setMembers(data.items);
   }
 
@@ -219,7 +219,7 @@ function BrandMembersSection({ brandId }: { brandId: string }) {
   async function assign() {
     if (!email.trim()) return;
     setBusy(true);
-    const ok = await apiSend(`/api/admin/brands/${brandId}/members`, "POST", { email: email.trim() });
+    const ok = await apiSend("/api/admin/brand-members", "POST", { brandId, email: email.trim() });
     setBusy(false);
     if (!ok) return;
     toast.success("Kullanıcı firmaya atandı");
@@ -229,7 +229,7 @@ function BrandMembersSection({ brandId }: { brandId: string }) {
 
   async function revoke(userId: string) {
     if (!confirm("Bu kullanıcının firma erişimini kaldırmak istiyor musunuz?")) return;
-    const ok = await apiSend(`/api/admin/brands/${brandId}/members`, "DELETE", { userId });
+    const ok = await apiSend("/api/admin/brand-members", "DELETE", { brandId, userId });
     if (!ok) return;
     toast.success("Erişim kaldırıldı");
     loadMembers();

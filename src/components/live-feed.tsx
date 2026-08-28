@@ -6,9 +6,10 @@ type Props = {
   items: Complaint[];
   loading?: boolean;
   compact?: boolean;
+  updatedAt?: Date;
 };
 
-export function LiveFeed({ items, loading, compact }: Props) {
+export function LiveFeed({ items, loading, compact, updatedAt }: Props) {
   const list = items.slice(0, compact ? 3 : 4);
 
   return (
@@ -20,6 +21,11 @@ export function LiveFeed({ items, loading, compact }: Props) {
             <span className="relative inline-flex size-2 rounded-full bg-brand" />
           </span>
           <span className="text-[13px] font-semibold text-ink">Canlı akış</span>
+          {updatedAt && (
+            <span className="text-[10px] text-navy-mid tabular-nums">
+              {updatedAt.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
+            </span>
+          )}
         </div>
         <Link to="/sikayetler" className="text-[12px] font-medium text-brand hover:underline">
           Tümü

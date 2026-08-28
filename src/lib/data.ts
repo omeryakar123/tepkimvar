@@ -2,6 +2,7 @@
 // Drizzle on the server; the routes return the same snake_case Db* shapes the
 // mappers below expect, so the pure mappers are unchanged from the Supabase era.
 import type { Company, Complaint, ComplaintStatus } from "@/lib/mock-data";
+import { publicPlatformStats, type RawPlatformStats } from "@/lib/public-stats";
 
 const DB_TO_UI_STATUS: Record<string, ComplaintStatus> = {
   pending: "beklemede",
@@ -31,7 +32,11 @@ function resolveUrl(url: string): string {
 }
 
 async function getJson<T>(url: string): Promise<T> {
-  const res = await fetch(resolveUrl(url));
+  const isBrowser = typeof window !== "undefined";
+  const res = await fetch(resolveUrl(url), {
+    cache: isBrowser ? "no-store" : "default",
+    headers: isBrowser ? { "Cache-Control": "no-cache" } : undefined,
+  });
   if (!res.ok) throw new Error(`${url} -> ${res.status}`);
   return (await res.json()) as T;
 }
@@ -311,13 +316,17 @@ export async function fetchTrendingComplaints(limit = 30) {
 
 
 export async function fetchPlatformStats() {
-  return getJson<{
-    totalComplaints: number;
-    resolvedComplaints: number;
-    resolutionRate: number;
-    totalCompanies: number;
-    totalUsers: number;
-  }>("/api/stats");
+  try {
+    return await getJson<RawPlatformStats>("/api/stats");
+  } catch {
+    return publicPlatformStats({
+      totalUsers: 0,
+      totalCompanies: 0,
+      totalComplaints: 0,
+      resolvedComplaints: 0,
+      resolutionRate: 0,
+    });
+  }
 }
 
 export async function fetchFastestResolvers(limit = 5) {

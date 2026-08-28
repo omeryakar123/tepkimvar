@@ -1,4 +1,4 @@
-/* eslint-disable */
+§/* eslint-disable */
 
 // @ts-nocheck
 
@@ -108,6 +108,7 @@ import { Route as ApiAdminBotGenerateRouteImport } from './routes/api/admin/bot/
 import { Route as ApiAdminBotRunsRouteImport } from './routes/api/admin/bot/runs'
 import { Route as ApiAdminCmsRouteImport } from './routes/api/admin/cms'
 import { Route as ApiAdminCategoriesRouteImport } from './routes/api/admin/categories'
+import { Route as ApiAdminBrandMembersRouteImport } from './routes/api/admin/brand-members'
 import { Route as ApiAdminBrandsRouteImport } from './routes/api/admin/brands'
 import { Route as ApiAdminBlogsRouteImport } from './routes/api/admin/blogs'
 import { Route as AdminFirmaIdRouteImport } from './routes/admin/firma.$id'
@@ -621,6 +622,11 @@ const ApiAdminCategoriesRoute = ApiAdminCategoriesRouteImport.update({
   path: '/api/admin/categories',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAdminBrandMembersRoute = ApiAdminBrandMembersRouteImport.update({
+  id: '/api/admin/brand-members',
+  path: '/api/admin/brand-members',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAdminBrandsRoute = ApiAdminBrandsRouteImport.update({
   id: '/api/admin/brands',
   path: '/api/admin/brands',
@@ -798,6 +804,7 @@ export interface FileRoutesByFullPath {
   '/sikayet/$id': typeof SiteSikayetIdRoute
   '/admin/firma/$id': typeof AdminFirmaIdRoute
   '/api/admin/blogs': typeof ApiAdminBlogsRoute
+  '/api/admin/brand-members': typeof ApiAdminBrandMembersRoute
   '/api/admin/brands': typeof ApiAdminBrandsRouteWithChildren
   '/api/admin/categories': typeof ApiAdminCategoriesRoute
   '/api/admin/cms': typeof ApiAdminCmsRoute
@@ -913,6 +920,7 @@ export interface FileRoutesByTo {
   '/sikayet/$id': typeof SiteSikayetIdRoute
   '/admin/firma/$id': typeof AdminFirmaIdRoute
   '/api/admin/blogs': typeof ApiAdminBlogsRoute
+  '/api/admin/brand-members': typeof ApiAdminBrandMembersRoute
   '/api/admin/brands': typeof ApiAdminBrandsRouteWithChildren
   '/api/admin/categories': typeof ApiAdminCategoriesRoute
   '/api/admin/cms': typeof ApiAdminCmsRoute
@@ -1031,6 +1039,7 @@ export interface FileRoutesById {
   '/_site/sikayet/$id': typeof SiteSikayetIdRoute
   '/admin/firma/$id': typeof AdminFirmaIdRoute
   '/api/admin/blogs': typeof ApiAdminBlogsRoute
+  '/api/admin/brand-members': typeof ApiAdminBrandMembersRoute
   '/api/admin/brands': typeof ApiAdminBrandsRouteWithChildren
   '/api/admin/categories': typeof ApiAdminCategoriesRoute
   '/api/admin/cms': typeof ApiAdminCmsRoute
@@ -1149,6 +1158,7 @@ export interface FileRouteTypes {
     | '/sikayet/$id'
     | '/admin/firma/$id'
     | '/api/admin/blogs'
+    | '/api/admin/brand-members'
     | '/api/admin/brands'
     | '/api/admin/categories'
     | '/api/admin/cms'
@@ -1263,6 +1273,7 @@ export interface FileRouteTypes {
     | '/sikayet/$id'
     | '/admin/firma/$id'
     | '/api/admin/blogs'
+    | '/api/admin/brand-members'
     | '/api/admin/brands'
     | '/api/admin/categories'
     | '/api/admin/cms'
@@ -1379,6 +1390,7 @@ export interface FileRouteTypes {
     | '/_site/sikayet/$id'
     | '/admin/firma/$id'
     | '/api/admin/blogs'
+    | '/api/admin/brand-members'
     | '/api/admin/brands'
     | '/api/admin/categories'
     | '/api/admin/cms'
@@ -1456,6 +1468,7 @@ export interface RootRouteChildren {
   ApiTrendingRoute: typeof ApiTrendingRoute
   ApiUploadRoute: typeof ApiUploadRoute
   ApiAdminBlogsRoute: typeof ApiAdminBlogsRoute
+  ApiAdminBrandMembersRoute: typeof ApiAdminBrandMembersRoute
   ApiAdminBrandsRoute: typeof ApiAdminBrandsRouteWithChildren
   ApiAdminCategoriesRoute: typeof ApiAdminCategoriesRoute
   ApiAdminCmsRoute: typeof ApiAdminCmsRoute
@@ -2165,6 +2178,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAdminCategoriesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/admin/brand-members': {
+      id: '/api/admin/brand-members'
+      path: '/api/admin/brand-members'
+      fullPath: '/api/admin/brand-members'
+      preLoaderRoute: typeof ApiAdminBrandMembersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/admin/brands': {
       id: '/api/admin/brands'
       path: '/api/admin/brands'
@@ -2511,6 +2531,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiTrendingRoute: ApiTrendingRoute,
   ApiUploadRoute: ApiUploadRoute,
   ApiAdminBlogsRoute: ApiAdminBlogsRoute,
+  ApiAdminBrandMembersRoute: ApiAdminBrandMembersRoute,
   ApiAdminBrandsRoute: ApiAdminBrandsRouteWithChildren,
   ApiAdminCategoriesRoute: ApiAdminCategoriesRoute,
   ApiAdminCmsRoute: ApiAdminCmsRoute,
