@@ -5,16 +5,15 @@
  * İdempotent.  Çalıştır: bun scripts/seed-casino-brands-big.mjs
  */
 import postgres from "postgres";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
 const sql = postgres(process.env.DATABASE_URL, { max: 3 });
 const BUCKET = process.env.S3_BUCKET || "itirazvar";
-const s3 = new S3Client({
-  region: process.env.S3_REGION || "us-east-1",
-  endpoint: process.env.S3_ENDPOINT,
-  forcePathStyle: true,
-  credentials: { accessKeyId: process.env.S3_ACCESS_KEY_ID, secretAccessKey: process.env.S3_SECRET_ACCESS_KEY },
-});
+const useS3 = Boolean(process.env.S3_ENDPOINT && process.env.S3_ACCESS_KEY_ID && process.env.S3_SECRET_ACCESS_KEY);
+
+function unavatarLogo(name, domain) {
+  const fb = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&size=256&background=1B263B&color=fff&bold=true&length=2`;
+  return `https://unavatar.io/${domain}?fallback=${encodeURIComponent(fb)}`;
+}
 const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
 
 const NAMES = [
@@ -93,10 +92,27 @@ for (const name of NAMES) {
   if (exists) { skipped++; continue; }
 
   const domain = `${slug.replace(/-/g, "")}.com`;
-  const { buf, type, src } = await bestLogo(name, domain);
-  stats[src]++;
-  const key = `brand-logos/seed/${slug}-v2.png`;
-  await s3.send(new PutObjectCommand({ Bucket: BUCKET, Key: key, Body: buf, ContentType: type }));
+  let logoUrl;
+  if (useS3) {
+    const { S3Client, PutObjectCommand } = await import("@aws-sdk/client-s3");
+    const s3 = new S3Client({
+      region: process.env.S3_REGION || "us-east-1",
+      endpoint: process.env.S3_ENDPOINT,
+      forcePathStyle: true,
+      credentials: {
+        accessKeyId: process.env.S3_ACCESS_KEY_ID,
+        secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
+      },
+    });
+    const { buf, type, src } = await bestLogo(name, domain);
+    stats[src]++;
+    const key = `brand-logos/seed/${slug}-v2.png`;
+    await s3.send(new PutObjectCommand({ Bucket: BUCKET, Key: key, Body: buf, ContentType: type }));
+    logoUrl = `/api/files/${key}`;
+  } else {
+    stats.monogram++;
+    logoUrl = unavatarLogo(name, domain);
+  }
 
   // Büyük marka profili: yüksek hacim, düşük-orta çözüm oranı
   const total = rnd(800, 6500);
@@ -104,7 +120,7 @@ for (const name of NAMES) {
   await sql`INSERT INTO brands
     (slug, name, category_id, website, city, logo_url, verified, premium,
      rating, rating_count, total_complaints, complaints_resolved, resolution_rate, avg_response_minutes)
-    VALUES (${slug}, ${name}, ${cat.id}, ${"https://" + domain}, ${"İstanbul"}, ${"/api/files/" + key},
+    VALUES (${slug}, ${name}, ${cat.id}, ${"https://" + domain}, ${"İstanbul"}, ${logoUrl},
             false, false, ${(rnd(18, 36) / 10).toFixed(2)}, ${rnd(150, 3000)}, ${total},
             ${Math.round((total * resolvedPct) / 100)}, ${resolvedPct}, ${rnd(60, 1200)})`;
   added++;

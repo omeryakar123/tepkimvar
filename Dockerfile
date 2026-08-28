@@ -36,6 +36,8 @@ COPY --from=builder /app/drizzle ./drizzle
 COPY --from=builder /app/src/db/migrate.ts ./src/db/migrate.ts
 COPY --from=builder /app/node_modules/drizzle-orm ./node_modules/drizzle-orm
 COPY --from=builder /app/node_modules/postgres ./node_modules/postgres
+# Prod bakım: marka/kategori seed scriptleri (DATABASE_URL ile çalıştırılır).
+COPY --from=builder /app/scripts ./scripts
 
 # Nitro node-server PORT'u dinler (Coolify enjekte eder).
 ENV PORT=3000
