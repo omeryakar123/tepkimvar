@@ -166,3 +166,97 @@ export function SiteNav() {
 }
 
 export function SiteFooter() {
+  const columns = [
+    { t: "Şikayetler", l: [
+      ["Son Şikayetler", "/sikayetler"],
+      ["Trend Şikayetler", "/trendler"],
+      ["Çözülen Şikayetler", "/sikayetler", { durum: "cozuldu" }],
+      ["Anonim Şikayet", "/sikayet-yaz"],
+      ["Yardım", "/yardim"],
+      ["SSS", "/yardim"],
+    ] },
+    { t: "Markalar", l: [
+      ["Tüm Markalar", "/markalar"],
+      ["Doğrulanmış Markalar", "/markalar", { dogrulanmis: true }],
+      ["Premium Markalar", "/markalar", { premium: true }],
+      ["Marka Ekle", "/register"],
+      ["Marka Yönetim", "/brand"],
+    ] },
+    { t: "Çok Aranan", l: [
+      ["Turkcell", "/firma/$slug", undefined, { slug: "turkcell" }],
+      ["Trendyol", "/firma/$slug", undefined, { slug: "trendyol" }],
+      ["Vodafone", "/firma/$slug", undefined, { slug: "vodafone" }],
+      ["Papara", "/firma/$slug", undefined, { slug: "papara" }],
+      ["Hepsiburada", "/firma/$slug", undefined, { slug: "hepsiburada" }],
+      ["Migros", "/firma/$slug", undefined, { slug: "migros" }],
+    ] },
+    { t: "Trend 100", l: [
+      ["Genel", "/trend-100"],
+      ["Bankacılık", "/trend-100", { kategori: "bankacilik" }],
+      ["E-Ticaret", "/trend-100", { kategori: "e-ticaret" }],
+      ["Telekom", "/trend-100", { kategori: "telekom" }],
+      ["Kargo", "/trend-100", { kategori: "kargo" }],
+      ["Ulaşım", "/trend-100", { kategori: "ulasim" }],
+    ] },
+    { t: "Konular", l: [
+      ["Bankacılık", "/sikayetler", { kategori: "bankacilik" }],
+      ["Sigorta", "/sikayetler", { kategori: "sigorta" }],
+      ["Kripto", "/sikayetler", { kategori: "kripto" }],
+      ["Kargo", "/sikayetler", { kategori: "kargo" }],
+      ["Yemek", "/sikayetler", { kategori: "yemek" }],
+      ["Telefon", "/sikayetler", { kategori: "telefon" }],
+    ] },
+  ] as const;
+  const topLinks = [
+    ["Hakkımızda", "/hakkimizda"],
+    ["Markalar İçin", "/reklam-cozumleri"],
+    ["Blog", "/blog"],
+    ["Şeffaflık Raporu", "/seffaflik-raporu"],
+    ["İletişim", "/iletisim"],
+  ] as const;
+  return (
+    <footer className="mt-0 bg-ink text-paper/80 dark:bg-surface dark:text-navy border-t border-transparent dark:border-rule">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-14">
+        <div className="flex items-center justify-between mb-10">
+          <Link to="/" className="font-display font-black text-[22px] tracking-tight text-paper dark:text-ink">
+            tepkimvar<span className="text-brand">.</span>
+          </Link>
+          <div className="hidden md:flex items-center gap-4 text-[13px]">
+            {topLinks.map(([t, to]) => (
+              <Link key={t} to={to} className="hover:text-paper dark:hover:text-ink">{t}</Link>
+            ))}
+          </div>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
+          {columns.map((g) => (
+            <div key={g.t}>
+              <h4 className="text-paper dark:text-ink font-semibold text-[13px] mb-3">{g.t}</h4>
+              <ul className="space-y-2 text-[12.5px]">
+                {g.l.map(([label, to, search, params]) => (
+                  <li key={label}>
+                    <Link
+                      to={to}
+                      search={search as never}
+                      params={params as never}
+                      className="text-paper/60 dark:text-navy-mid hover:text-paper dark:hover:text-ink transition-colors"
+                    >
+                      {label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+        <div className="mt-12 pt-6 border-t border-paper/10 dark:border-rule flex flex-col md:flex-row gap-3 justify-between text-[12px] text-paper/60 dark:text-navy-mid">
+          <span>© 2026 tepkimvar — Tüm hakları saklıdır</span>
+          <div className="flex gap-6">
+            <Link to="/kullanim-kosullari" className="hover:text-paper dark:hover:text-ink">Kullanım Koşulları</Link>
+            <Link to="/gizlilik" className="hover:text-paper dark:hover:text-ink">Gizlilik</Link>
+            <Link to="/kvkk" className="hover:text-paper dark:hover:text-ink">KVKK</Link>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+}
