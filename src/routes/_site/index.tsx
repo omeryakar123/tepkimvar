@@ -467,17 +467,19 @@ function Home() {
               Detaylı incele <ArrowRight className="size-4" />
             </Link>
           </div>
-          <div className="relative w-full max-w-[220px] sm:max-w-[260px] md:max-w-sm mx-auto md:ml-auto md:mr-0 mt-2 md:mt-0">
-            <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-[#c4b5fd] via-[#7dd3fc] to-[#34d399] p-1 shadow-lift">
+          <div className="relative w-full max-w-[320px] sm:max-w-[380px] md:max-w-[420px] lg:max-w-[460px] mx-auto md:ml-auto md:mr-0 mt-4 md:mt-0">
+            <div className="overflow-hidden rounded-2xl shadow-lift ring-1 ring-rule/60">
               <img
                 src="/dogrulama-rozeti.jpg"
                 alt="Doğrulanmış marka rozeti — QR kod ile firma inceleme, müşteri memnuniyeti puanı"
-                className="block w-full h-auto rounded-[14px]"
+                width={1024}
+                height={494}
+                className="block w-full h-auto"
                 loading="lazy"
               />
             </div>
-            <div className="absolute -top-3 -right-3 sm:-top-4 sm:-right-4 size-12 sm:size-16 md:size-20 rounded-full bg-accent-yellow pointer-events-none z-10 shadow-md" aria-hidden />
-            <div className="absolute -bottom-2 -left-2 sm:-bottom-3 sm:-left-3 size-9 sm:size-12 md:size-14 rounded-full bg-cyan-400 pointer-events-none z-10 shadow-md" aria-hidden />
+            <div className="absolute -top-2 -right-2 sm:-top-3 sm:-right-3 size-10 sm:size-14 rounded-full bg-accent-yellow pointer-events-none z-10 shadow-md" aria-hidden />
+            <div className="absolute -bottom-2 -left-2 sm:-bottom-3 sm:-left-3 size-8 sm:size-11 rounded-full bg-cyan-400 pointer-events-none z-10 shadow-md" aria-hidden />
           </div>
         </div>
       </section>
