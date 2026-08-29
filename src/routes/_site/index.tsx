@@ -447,12 +447,12 @@ function Home() {
 
       {/* ÖDÜLLER — split banner */}
       <section className="bg-surface">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-16 grid md:grid-cols-2 gap-10 items-center">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-16 grid md:grid-cols-2 gap-8 md:gap-10 items-center">
           <div>
             <div className="inline-flex items-center gap-2 text-[12px] font-bold uppercase tracking-wider text-brand mb-3">
               <Award className="size-4" /> tepkimvar Ödülleri
             </div>
-            <h2 className="font-display font-black text-[32px] text-ink leading-tight tracking-tight">
+            <h2 className="font-display font-black text-[26px] sm:text-[32px] text-ink leading-tight tracking-tight">
               Çözüme değer verenler ödüllendirilir.
             </h2>
             <p className="mt-3 text-[14px] text-navy leading-relaxed max-w-md">
@@ -467,17 +467,17 @@ function Home() {
               Detaylı incele <ArrowRight className="size-4" />
             </Link>
           </div>
-          <div className="relative max-w-xl ml-auto">
-            <div className="overflow-hidden rounded-[20px] bg-gradient-to-br from-[#c4b5fd] via-[#7dd3fc] to-[#34d399] p-1 sm:p-1.5 shadow-lift">
+          <div className="relative w-full max-w-[220px] sm:max-w-[260px] md:max-w-sm mx-auto md:ml-auto md:mr-0 mt-2 md:mt-0">
+            <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-[#c4b5fd] via-[#7dd3fc] to-[#34d399] p-1 shadow-lift">
               <img
                 src="/dogrulama-rozeti.jpg"
                 alt="Doğrulanmış marka rozeti — QR kod ile firma inceleme, müşteri memnuniyeti puanı"
-                className="block w-full h-auto rounded-[16px]"
+                className="block w-full h-auto rounded-[14px]"
                 loading="lazy"
               />
             </div>
-            <div className="absolute -top-5 -right-5 sm:-top-6 sm:-right-6 size-20 sm:size-24 rounded-full bg-accent-yellow pointer-events-none z-10 shadow-md" aria-hidden />
-            <div className="absolute -bottom-3 -left-3 sm:-bottom-4 sm:-left-4 size-14 sm:size-16 rounded-full bg-cyan-400 pointer-events-none z-10 shadow-md" aria-hidden />
+            <div className="absolute -top-3 -right-3 sm:-top-4 sm:-right-4 size-12 sm:size-16 md:size-20 rounded-full bg-accent-yellow pointer-events-none z-10 shadow-md" aria-hidden />
+            <div className="absolute -bottom-2 -left-2 sm:-bottom-3 sm:-left-3 size-9 sm:size-12 md:size-14 rounded-full bg-cyan-400 pointer-events-none z-10 shadow-md" aria-hidden />
           </div>
         </div>
       </section>
