@@ -467,14 +467,17 @@ function Home() {
               Detaylı incele <ArrowRight className="size-4" />
             </Link>
           </div>
-          <div className="relative h-56">
-            <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-accent-purple to-brand overflow-hidden">
-              <div className="absolute inset-0 grid place-items-center">
-                <Award className="size-24 text-paper/80 dark:text-navy" />
-              </div>
+          <div className="relative h-56 sm:h-64 md:h-72">
+            <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-accent-purple to-brand overflow-hidden p-3 sm:p-4">
+              <img
+                src="/dogrulama-rozeti.jpg"
+                alt="Doğrulanmış marka rozeti — QR kod ile firma inceleme, müşteri memnuniyeti puanı"
+                className="w-full h-full object-contain rounded-2xl shadow-lift"
+                loading="lazy"
+              />
             </div>
-            <div className="absolute -top-6 -right-6 size-24 rounded-full bg-accent-yellow" />
-            <div className="absolute -bottom-4 -left-4 size-16 rounded-full bg-brand" />
+            <div className="absolute -top-6 -right-6 size-24 rounded-full bg-accent-yellow pointer-events-none" aria-hidden />
+            <div className="absolute -bottom-4 -left-4 size-16 rounded-full bg-brand pointer-events-none" aria-hidden />
           </div>
         </div>
       </section>
