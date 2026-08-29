@@ -24,6 +24,7 @@ import {
   fetchPlatformStats,
 } from "@/lib/data";
 import { publicPlatformStats } from "@/lib/public-stats";
+import { SITE_CONTACT_EMAIL } from "@/lib/contact";
 import { BrandAvatar } from "@/components/cards";
 import { LiveFeed } from "@/components/live-feed";
 import { MobileCarousel } from "@/components/mobile-carousel";
@@ -71,7 +72,11 @@ export const Route = createFileRoute("/_site/")({
           name: "tepkimvar",
           url: absUrl("/"),
           logo: absUrl("/tepkim-hero.png"),
-          sameAs: ["https://t.me/tepkimvarplus"],
+          contactPoint: {
+            "@type": "ContactPoint",
+            contactType: "customer service",
+            email: SITE_CONTACT_EMAIL,
+          },
         }),
         jsonLd({
           "@context": "https://schema.org",

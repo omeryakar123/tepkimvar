@@ -1,17 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Mail, Send } from "lucide-react";
+import { Mail } from "lucide-react";
 import { seoHead, breadcrumbLd } from "@/lib/seo";
-
-const CONTACT_EMAIL = "iletisim@tepkimvarplus.com";
-const TELEGRAM_URL = "https://t.me/tepkimvarplus";
+import { SITE_CONTACT_EMAIL, siteContactMailto } from "@/lib/contact";
 
 export const Route = createFileRoute("/_site/(kurumsal)/iletisim")({
   head: () => ({
     ...seoHead({
       title: "İletişim — tepkimvar",
       description:
-        "tepkimvar ekibine ulaşın: soru, öneri, iş birliği ve marka başvuruları için e-posta veya Telegram üzerinden iletişime geçin.",
+        "tepkimvar ekibine ulaşın: soru, öneri, iş birliği ve marka başvuruları için info@tepkimvar.com adresine yazın.",
       path: "/iletisim",
     }),
     scripts: [
@@ -29,12 +27,10 @@ function Page() {
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
 
-  // Form, varsayılan e-posta uygulamasında hazır bir mesaj açar.
   function submit(e: React.FormEvent) {
     e.preventDefault();
     const body = `${message}\n\n— ${name || "İsimsiz"}`;
-    const url = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject || "tepkimvar iletişim")}&body=${encodeURIComponent(body)}`;
-    window.location.href = url;
+    window.location.href = siteContactMailto(subject || "tepkimvar iletişim", body);
   }
 
   return (
@@ -42,24 +38,20 @@ function Page() {
       <div className="mx-auto max-w-5xl px-4 sm:px-6 py-16">
         <h1 className="text-3xl sm:text-4xl font-display font-black mb-3">İletişim</h1>
         <p className="text-navy-mid mb-10">
-          Soru, öneri, iş birliği ve marka başvuruları için bize aşağıdaki kanallardan ulaşabilirsiniz.
+          Soru, öneri, iş birliği ve marka başvuruları için bize e-posta ile ulaşabilirsiniz.
         </p>
-        <div className="grid md:grid-cols-2 gap-4 mb-10">
-          <a href={`mailto:${CONTACT_EMAIL}`} className="bg-card rounded-2xl ring-1 ring-rule p-6 hover:ring-brand/40 transition">
-            <div className="size-10 rounded-xl bg-brand-soft text-brand grid place-items-center mb-3">
-              <Mail className="size-5" />
-            </div>
+        <a
+          href={siteContactMailto()}
+          className="inline-flex bg-card rounded-2xl ring-1 ring-rule p-6 hover:ring-brand/40 transition mb-10"
+        >
+          <div className="size-10 rounded-xl bg-brand-soft text-brand grid place-items-center mr-4 shrink-0">
+            <Mail className="size-5" />
+          </div>
+          <div>
             <div className="text-xs uppercase tracking-widest text-navy-mid">E-posta</div>
-            <div className="mt-1 font-semibold text-ink break-all">{CONTACT_EMAIL}</div>
-          </a>
-          <a href={TELEGRAM_URL} target="_blank" rel="noopener noreferrer" className="bg-card rounded-2xl ring-1 ring-rule p-6 hover:ring-brand/40 transition">
-            <div className="size-10 rounded-xl bg-brand-soft text-brand grid place-items-center mb-3">
-              <Send className="size-5" />
-            </div>
-            <div className="text-xs uppercase tracking-widest text-navy-mid">Telegram</div>
-            <div className="mt-1 font-semibold text-ink">@tepkimvarplus</div>
-          </a>
-        </div>
+            <div className="mt-1 font-semibold text-ink break-all">{SITE_CONTACT_EMAIL}</div>
+          </div>
+        </a>
         <form onSubmit={submit} className="bg-card rounded-2xl ring-1 ring-rule p-6 space-y-4">
           <div className="grid md:grid-cols-2 gap-4">
             <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ad Soyad" className="h-12 px-4 rounded-lg ring-1 ring-rule focus:outline-none focus:ring-brand/40" />

@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { seoHead } from "@/lib/seo";
+import { SITE_CONTACT_EMAIL } from "@/lib/contact";
 
 const SECTIONS: { h: string; p: string[] }[] = [
   {
@@ -41,7 +42,7 @@ const SECTIONS: { h: string; p: string[] }[] = [
   {
     h: "7. İletişim",
     p: [
-      "Gizlilikle ilgili soru ve talepleriniz için iletisim@tepkimvarplus.com adresine yazabilirsiniz. Ayrıntılı bilgi için KVKK Aydınlatma Metni'ni inceleyebilirsiniz.",
+      `Gizlilikle ilgili soru ve talepleriniz için ${SITE_CONTACT_EMAIL} adresine yazabilirsiniz. Ayrıntılı bilgi için KVKK Aydınlatma Metni'ni inceleyebilirsiniz.`,
     ],
   },
 ];

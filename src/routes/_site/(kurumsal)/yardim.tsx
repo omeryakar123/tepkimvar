@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { ChevronDown, Search } from "lucide-react";
 import { seoHead, jsonLd } from "@/lib/seo";
+import { SITE_CONTACT_EMAIL } from "@/lib/contact";
 
 const groups = [
   {
@@ -11,7 +12,7 @@ const groups = [
       { q: "Nasıl üye olurum?", a: "Sağ üstteki 'Giriş / Üye Ol' bağlantısından e-postanızla saniyeler içinde üye olabilirsiniz. Google hesabınızla da giriş yapabilirsiniz." },
       { q: "Şifremi unuttum, ne yapmalıyım?", a: "Giriş ekranındaki 'Şifremi Unuttum' bağlantısını kullanın; e-postanıza 6 haneli doğrulama kodu gönderilir." },
       { q: "Üyelik ücretli mi?", a: "Hayır. Şikayet yazmak, yorum yapmak ve markaları puanlamak tamamen ücretsizdir." },
-      { q: "Hesabımı nasıl silerim?", a: "Profil sayfanızdaki ayarlardan hesabınızı kapatabilir veya iletisim@tepkimvarplus.com adresine yazarak silinmesini talep edebilirsiniz." },
+      { q: "Hesabımı nasıl silerim?", a: `Profil sayfanızdaki ayarlardan hesabınızı kapatabilir veya ${SITE_CONTACT_EMAIL} adresine yazarak silinmesini talep edebilirsiniz.` },
     ],
   },
   {

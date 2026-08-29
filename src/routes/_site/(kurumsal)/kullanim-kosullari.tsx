@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { seoHead } from "@/lib/seo";
+import { SITE_CONTACT_EMAIL } from "@/lib/contact";
 
 const SECTIONS: { h: string; p: string }[] = [
   {
@@ -28,7 +29,7 @@ const SECTIONS: { h: string; p: string }[] = [
   },
   {
     h: "7. İçerik Kaldırma ve İtiraz",
-    p: "Hakkınızda hukuka aykırı içerik bulunduğunu düşünüyorsanız, ilgili içeriği 'Raporla' özelliğiyle veya iletisim@tepkimvarplus.com üzerinden bildirebilirsiniz. Bildirimler moderasyon ekibince incelenir.",
+    p: `Hakkınızda hukuka aykırı içerik bulunduğunu düşünüyorsanız, ilgili içeriği 'Raporla' özelliğiyle veya ${SITE_CONTACT_EMAIL} üzerinden bildirebilirsiniz. Bildirimler moderasyon ekibince incelenir.`,
   },
   {
     h: "8. Değişiklikler",

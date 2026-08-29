@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { seoHead } from "@/lib/seo";
+import { siteContactMailto } from "@/lib/contact";
 import { ArrowRight, Target, Sparkles, Radar, Check, BarChart3, Users, Globe, ShieldCheck, MessageCircle } from "lucide-react";
 
 export const Route = createFileRoute("/_site/(kurumsal)/reklam-cozumleri")({
@@ -82,9 +83,7 @@ function AdsPage() {
                 Modelleri incele <ArrowRight className="size-4" />
               </a>
               <a
-                href="https://t.me/tepkimvarplus"
-                target="_blank"
-                rel="noopener noreferrer"
+                href={siteContactMailto("Reklam çözümleri")}
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-card ring-1 ring-rule px-6 h-11 text-[13px] font-semibold hover:bg-surface transition"
               >
                 Satış ekibiyle görüş
@@ -181,9 +180,7 @@ function AdsPage() {
                       ))}
                     </ul>
                     <a
-                      href="https://t.me/tepkimvarplus"
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      href={siteContactMailto("Reklam çözümleri")}
                       className="mt-5 inline-flex items-center justify-center gap-2 rounded-full bg-brand text-brand-foreground px-5 h-10 text-[13px] font-semibold hover:bg-brand-hover transition w-full"
                     >
                       İletişime geç <ArrowRight className="size-4" />
@@ -207,9 +204,7 @@ function AdsPage() {
           </p>
           <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
             <a
-              href="https://t.me/tepkimvarplus"
-              target="_blank"
-              rel="noopener noreferrer"
+              href={siteContactMailto("Pro üyelik")}
               className="inline-flex items-center justify-center gap-2 rounded-full bg-card text-brand px-6 h-11 text-[13px] font-semibold hover:brightness-105 transition"
             >
               Pro üyelik için iletişim

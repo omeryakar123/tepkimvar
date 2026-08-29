@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { seoHead } from "@/lib/seo";
+import { SITE_CONTACT_EMAIL } from "@/lib/contact";
 
 const SECTIONS: { h: string; p: string[] }[] = [
   {
@@ -36,7 +37,7 @@ const SECTIONS: { h: string; p: string[] }[] = [
     h: "6. Haklarınız (KVKK m.11)",
     p: [
       "Kişisel verilerinizin işlenip işlenmediğini öğrenme, işlenmişse buna ilişkin bilgi talep etme, işleme amacını ve amacına uygun kullanılıp kullanılmadığını öğrenme, eksik veya yanlış işlenmişse düzeltilmesini isteme, silinmesini veya yok edilmesini talep etme, otomatik sistemlerle analiz sonucu aleyhinize bir sonucun ortaya çıkmasına itiraz etme ve zarara uğramanız halinde giderilmesini talep etme haklarına sahipsiniz.",
-      "Taleplerinizi iletisim@tepkimvarplus.com adresine iletebilirsiniz. Başvurularınız en geç 30 gün içinde ücretsiz olarak sonuçlandırılır.",
+      `Taleplerinizi ${SITE_CONTACT_EMAIL} adresine iletebilirsiniz. Başvurularınız en geç 30 gün içinde ücretsiz olarak sonuçlandırılır.`,
     ],
   },
 ];
