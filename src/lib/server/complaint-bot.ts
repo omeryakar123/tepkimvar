@@ -25,6 +25,7 @@ import {
   buildResponseMessages,
   fallbackComplaint,
   fallbackResponse,
+  pickVariationAngle,
   scenarioLabel,
   type ComplaintTone,
   type LanguageCode,
@@ -386,6 +387,8 @@ export async function generateComplaint(input: {
   scenario: ScenarioKey;
   rating: number;
   avoidTitles: string[];
+  avoidBodies?: string[];
+  variationAngle?: string;
 }): Promise<GeneratedComplaint> {
   if (!isAiConfigured()) {
     const t = fallbackComplaint({ scenario: input.scenario, language: input.config.language });
@@ -401,9 +404,11 @@ export async function generateComplaint(input: {
       rating: input.rating,
       customInstructions: input.config.customInstructions,
       avoidTitles: input.avoidTitles,
+      avoidBodies: input.avoidBodies,
+      variationAngle: input.variationAngle ?? pickVariationAngle(),
     }),
     temperature: 0.95,
-    maxTokens: 500,
+    maxTokens: 560,
   });
 
   const title = cleanLine(raw.title, 200);
@@ -451,12 +456,12 @@ export async function generateComplaintResponse(input: {
       rating: input.rating,
       customInstructions: input.config.customInstructions,
     }),
-    temperature: 0.6,
-    maxTokens: 320,
+    temperature: 0.65,
+    maxTokens: 400,
   });
 
   const text = cleanLine(raw.response, 2000);
-  if (text.length < 20) {
+  if (text.length < 40) {
     throw new AiError("Model geçersiz yanıt üretti (metin çok kısa)", { retryable: true });
   }
   return { text, source: "ai" };
@@ -594,7 +599,7 @@ async function writeComplaint(input: {
       title: input.generated.title,
       body: input.generated.body,
       status: "approved",
-      rating: input.rating,
+      rating: null,
       // Firma profilinde görünsün; sentetik bayrağı ayrı tutulur.
       isPublic: true,
       isAnonymous: false,
@@ -620,6 +625,8 @@ async function writeResponse(input: {
   language: string;
   botUserId: string;
   generatedBy: "ai_bot" | "ai_manual";
+  /** Şikayet bazlı memnuniyet — yalnızca yanıt sonrası yazılır. */
+  rating?: number | null;
 }): Promise<void> {
   await db.insert(schema.complaintReplies).values({
     complaintId: input.complaintId,
@@ -651,6 +658,7 @@ async function writeResponse(input: {
       firstResponseAt: now,
       firstResponseMinutes: minutes,
       botError: null,
+      ...(input.rating != null ? { rating: clamp(Math.round(input.rating), 1, 5) } : {}),
       updatedAt: now,
     })
     .where(eq(schema.complaints.id, input.complaintId));
@@ -763,17 +771,22 @@ export async function runBotForBrand(opts: {
 
     // Panelde/AI promptunda tekrardan kaçınmak için son başlıklar + senaryolar.
     const recent = await db
-      .select({ title: schema.complaints.title, scenario: schema.complaints.botScenario })
+      .select({
+        title: schema.complaints.title,
+        body: schema.complaints.body,
+        scenario: schema.complaints.botScenario,
+      })
       .from(schema.complaints)
       .where(eq(schema.complaints.brandId, opts.brandId))
       .orderBy(desc(schema.complaints.createdAt))
-      .limit(20);
+      .limit(50);
 
     const avoidTitles = recent.map((r) => r.title);
+    const avoidBodies = recent.map((r) => r.body);
     const recentScenarios = recent
       .map((r) => r.scenario)
       .filter((s): s is string => !!s)
-      .slice(0, 4);
+      .slice(0, 8);
 
     /* --- 1) Önce yanıtı üretilemeyen eski şikayetleri yeniden dene --------- */
     const stuck = await db
@@ -798,13 +811,14 @@ export async function runBotForBrand(opts: {
 
     for (const item of stuck) {
       try {
+        const retryRating = item.rating ?? generateRating(effectiveConfig);
         const response = await generateComplaintResponse({
           brandName: brand.name,
           title: item.title,
           body: item.body,
           scenario: item.scenario ?? "customer_support",
           config: { ...effectiveConfig, language: (item.language as LanguageCode) ?? effectiveConfig.language },
-          rating: item.rating ?? 3,
+          rating: retryRating,
         });
         await writeResponse({
           complaintId: item.id,
@@ -812,6 +826,7 @@ export async function runBotForBrand(opts: {
           language: item.language ?? effectiveConfig.language,
           botUserId,
           generatedBy,
+          rating: retryRating,
         });
         result.responsesGenerated++;
         result.retriedResponses++;
@@ -829,12 +844,13 @@ export async function runBotForBrand(opts: {
 
       let generated: GeneratedComplaint | null = null;
 
-      // Kopya çıkarsa farklı senaryoyla en fazla 3 kez dene.
-      for (let attempt = 0; attempt < 3 && !generated; attempt++) {
+      // Kopya çıkarsa farklı senaryoyla en fazla 5 kez dene.
+      for (let attempt = 0; attempt < 5 && !generated; attempt++) {
         const attemptScenario =
           attempt === 0
             ? scenario
             : (opts.scenario ?? pickScenario(effectiveConfig.scenarios, [...recentScenarios, scenario]));
+        const variationAngle = pickVariationAngle();
 
         let candidate: GeneratedComplaint;
         try {
@@ -844,6 +860,8 @@ export async function runBotForBrand(opts: {
             scenario: attemptScenario,
             rating,
             avoidTitles,
+            avoidBodies,
+            variationAngle,
           });
         } catch (e) {
           result.errors.push(`Şikayet üretimi başarısız: ${errText(e)}`);
@@ -870,6 +888,7 @@ export async function runBotForBrand(opts: {
 
         generated = candidate;
         recentScenarios.unshift(attemptScenario);
+        avoidBodies.unshift(candidate.body);
 
         const complaintId = await writeComplaint({
           brand,
@@ -900,6 +919,7 @@ export async function runBotForBrand(opts: {
             language: effectiveConfig.language,
             botUserId,
             generatedBy,
+            rating,
           });
           result.responsesGenerated++;
         } catch (e) {

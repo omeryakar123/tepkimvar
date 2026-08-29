@@ -6,17 +6,10 @@ import { isSyntheticPublic } from "@/lib/server/synthetic";
  * Marka puanı ve şikayet sayaçları TEK YERDEN, her zaman kaynak satırların
  * gerçek ortalaması/sayımı olarak hesaplanır.
  *
- * Puan iki kaynaktan beslenir; ikisi de kullanıcının verdiği 1-5 arası nottur:
- *   - `brand_ratings`    → marka sayfasındaki genel oy (kullanıcı başına tek)
- *   - `complaints.rating` → ŞİKAYET BAZLI memnuniyet oyu; kullanıcı kendi
- *     şikayetinin sonucunu yıldızlayınca yazılır (çözüm tüneli ya da
- *     /api/complaint-rating). Her şikayet için en fazla bir oy olduğundan
- *     `complaint_resolutions.resolution_rating` ARTIK ortalamaya katılmaz —
- *     aynı not iki kez sayılırdı.
- *
- * Artımlı ("kayan ortalama") güncelleme bilinçli olarak kullanılmaz: oy
- * değiştiğinde, oy silindiğinde veya kullanıcı hesabı kapandığında (cascade)
- * ortalama kayar ve bir daha kendini toparlamazdı.
+ * Puan YALNIZCA şikayet bazlıdır: `complaints.rating` — kullanıcı (veya bot)
+ * şikayet sonucunu 1-5 yıldızla değerlendirdiğinde yazılır. Marka sayfası
+ * doğrudan oyu (`brand_ratings`) ortalamaya KATILMAZ; şikayeti olmayan
+ * markanın puanı da gösterilmez (rating_count = 0).
  */
 
 /** Reddedilen/spam kayıtlar gerçek şikayet sayılmaz. */
@@ -62,10 +55,6 @@ export async function recomputeBrandAggregates(
 
   const rows = (await db.execute(sql`
     WITH scores AS (
-      SELECT rating::numeric AS value
-        FROM brand_ratings
-       WHERE brand_id = ${brandId}
-      UNION ALL
       SELECT rating::numeric AS value
         FROM complaints
        WHERE brand_id = ${brandId}

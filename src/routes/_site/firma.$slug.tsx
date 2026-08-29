@@ -132,8 +132,6 @@ function CompanyPage() {
     loaded?.complaints?.items ?? [],
   );
   const [tab, setTab] = useState<(typeof tabs)[number]>("Şikayetler");
-  const [myRating, setMyRating] = useState(0);
-  const [hover, setHover] = useState(0);
   const [verifyOpen, setVerifyOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(loaded?.complaints?.total ?? 0);
@@ -159,17 +157,6 @@ function CompanyPage() {
     if (!r) return;
     setCompany(r.company);
     setRaw(r.raw);
-    if (user) {
-      const res = await fetch(`/api/brand-ratings?brandId=${r.raw.id}`, {
-        credentials: "include",
-      });
-      if (res.ok) {
-        const d = (await res.json()) as { rating: number | null };
-        setMyRating(d.rating ?? 0);
-      }
-    } else {
-      setMyRating(0);
-    }
   }
   useEffect(() => {
     setPage(1);
@@ -214,43 +201,6 @@ function CompanyPage() {
     });
     if (!res.ok) { toast.error("Yazışma başlatılamadı"); return; }
     navigate({ to: "/profile", search: { sekme: "mesajlar" } });
-  }
-
-  async function rate(value: number) {
-    if (!user) {
-      toast.error("Oy vermek için giriş yapın");
-      return;
-    }
-    if (!raw) return;
-    const res = await fetch("/api/brand-ratings", {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ brandId: raw.id, rating: value }),
-    });
-    if (!res.ok) {
-      const j = (await res.json().catch(() => ({}))) as { error?: string };
-      toast.error(j.error ?? "Oy kaydedilemedi");
-    } else {
-      toast.success("Oyunuz kaydedildi");
-      setMyRating(value);
-      load();
-    }
-  }
-
-  async function removeRating() {
-    if (!raw) return;
-    const res = await fetch(`/api/brand-ratings?brandId=${raw.id}`, {
-      method: "DELETE",
-      credentials: "include",
-    });
-    if (!res.ok) {
-      toast.error("Oy kaldırılamadı");
-      return;
-    }
-    toast.success("Oyunuz kaldırıldı");
-    setMyRating(0);
-    load();
   }
 
   async function uploadBrandImage(file: File, kind: "logo" | "cover") {
@@ -434,34 +384,24 @@ function CompanyPage() {
               </div>
 
               <div className="mt-3 flex items-center gap-2 flex-wrap">
-                <div className="flex items-center gap-0.5">
-                  {[1, 2, 3, 4, 5].map((n) => (
-                    <button
-                      key={n}
-                      onMouseEnter={() => setHover(n)}
-                      onMouseLeave={() => setHover(0)}
-                      onClick={() => rate(n)}
-                      className="p-0.5"
-                      aria-label={`${n} yıldız ver`}
-                    >
-                      <Star
-                        className={`size-5 transition ${(hover || myRating) >= n ? "fill-amber-400 text-amber-400" : "text-navy-mid"}`}
-                      />
-                    </button>
-                  ))}
-                </div>
-                <span className="text-[12px] text-navy-mid">
-                  {(raw.rating_count ?? 0) > 0
-                    ? `${formatRating(raw.rating, raw.rating_count)} / 5 · ${raw.rating_count} oy`
-                    : "Bu firmaya ilk oyu siz verin"}
-                </span>
-                {myRating > 0 && (
-                  <button
-                    onClick={removeRating}
-                    className="text-[12px] text-navy-mid underline hover:text-brand"
-                  >
-                    Oyumu kaldır
-                  </button>
+                {(raw.rating_count ?? 0) > 0 ? (
+                  <>
+                    <div className="flex items-center gap-0.5" aria-label="Şikayet bazlı ortalama puan">
+                      {[1, 2, 3, 4, 5].map((n) => (
+                        <Star
+                          key={n}
+                          className={`size-5 ${Math.round(raw.rating ?? 0) >= n ? "fill-amber-400 text-amber-400" : "text-navy-mid/40"}`}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-[12px] text-navy-mid">
+                      {formatRating(raw.rating, raw.rating_count)} / 5 · {raw.rating_count} şikayet puanı
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-[12px] text-navy-mid">
+                    Henüz şikayet bazlı puan yok — puanlar yalnızca şikayet sonuçlarından hesaplanır
+                  </span>
                 )}
                 {!company.verified && (
                   <span className="text-[11px] text-warning">Doğrulanmamış</span>

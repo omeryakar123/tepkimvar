@@ -347,6 +347,10 @@ export type ComplaintPromptInput = {
   customInstructions?: string | null;
   /** Modelin tekrara düşmemesi için son üretilen başlıklar. */
   avoidTitles: string[];
+  /** Son gövdelerin kısa özeti — aynı cümle kalıplarını engeller. */
+  avoidBodies?: string[];
+  /** Her üretimde farklı açı — tekrarı kırar. */
+  variationAngle?: string;
 };
 
 const COMPLAINT_SYSTEM = [
@@ -357,12 +361,35 @@ const COMPLAINT_SYSTEM = [
   "- Never invent real people's names, phone numbers, e-mails, IBANs, card numbers or ID numbers.",
   "- No profanity, no insults, no threats, no accusations of crime.",
   "- One incident only. No marketing language, no meta commentary, no emojis.",
+  "- Every complaint MUST be structurally different: vary opening sentence, specific detail (amount OR days OR method OR game), and closing demand.",
+  "- Do NOT reuse stock phrases like 'talep ediyorum', 'bilgilendirilmeyi', 'ivedilikle' in the same form across outputs.",
   "- Return ONLY a JSON object with keys: title, body, nickname.",
 ].join("\n");
 
+/** Her üretimde modele verilen farklı odak — tekrarı kırar. */
+export const COMPLAINT_VARIATION_ANGLES = [
+  "Focus on how many days passed without any update from support.",
+  "Focus on a specific payment method and transaction reference.",
+  "Focus on money leaving the bank but never appearing in the account.",
+  "Focus on contradictory answers from different support agents.",
+  "Focus on being asked to upload the same document repeatedly.",
+  "Focus on a game round that froze or disconnected mid-win.",
+  "Focus on bonus terms changing after the user already met them.",
+  "Focus on withdrawal stuck in pending with no explanation.",
+  "Focus on the mobile app crashing while the website shows different balance.",
+  "Focus on a sports bet settled against the official match result.",
+  "Focus on account access blocked without clear reason.",
+  "Focus on an unexplained fee deducted from a transaction.",
+] as const;
+
+export function pickVariationAngle(): string {
+  return COMPLAINT_VARIATION_ANGLES[Math.floor(Math.random() * COMPLAINT_VARIATION_ANGLES.length)];
+}
+
 export function buildComplaintMessages(input: ComplaintPromptInput) {
   const scenario = scenarioByKey(input.scenario);
-  const avoid = input.avoidTitles.slice(0, 12);
+  const avoidTitles = input.avoidTitles.slice(0, 20);
+  const avoidBodies = (input.avoidBodies ?? []).slice(0, 8).map((b) => b.slice(0, 120));
 
   const user = [
     `Brand: ${input.brandName}`,
@@ -370,12 +397,15 @@ export function buildComplaintMessages(input: ComplaintPromptInput) {
     `Language: ${languageName(input.language)} (write everything in this language)`,
     `Customer tone: ${COMPLAINT_TONE_HINTS[input.tone]}`,
     `Satisfaction the customer would give afterwards: ${input.rating}/5 — the severity of the text must match this score (1 = severe unresolved problem, 5 = minor issue that was handled well).`,
+    input.variationAngle ? `Unique angle for THIS complaint: ${input.variationAngle}` : "",
     "",
     "Constraints:",
-    "- title: 4-10 words, no quotes, no brand slogan.",
-    "- body: 45-110 words, first person, includes one concrete detail (an amount, a duration or a step already taken).",
+    "- title: 4-12 words, no quotes, no brand slogan, must NOT start the same way as recent titles.",
+    "- body: 55-130 words, first person, includes TWO concrete details (amount, duration, method, reference number, or product name).",
     "- nickname: a short invented display name (no real-looking full names).",
-    avoid.length ? `- Must NOT resemble any of these existing titles: ${avoid.map((t) => `"${t}"`).join(", ")}` : "",
+    "- Use a different narrative structure than a generic 'I did X and Y happened' template.",
+    avoidTitles.length ? `- Must NOT resemble these existing titles: ${avoidTitles.map((t) => `"${t}"`).join(", ")}` : "",
+    avoidBodies.length ? `- Avoid similar story openings or endings to: ${avoidBodies.map((b) => `"${b}…"`).join("; ")}` : "",
     input.customInstructions ? `\nBrand-specific instructions: ${input.customInstructions}` : "",
     "",
     'Respond as: {"title": "...", "body": "...", "nickname": "..."}',
@@ -404,10 +434,16 @@ const RESPONSE_SYSTEM = [
   "You are the customer support team of the brand, replying publicly to one complaint.",
   "Hard rules:",
   "- Reply in the SAME language as the complaint.",
-  "- Address the specific issue described; never answer generically.",
-  "- Max 90 words. No emojis, no signature block, no links.",
-  "- Never promise a specific payout amount or date you cannot know; describe the next concrete step instead.",
+  "- Address the SPECIFIC issue described; quote or reference at least one concrete detail from the complaint (amount, days, method, product).",
+  "- Structure the reply in 3 clear parts:",
+  "  1) Acknowledge the problem and apologize if the customer is dissatisfied.",
+  "  2) Explain what you checked or will check, with a concrete next step (not vague promises).",
+  "  3) Tell them how and when they will hear back (e.g. via this thread, e-mail, or account notification).",
+  "- Be solution-oriented: offer a practical resolution path, not deflection.",
+  "- Max 120 words. No emojis, no signature block, no links.",
+  "- Never promise a specific payout amount or exact date you cannot know.",
   "- Never ask for card numbers, passwords or full ID numbers in public.",
+  "- Do NOT use empty phrases like 'we are looking into it' without specifics.",
   "- Return ONLY a JSON object with key: response.",
 ].join("\n");
 
@@ -417,8 +453,9 @@ export function buildResponseMessages(input: ResponsePromptInput) {
     `Language: ${languageName(input.language)}`,
     `Support tone: ${RESPONSE_TONE_HINTS[input.tone]}`,
     `Scenario: ${input.scenario}`,
-    `Customer satisfaction score: ${input.rating}/5 — a low score means the reply must acknowledge the failure more directly.`,
+    `Customer satisfaction score: ${input.rating}/5 — a low score means the reply must acknowledge the failure more directly and offer a stronger recovery step.`,
     "",
+    "The response must feel written by a human agent who read the full complaint, not a template.",
     `Complaint title: ${input.complaintTitle}`,
     `Complaint body: ${input.complaintBody}`,
     input.customInstructions ? `\nBrand-specific instructions: ${input.customInstructions}` : "",
@@ -458,12 +495,20 @@ const DEMANDS = {
     "Somut bir açıklama ve işlem tarihi bekliyorum.",
     "Mağduriyetimin giderilmesini istiyorum, aksi halde şikayetimi yetkili mercilere de ileteceğim.",
     "Bu süreçle ilgili yazılı bir dönüş yapılmasını rica ediyorum.",
+    "Kayıtlarınızda işlem numaramı bulup sonucu paylaşmanızı bekliyorum.",
+    "Aynı sorunu tekrar yaşamamak için kalıcı bir çözüm istiyorum.",
+    "Hesabımdaki bakiyemin güvenli şekilde iade edilmesini talep ediyorum.",
+    "Canlı destek yerine bu şikayet üzerinden resmi dönüş almak istiyorum.",
   ],
   en: [
     "I expect this to be resolved urgently and to be informed about it.",
     "I would like a concrete explanation and a processing date.",
     "I want this resolved; otherwise I will escalate the complaint further.",
     "Please get back to me in writing about this process.",
+    "Please locate my transaction id in your records and share the outcome.",
+    "I need a permanent fix so this does not happen again.",
+    "I expect my balance to be returned safely to my account.",
+    "I prefer an official reply on this complaint instead of live chat.",
   ],
 } as const;
 
@@ -473,12 +518,20 @@ const CONTEXT = {
     "Tüm belgeleri ve işlem numarasını ({ref}) paylaştım.",
     "Aynı sorunu daha önce de yaşadım ama bu kez hiç dönüş olmadı.",
     "Referans numaram {ref}; kayıtlarda görünüyor olmalı.",
+    "Ekran görüntüsü ve banka dekontunu da yükledim, inceleme yapılmadı.",
+    "Canlı destek oturumu {days} dakika açık kaldıktan sonra kapatıldı.",
+    "Mobil uygulama üzerinden de aynı hatayı alıyorum.",
+    "İşlem saati ve tutarı banka ekstremde görünüyor.",
   ],
   en: [
     "I have contacted support {days} times with no result.",
     "I shared every document and the transaction id ({ref}).",
     "I had the same problem before, but this time nobody replied at all.",
     "My reference number is {ref}; it should be visible in your records.",
+    "I uploaded screenshots and a bank receipt but nothing was reviewed.",
+    "The live chat session was closed after {days} minutes without an answer.",
+    "I get the same error on the mobile app as well.",
+    "The transaction time and amount appear on my bank statement.",
   ],
 } as const;
 
@@ -486,6 +539,8 @@ const NICKNAMES = [
   "gecikenkullanici", "sabirlimusteri", "kayipbakiye", "denizd", "arda_k", "mgurses",
   "beklemedeyim", "oyuncu42", "sessizmagdur", "yorgunkullanici", "efe.t", "seda_y",
   "player_88", "no_reply_user", "kanitlivar", "hesapmagduru",
+  "slotcu_07", "bahisci_tr", "cekim_bekleyen", "destek_yok", "kuponcu99",
+  "mobil_oyuncu", "bonus_avcisi", "kayit_tut", "magdur_2024",
 ];
 
 function fillTokens(text: string, lang: "tr" | "en"): string {
@@ -546,11 +601,17 @@ const RESPONSE_ACTIONS = {
     "İlgili birim {scenario} kaydınızı işlem numarasıyla birlikte kontrol ediyor.",
     "{scenario} talebiniz öncelikli kuyruğa alındı ve teknik ekibe iletildi.",
     "Kaydınızı açtık; {scenario} sürecindeki adımlar baştan doğrulanıyor.",
+    "Finans ekibimiz {scenario} işleminizi ödeme sağlayıcı kayıtlarıyla karşılaştırıyor.",
+    "Hesabınızdaki {scenario} geçmişi ve destek yazışmaları birlikte inceleniyor.",
+    "Teknik loglarda {scenario} kaydınızı arıyoruz; eşleşen oturum bulunursa düzeltme uygulanacak.",
   ],
   en: [
     "The relevant team is checking your {scenario} record together with the transaction id.",
     "Your {scenario} request has been moved to the priority queue and shared with the technical team.",
     "We opened a case and are re-verifying every step of the {scenario} process.",
+    "Our finance team is comparing your {scenario} transaction against the payment provider records.",
+    "We are reviewing your account {scenario} history together with prior support messages.",
+    "We are searching technical logs for your {scenario} session; if a match is found, a correction will be applied.",
   ],
 } as const;
 
@@ -559,11 +620,17 @@ const RESPONSE_CLOSERS = {
     "Sonucu en kısa sürede hesabınızdaki iletişim adresinden paylaşacağız.",
     "Gelişmeleri sizinle bu şikayet üzerinden paylaşacağız; ek belge gerekirse yazacağız.",
     "İnceleme tamamlandığında size dönüş yapılacaktır, anlayışınız için teşekkür ederiz.",
+    "24 saat içinde bu şikayet altında güncelleme paylaşmayı hedefliyoruz.",
+    "Ek bilgi gerekiyorsa sizi hesabınızdaki kayıtlı numaradan arayacağız.",
+    "Çözüm adımlarını tamamladığımızda buradan yazılı olarak bilgilendireceğiz.",
   ],
   en: [
     "We will share the outcome via the contact details on your account as soon as possible.",
     "We will post updates on this complaint and write to you if further documents are needed.",
     "You will hear back from us once the review is complete — thank you for your patience.",
+    "We aim to post an update on this complaint within 24 hours.",
+    "If we need more information, we will call the number registered on your account.",
+    "Once the resolution steps are complete, we will confirm it here in writing.",
   ],
 } as const;
 
