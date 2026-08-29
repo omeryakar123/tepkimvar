@@ -355,8 +355,9 @@ function CompanyPage() {
                   const src =
                     proxyImage(raw.logo_url) ||
                     brandLogoUrl({
-                      logoUrl: null,
+                      logoUrl: raw.logo_url,
                       website: raw.website,
+                      slug: raw.slug,
                       size: 256,
                     });
                   return src ? (
@@ -432,45 +433,40 @@ function CompanyPage() {
                 )}
               </div>
 
-              {company.verified ? (
-                <div className="mt-3 flex items-center gap-2">
-                  <div className="flex items-center gap-0.5">
-                    {[1, 2, 3, 4, 5].map((n) => (
-                      <button
-                        key={n}
-                        onMouseEnter={() => setHover(n)}
-                        onMouseLeave={() => setHover(0)}
-                        onClick={() => rate(n)}
-                        className="p-0.5"
-                        aria-label={`${n} yıldız ver`}
-                      >
-                        <Star
-                          className={`size-5 transition ${(hover || myRating) >= n ? "fill-amber-400 text-amber-400" : "text-navy-mid"}`}
-                        />
-                      </button>
-                    ))}
-                  </div>
-                  <span className="text-[12px] text-navy-mid">
-                    {(raw.rating_count ?? 0) > 0
-                      ? `${formatRating(raw.rating, raw.rating_count)} / 5 · ${raw.rating_count} oy`
-                      : "Bu firmaya ilk oyu siz verin"}
-                  </span>
-                  {myRating > 0 && (
+              <div className="mt-3 flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-0.5">
+                  {[1, 2, 3, 4, 5].map((n) => (
                     <button
-                      onClick={removeRating}
-                      className="text-[12px] text-navy-mid underline hover:text-brand"
+                      key={n}
+                      onMouseEnter={() => setHover(n)}
+                      onMouseLeave={() => setHover(0)}
+                      onClick={() => rate(n)}
+                      className="p-0.5"
+                      aria-label={`${n} yıldız ver`}
                     >
-                      Oyumu kaldır
+                      <Star
+                        className={`size-5 transition ${(hover || myRating) >= n ? "fill-amber-400 text-amber-400" : "text-navy-mid"}`}
+                      />
                     </button>
-                  )}
+                  ))}
                 </div>
-              ) : (
-                <div className="mt-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-warning-soft text-warning text-[12px] ring-1 ring-warning/30">
-                  <BadgeCheck className="size-3.5" /> Bu firma henüz
-                  doğrulanmamış. Doğrulama tamamlanana kadar puanlama ve güven
-                  göstergeleri kapalı.
-                </div>
-              )}
+                <span className="text-[12px] text-navy-mid">
+                  {(raw.rating_count ?? 0) > 0
+                    ? `${formatRating(raw.rating, raw.rating_count)} / 5 · ${raw.rating_count} oy`
+                    : "Bu firmaya ilk oyu siz verin"}
+                </span>
+                {myRating > 0 && (
+                  <button
+                    onClick={removeRating}
+                    className="text-[12px] text-navy-mid underline hover:text-brand"
+                  >
+                    Oyumu kaldır
+                  </button>
+                )}
+                {!company.verified && (
+                  <span className="text-[11px] text-warning">Doğrulanmamış</span>
+                )}
+              </div>
             </div>
             <div className="flex gap-2 flex-wrap">
               {isAdmin && (

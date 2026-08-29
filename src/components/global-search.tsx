@@ -90,7 +90,7 @@ function GlobalSearchModal({ open, onClose }: { open: boolean; onClose: () => vo
                 <button key={b.id} onClick={() => go(`/firma/${b.slug}`)} className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-brand-soft/40 text-left">
                   <div className="size-8 rounded-lg bg-surface grid place-items-center overflow-hidden">
                     {(() => {
-                      const src = brandLogoUrl({ logoUrl: b.logo_url, website: b.website, size: 64 });
+                      const src = brandLogoUrl({ logoUrl: b.logo_url, website: b.website, slug: b.slug, size: 64 });
                       return src ? (
                         <img src={src} alt="" className="size-full object-cover" />
                       ) : (

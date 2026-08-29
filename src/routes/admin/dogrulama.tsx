@@ -115,7 +115,7 @@ function VerificationsPage() {
   }
 
   return (
-    <div className="px-6 lg:px-10 py-8 grid lg:grid-cols-[420px_1fr] gap-4">
+    <div className="px-3 sm:px-6 lg:px-10 py-6 sm:py-8 grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-4">
       <aside className="bg-card rounded-2xl ring-1 ring-rule overflow-hidden flex flex-col max-h-[calc(100vh-4rem)]">
         <div className="p-4 border-b border-rule">
           <div className="eyebrow text-navy-mid">Super Admin</div>

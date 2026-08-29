@@ -61,6 +61,7 @@ export interface Complaint {
   firstResponseMinutes?: number | null;
   brandId?: string;
   companyReply?: { body: string; agoLabel: string };
+  previewComments?: { userName: string; body: string; createdAgo: string }[];
 }
 
 

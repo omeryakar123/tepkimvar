@@ -597,8 +597,8 @@ async function writeComplaint(input: {
       rating: input.rating,
       // Firma profilinde görünsün; sentetik bayrağı ayrı tutulur.
       isPublic: true,
-      isAnonymous: true,
-      anonName: input.generated.nickname,
+      isAnonymous: false,
+      anonName: null,
       isSynthetic: true,
       generatedBy: input.generatedBy,
       language: input.config.language,

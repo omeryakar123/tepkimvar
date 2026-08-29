@@ -18,7 +18,8 @@ import { formatRating, type Company, type Complaint } from "@/lib/mock-data";
 import {
   fetchBrandsList,
   fetchCategoriesWithCount,
-  fetchComplaintsList,
+  fetchHomeAgenda,
+  fetchHomeTalked,
   fetchLiveFeed,
   fetchPlatformStats,
 } from "@/lib/data";
@@ -40,16 +41,17 @@ const FALLBACK_STATS = publicPlatformStats({
 
 export const Route = createFileRoute("/_site/")({
   loader: async () => {
-    const [liveFeed, categories, trending, platformStats, topBrands, trendBrands] =
+    const [liveFeed, agenda, talked, categories, platformStats, topBrands, trendBrands] =
       await Promise.all([
         fetchLiveFeed({ limit: 6 }).catch(() => [] as Complaint[]),
+        fetchHomeAgenda({ limit: 6 }).catch(() => [] as Complaint[]),
+        fetchHomeTalked({ limit: 4 }).catch(() => [] as Complaint[]),
         fetchCategoriesWithCount().catch(() => []),
-        fetchComplaintsList({ limit: 6, sortBy: "trending" }).catch(() => [] as Complaint[]),
         fetchPlatformStats().catch(() => FALLBACK_STATS),
         fetchBrandsList({ limit: 5, sortBy: "resolution" }).catch(() => [] as Company[]),
         fetchBrandsList({ limit: 10, sortBy: "complaints" }).catch(() => [] as Company[]),
       ]);
-    return { latest: liveFeed, categories, trending, stats: platformStats, topBrands, trendBrands };
+    return { latest: liveFeed, agenda, talked, categories, stats: platformStats, topBrands, trendBrands };
   },
   head: () => {
     const base = seoHead({
@@ -91,9 +93,8 @@ export const Route = createFileRoute("/_site/")({
 function Home() {
   const loaderData = Route.useLoaderData();
   const [featured, setFeatured] = useState<Complaint[]>(loaderData.latest ?? []);
-  const [talked, setTalked] = useState<Complaint[]>(
-    loaderData.trending?.length ? loaderData.trending : (loaderData.latest ?? []).slice(0, 4),
-  );
+  const [agenda, setAgenda] = useState<Complaint[]>(loaderData.agenda ?? []);
+  const [talked, setTalked] = useState<Complaint[]>(loaderData.talked ?? []);
   const [top, setTop] = useState<Company[]>(loaderData.topBrands ?? []);
   const [trend100, setTrend100] = useState<Company[]>(loaderData.trendBrands ?? []);
   const [stats, setStats] = useState(loaderData.stats ?? FALLBACK_STATS);
@@ -110,7 +111,8 @@ function Home() {
       setFeedLoading(true);
       const results = await Promise.allSettled([
         fetchLiveFeed({ limit: 6 }),
-        fetchComplaintsList({ limit: 6, sortBy: "trending" }),
+        fetchHomeAgenda({ limit: 6 }),
+        fetchHomeTalked({ limit: 4 }),
         fetchBrandsList({ limit: 5, sortBy: "resolution" }),
         fetchBrandsList({ limit: 10, sortBy: "complaints" }),
         fetchPlatformStats(),
@@ -118,11 +120,10 @@ function Home() {
 
       if (cancelled) return;
 
-      const [recentR, trendingR, topR, trendR, statsR] = results;
+      const [recentR, agendaR, talkedR, topR, trendR, statsR] = results;
       if (recentR.status === "fulfilled") setFeatured(recentR.value);
-      if (trendingR.status === "fulfilled") {
-        setTalked(trendingR.value.length > 0 ? trendingR.value : recentR.status === "fulfilled" ? recentR.value.slice(0, 4) : []);
-      }
+      if (agendaR.status === "fulfilled") setAgenda(agendaR.value);
+      if (talkedR.status === "fulfilled") setTalked(talkedR.value);
       if (topR.status === "fulfilled") setTop(topR.value);
       if (trendR.status === "fulfilled") setTrend100(trendR.value);
       if (statsR.status === "fulfilled") setStats(statsR.value);
@@ -269,7 +270,7 @@ function Home() {
           {/* Mobil: yatay carousel */}
           <div className="md:hidden">
             <MobileCarousel ariaLabel="Gündemdeki şikayetler">
-              {featured.map((c) => (
+              {agenda.map((c) => (
                 <Link
                   key={c.id}
                   to="/sikayet/$id"
@@ -295,7 +296,7 @@ function Home() {
 
           {/* Masaüstü: grid */}
           <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 gap-4">
-            {featured.map((c) => (
+            {agenda.map((c) => (
               <Link
                 key={c.id}
                 to="/sikayet/$id"
@@ -347,6 +348,17 @@ function Home() {
                   </div>
                   <h3 className="font-display font-bold text-[16px] text-ink mb-2 line-clamp-2">{c.title}</h3>
                   <p className="text-[13px] text-navy line-clamp-3 leading-relaxed">{c.body}</p>
+                  {c.previewComments && c.previewComments.length > 0 && (
+                    <ul className="mt-3 space-y-2 border-t border-rule pt-3">
+                      {c.previewComments.map((cm, i) => (
+                        <li key={i} className="text-[12px] text-navy leading-snug">
+                          <span className="font-semibold text-ink">{cm.userName}</span>
+                          <span className="text-navy-mid"> · {cm.createdAgo}</span>
+                          <p className="mt-0.5 line-clamp-2">{cm.body}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                   <div className="mt-3 text-[12px] font-semibold text-brand truncate">▸ {c.companyName}</div>
                 </Link>
               ))}
@@ -372,6 +384,17 @@ function Home() {
                 </div>
                 <h3 className="font-display font-bold text-[17px] text-ink mb-2 line-clamp-2">{c.title}</h3>
                 <p className="text-[13px] text-navy line-clamp-3 leading-relaxed">{c.body}</p>
+                {c.previewComments && c.previewComments.length > 0 && (
+                  <ul className="mt-3 space-y-2 border-t border-rule pt-3">
+                    {c.previewComments.map((cm, i) => (
+                      <li key={i} className="text-[12px] text-navy leading-snug">
+                        <span className="font-semibold text-ink">{cm.userName}</span>
+                        <span className="text-navy-mid"> · {cm.createdAgo}</span>
+                        <p className="mt-0.5 line-clamp-2">{cm.body}</p>
+                      </li>
+                    ))}
+                  </ul>
+                )}
                 <div className="mt-3 text-[12px] font-semibold text-brand">▸ {c.companyName}</div>
               </Link>
             ))}
@@ -500,29 +523,34 @@ function Home() {
             <p className="mt-1 text-[13px] text-navy-mid">Son 7 günün en çok konuşulan markaları.</p>
           </div>
 
-          {/* Mobil: kart listesi — marka adı tam okunur */}
-          <div className="md:hidden bg-card rounded-2xl ring-1 ring-rule divide-y divide-rule overflow-hidden">
-            {trend100.map((b, i) => (
-              <Link
-                key={b.slug}
-                to="/firma/$slug"
-                params={{ slug: b.slug }}
-                className="flex items-center gap-3 px-4 py-3.5 hover:bg-surface transition"
-              >
-                <span className="w-7 text-[13px] text-navy-mid font-bold tabular-nums shrink-0">{i + 1}.</span>
-                <BrandAvatar name={b.name} slug={b.slug} logoUrl={b.logoUrl} website={b.website} size={36} rounded="rounded-lg" />
-                <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-[14px] text-ink leading-snug break-words">{b.name}</div>
-                  <div className="text-[11px] text-navy-mid mt-0.5">{b.categoryName}</div>
-                </div>
-                <div className="shrink-0 text-right">
-                  <TrendingUp className="inline size-4 text-brand mb-0.5" />
-                  <div className="text-[13px] font-bold text-ink tabular-nums">
-                    {formatRating(b.rating, b.ratingCount)}
+          {/* Mobil: swiper — tam liste yerine kaydırmalı */}
+          <div className="md:hidden">
+            <MobileCarousel slideClassName="w-[78vw] max-w-[320px] snap-start shrink-0" ariaLabel="Trend 100 markalar">
+              {trend100.map((b, i) => (
+                <Link
+                  key={b.slug}
+                  to="/firma/$slug"
+                  params={{ slug: b.slug }}
+                  className="block h-full bg-card rounded-2xl ring-1 ring-rule p-4 hover:shadow-pop transition"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="w-7 text-[13px] text-navy-mid font-bold tabular-nums shrink-0">{i + 1}.</span>
+                    <BrandAvatar name={b.name} slug={b.slug} logoUrl={b.logoUrl} website={b.website} size={40} rounded="rounded-lg" />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-[14px] text-ink leading-snug break-words">{b.name}</div>
+                      <div className="text-[11px] text-navy-mid mt-0.5">{b.categoryName}</div>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <TrendingUp className="inline size-4 text-brand mb-0.5" />
+                      <div className="text-[13px] font-bold text-ink tabular-nums inline-flex items-center gap-1">
+                        <Star className="size-3.5 fill-amber-400 text-amber-400" />
+                        {formatRating(b.rating, b.ratingCount)}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              ))}
+            </MobileCarousel>
           </div>
 
           {/* Masaüstü: tablo */}

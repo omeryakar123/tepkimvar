@@ -167,7 +167,7 @@ export function BrandProfileComplaintCard({
 export function BrandAvatar({
   name, slug, logoUrl, website, size = 48, rounded = "rounded-xl",
 }: { name: string; slug: string; logoUrl?: string | null; website?: string | null; size?: number; rounded?: string }) {
-  const src = brandLogoUrl({ logoUrl, website, size: size * 2 });
+  const src = brandLogoUrl({ logoUrl, website, slug, size: size * 2 });
   const initials = name.slice(0, 2).toUpperCase();
   return (
     <div
@@ -207,6 +207,14 @@ export function CompanyCard({ company }: { company: Company }) {
           <p className="text-[12px] text-navy-mid">{company.categoryName}</p>
         </div>
         <div className="text-right shrink-0">
+          <div className="inline-flex items-center gap-0.5 justify-end mb-0.5">
+            {[1, 2, 3, 4, 5].map((n) => (
+              <Star
+                key={n}
+                className={`size-3 ${n <= Math.round(company.rating) && company.ratingCount > 0 ? "fill-amber-400 text-amber-400" : "text-navy-mid/25"}`}
+              />
+            ))}
+          </div>
           <div className="font-bold text-lg leading-none text-ink">{formatRating(company.rating, company.ratingCount)}</div>
           <div className="text-[10px] uppercase tracking-wider text-navy-mid mt-1">
             {company.ratingCount > 0 ? `${company.ratingCount} oy` : "puan yok"}
@@ -287,17 +295,18 @@ export function ComplaintCard({ complaint, variant = "default" }: { complaint: C
       <h4 className="font-semibold text-[16px] leading-snug text-ink mb-2 line-clamp-2 group-hover:text-brand transition-colors">
         {complaint.title}
       </h4>
-      <p className="text-[13px] text-navy line-clamp-2 leading-relaxed mb-5 flex-1">{complaint.body}</p>
+      <p className="text-[13px] text-navy line-clamp-2 leading-relaxed mb-3 flex-1">{complaint.body}</p>
+
+      {complaint.rating != null && complaint.rating > 0 ? (
+        <div className="mb-3">
+          <ComplaintStarRating rating={complaint.rating} size="sm" />
+        </div>
+      ) : null}
 
       <div className="flex items-center justify-between pt-4 border-t border-rule text-[12px] text-navy-mid">
         <div className="flex items-center gap-4">
           <span className="inline-flex items-center gap-1.5"><Eye className="size-3.5" /> {complaint.views.toLocaleString("tr-TR")}</span>
           <span className="inline-flex items-center gap-1.5"><MessageSquare className="size-3.5" /> {complaint.comments}</span>
-          {complaint.rating ? (
-            <span className="inline-flex items-center gap-1 text-amber-500">
-              <Star className="size-3.5 fill-amber-400" /> {complaint.rating}
-            </span>
-          ) : null}
         </div>
         <span className="inline-flex items-center gap-1.5"><Clock className="size-3.5" /> {complaint.createdAgo}</span>
       </div>

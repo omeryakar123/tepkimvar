@@ -132,7 +132,7 @@ function ProfilePage() {
 
   return (
     <div>
-      <main className="mx-auto max-w-5xl px-4 sm:px-6 py-10">
+      <main className="mx-auto max-w-5xl px-3 sm:px-6 py-6 sm:py-10">
         {/* Header card */}
         <div className="bg-card rounded-2xl ring-1 ring-rule p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
           <AvatarUpload
@@ -175,13 +175,15 @@ function ProfilePage() {
           <Stat icon={Eye} label="Görüntülenme" v={stats.views} />
         </div>
 
-        {/* Tabs */}
-        <div className="mt-6 flex gap-1 border-b border-rule">
-          {([["info", "Bilgilerim"], ["complaints", "Şikayetlerim"], ["messages", "Mesajlar"], ["security", "Güvenlik"]] as const).map(([k, l]) => (
-            <button key={k} onClick={() => setTab(k)} className={`px-4 h-10 text-[13.5px] font-semibold border-b-2 -mb-px ${tab === k ? "border-brand text-brand" : "border-transparent text-navy-mid hover:text-ink"}`}>
-              {l}
-            </button>
-          ))}
+        {/* Tabs — mobilde yatay kaydırma */}
+        <div className="mt-6 -mx-4 sm:mx-0 px-4 sm:px-0 overflow-x-auto scrollbar-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex gap-1 border-b border-rule min-w-max sm:min-w-0">
+            {([["info", "Bilgilerim"], ["complaints", "Şikayetlerim"], ["messages", "Mesajlar"], ["security", "Güvenlik"]] as const).map(([k, l]) => (
+              <button key={k} onClick={() => setTab(k)} className={`px-4 h-10 text-[13px] sm:text-[13.5px] font-semibold border-b-2 -mb-px whitespace-nowrap ${tab === k ? "border-brand text-brand" : "border-transparent text-navy-mid hover:text-ink"}`}>
+                {l}
+              </button>
+            ))}
+          </div>
         </div>
 
         {tab === "info" && (

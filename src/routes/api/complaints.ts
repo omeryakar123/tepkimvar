@@ -6,7 +6,6 @@ import { HttpError, errorResponse, rateLimit, requireUser } from "@/lib/server/g
 import { recordStatusChange } from "@/lib/server/history";
 import { refreshBrandAggregates } from "@/lib/server/brand-stats";
 import { moderateAndScore } from "@/lib/server/moderation";
-import { isSyntheticPublic } from "@/lib/server/synthetic";
 
 // Public: şikayet listesi. RLS gitti; moderasyon filtresi BURADA zorlanıyor.
 const HIDDEN_STATUSES = ["pending", "rejected", "spam"] as const;
@@ -41,10 +40,12 @@ export const Route = createFileRoute("/api/complaints")({
           );
           conditions.push(eq(schema.brands.slug, brandSlug));
         } else {
-          conditions.push(eq(schema.complaints.isPublic, true));
-          if (!isSyntheticPublic()) {
-            conditions.push(eq(schema.complaints.isSynthetic, false));
-          }
+          conditions.push(
+            or(
+              eq(schema.complaints.isPublic, true),
+              eq(schema.complaints.isSynthetic, true),
+            ) as SQL,
+          );
         }
 
         if (categoryIdParam) conditions.push(eq(schema.complaints.categoryId, categoryIdParam));
@@ -102,14 +103,11 @@ export const Route = createFileRoute("/api/complaints")({
             verified: r.b.verified,
           };
           const dc = toDbComplaint(r.c, brand);
-          // PII: anonim şikayette gerçek user_id sızdırma.
-          if (dc.is_anonymous) dc.user_id = null;
           return dc;
         });
 
-        // Attach profiles for non-anonymous rows (single inArray query).
         const ids = Array.from(
-          new Set(items.filter((i) => !i.is_anonymous && i.user_id).map((i) => i.user_id as string)),
+          new Set(items.map((i) => i.user_id).filter(Boolean) as string[]),
         );
         if (ids.length > 0) {
           const profs = await db
@@ -123,12 +121,28 @@ export const Route = createFileRoute("/api/complaints")({
             .where(inArray(schema.profiles.id, ids));
           const map = new Map(profs.map((pr) => [pr.id, pr]));
           for (const it of items) {
-            if (!it.is_anonymous && it.user_id) {
+            if (it.user_id) {
               const pr = map.get(it.user_id);
               it.profiles = pr
                 ? { full_name: pr.full_name, username: pr.username, avatar_url: pr.avatar_url }
                 : null;
             }
+          }
+        }
+
+        const cids = items.map((i) => i.id);
+        if (cids.length > 0) {
+          const counts = await db
+            .select({
+              complaintId: schema.comments.complaintId,
+              n: sql<number>`count(*)::int`,
+            })
+            .from(schema.comments)
+            .where(inArray(schema.comments.complaintId, cids))
+            .groupBy(schema.comments.complaintId);
+          const countMap = new Map(counts.map((c) => [c.complaintId, Number(c.n)]));
+          for (const it of items) {
+            (it as DbComplaintShape & { comment_count?: number }).comment_count = countMap.get(it.id) ?? 0;
           }
         }
 
@@ -181,8 +195,8 @@ export const Route = createFileRoute("/api/complaints")({
               title: title.slice(0, 200),
               body: body.slice(0, 5000),
               contactPhone: b.contactPhone || null,
-              isAnonymous: !!b.isAnonymous,
-              anonName: b.isAnonymous ? "Anonim" : null,
+              isAnonymous: false,
+              anonName: null,
               // Sunucu tarafından sabitlenen alanlar:
               status,
               isPublic: true,

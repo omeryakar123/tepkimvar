@@ -16,7 +16,7 @@ export const Route = createFileRoute("/_site/sikayet-yaz")({
   head: () => ({
     ...seoHead({
       title: "Şikayet Yaz — Sesini Duyur | tepkimvar",
-      description: "Yaşadığınız sorunu birkaç dakikada yazın, markadan resmi yanıt alın. Dilerseniz anonim paylaşın; çözüm sürecini adım adım takip edin.",
+      description: "Yaşadığınız sorunu birkaç dakikada yazın, markadan resmi yanıt alın. Çözüm sürecini adım adım takip edin.",
       path: "/sikayet-yaz",
     }),
   }),
@@ -42,7 +42,6 @@ function WriteComplaintPage() {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [phone, setPhone] = useState("");
-  const [anonymous, setAnonymous] = useState(false);
   const [kvkk, setKvkk] = useState(false);
   const [files, setFiles] = useState<AcceptedFile[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -91,7 +90,7 @@ function WriteComplaintPage() {
           brandId,
           categoryId: categoryId || null,
           contactPhone: e164,
-          isAnonymous: anonymous,
+          isAnonymous: false,
         }),
       });
       const json = (await res.json()) as {
@@ -242,10 +241,6 @@ function WriteComplaintPage() {
           </div>
 
           <div className="space-y-2 pt-2 border-t border-rule">
-            <label className="flex items-start gap-3 text-[13px] text-navy cursor-pointer">
-              <input type="checkbox" checked={anonymous} onChange={(e) => setAnonymous(e.target.checked)} className="mt-0.5 size-4 accent-brand" />
-              <span><b>Anonim paylaş</b> — şikayetiniz yayında ismi göstermeden görünür.</span>
-            </label>
             <label className="flex items-start gap-3 text-[13px] text-navy cursor-pointer">
               <input type="checkbox" required checked={kvkk} onChange={(e) => setKvkk(e.target.checked)} className="mt-0.5 size-4 accent-brand" />
               <span>KVKK kapsamında <Link to="/kvkk" className="text-brand underline">aydınlatma metnini</Link> okudum, kişisel verilerimin işlenmesini onaylıyorum.</span>

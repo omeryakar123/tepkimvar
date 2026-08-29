@@ -51,17 +51,30 @@ function buildQuery(params: Record<string, string | number | undefined>): string
 }
 
 export function formatAgo(iso: string): string {
-  const d = new Date(iso).getTime();
-  const diff = Date.now() - d;
+  const d = new Date(iso);
+  const now = new Date();
+  const sameDay =
+    d.getFullYear() === now.getFullYear() &&
+    d.getMonth() === now.getMonth() &&
+    d.getDate() === now.getDate();
+  const diff = Date.now() - d.getTime();
   const s = Math.max(1, Math.floor(diff / 1000));
+  if (sameDay && s < 86400) {
+    if (s < 60) return "Az önce";
+    const m = Math.floor(s / 60);
+    if (m < 60) return `${m} dk önce`;
+    const h = Math.floor(m / 60);
+    return `${h} sa önce · Bugün`;
+  }
   if (s < 60) return `${s} sn önce`;
   const m = Math.floor(s / 60);
   if (m < 60) return `${m} dk önce`;
   const h = Math.floor(m / 60);
   if (h < 24) return `${h} sa önce`;
   const dd = Math.floor(h / 24);
+  if (dd === 1) return "Dün";
   if (dd < 30) return `${dd} gün önce`;
-  return new Date(iso).toLocaleDateString("tr-TR");
+  return d.toLocaleDateString("tr-TR");
 }
 
 function initialsOf(name: string): string {
@@ -167,11 +180,13 @@ export type DbComplaint = {
   first_response_minutes: number | null;
   brands?: { name: string; slug: string; logo_url: string | null; verified: boolean } | null;
   profiles?: { full_name: string | null; username: string | null; avatar_url: string | null } | null;
+  comment_count?: number;
+  preview_comments?: { id: string; body: string; created_at: string; profiles: { full_name: string | null; username: string | null } | null }[];
 };
 
 export function dbComplaintToUi(c: DbComplaint): Complaint {
   const cat = c.category_id ? categoryNameCache.get(c.category_id) : null;
-  const userName = c.is_anonymous ? c.anon_name ?? "Anonim" : c.profiles?.full_name ?? c.profiles?.username ?? "Kullanıcı";
+  const userName = c.profiles?.full_name ?? c.profiles?.username ?? "Kullanıcı";
   return {
     id: c.id,
     publicId: c.public_id ?? c.short_id ?? undefined,
@@ -186,7 +201,7 @@ export function dbComplaintToUi(c: DbComplaint): Complaint {
     createdAgo: formatAgo(c.created_at),
     status: DB_TO_UI_STATUS[c.status] ?? "beklemede",
     views: c.views ?? 0,
-    comments: 0,
+    comments: c.comment_count ?? 0,
     votes: c.votes ?? 0,
     rating: c.rating ?? null,
     sentiment: (c.sentiment_score as Complaint["sentiment"]) ?? undefined,
@@ -196,6 +211,11 @@ export function dbComplaintToUi(c: DbComplaint): Complaint {
     companyReply: c.brand_response
       ? { body: c.brand_response, agoLabel: c.brand_response_at ? formatAgo(c.brand_response_at) : "" }
       : undefined,
+    previewComments: c.preview_comments?.map((pc) => ({
+      userName: pc.profiles?.full_name ?? pc.profiles?.username ?? "Kullanıcı",
+      body: pc.body,
+      createdAgo: formatAgo(pc.created_at),
+    })),
   };
 }
 
@@ -213,6 +233,20 @@ export async function fetchLiveFeed(opts: { limit?: number } = {}) {
   await ensureCategoryCache();
   const qs = buildQuery({ limit: opts.limit });
   const { items } = await getJson<{ items: DbComplaint[] }>(`/api/live-feed${qs}`);
+  return items.map(dbComplaintToUi);
+}
+
+export async function fetchHomeAgenda(opts: { limit?: number } = {}) {
+  await ensureCategoryCache();
+  const qs = buildQuery({ limit: opts.limit });
+  const { items } = await getJson<{ items: DbComplaint[] }>(`/api/home-agenda${qs}`);
+  return items.map(dbComplaintToUi);
+}
+
+export async function fetchHomeTalked(opts: { limit?: number } = {}) {
+  await ensureCategoryCache();
+  const qs = buildQuery({ limit: opts.limit });
+  const { items } = await getJson<{ items: DbComplaint[] }>(`/api/home-talked${qs}`);
   return items.map(dbComplaintToUi);
 }
 
