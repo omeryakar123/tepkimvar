@@ -25,6 +25,8 @@ import {
   buildResponseMessages,
   fallbackComplaint,
   fallbackResponse,
+  normalizeBotDisplayName,
+  pickTurkishDisplayName,
   pickVariationAngle,
   scenarioLabel,
   type ComplaintTone,
@@ -361,7 +363,8 @@ export async function detectDuplicateComplaint(input: {
 export type GeneratedComplaint = {
   title: string;
   body: string;
-  nickname: string;
+  /** Herkese görünen yazar adı (Türk ismi). */
+  displayName: string;
   source: "ai" | "template";
 };
 
@@ -388,11 +391,17 @@ export async function generateComplaint(input: {
   rating: number;
   avoidTitles: string[];
   avoidBodies?: string[];
+  avoidDisplayNames?: string[];
   variationAngle?: string;
 }): Promise<GeneratedComplaint> {
   if (!isAiConfigured()) {
     const t = fallbackComplaint({ scenario: input.scenario, language: input.config.language });
-    return { ...t, source: "template" };
+    return {
+      title: t.title,
+      body: t.body,
+      displayName: pickTurkishDisplayName(input.avoidDisplayNames),
+      source: "template",
+    };
   }
 
   const raw = await chatCompleteJson<{ title?: string; body?: string; nickname?: string }>({
@@ -420,7 +429,7 @@ export async function generateComplaint(input: {
   return {
     title,
     body,
-    nickname: cleanLine(raw.nickname, 40) || "kullanici",
+    displayName: normalizeBotDisplayName(raw.nickname, input.avoidDisplayNames),
     source: "ai",
   };
 }
@@ -476,8 +485,8 @@ let cachedBotUserId: string | null = null;
 
 /**
  * Şikayet satırları `user_id` ister. Bot için TEK bir sistem kullanıcısı
- * kullanılır: `account` satırı olmadığı için bu kullanıcı ASLA giriş yapamaz.
- * Şikayetler `is_anonymous = true` yazıldığı için bu kimlik dışarıya sızmaz.
+ * kullanılır (giriş yapamaz). Dışarıda görünen ad `anon_name` + is_anonymous
+ * ile rastgele Türk ismi olarak yazılır — bot kimliği ASLA gösterilmez.
  */
 async function ensureBotUser(): Promise<string> {
   if (cachedBotUserId) return cachedBotUserId;
@@ -600,10 +609,10 @@ async function writeComplaint(input: {
       body: input.generated.body,
       status: "approved",
       rating: null,
-      // Firma profilinde görünsün; sentetik bayrağı ayrı tutulur.
+      // Firma profilinde görünsün; yazar adı anon_name'de (Türk ismi).
       isPublic: true,
-      isAnonymous: false,
-      anonName: null,
+      isAnonymous: true,
+      anonName: input.generated.displayName,
       isSynthetic: true,
       generatedBy: input.generatedBy,
       language: input.config.language,
@@ -775,6 +784,7 @@ export async function runBotForBrand(opts: {
         title: schema.complaints.title,
         body: schema.complaints.body,
         scenario: schema.complaints.botScenario,
+        anonName: schema.complaints.anonName,
       })
       .from(schema.complaints)
       .where(eq(schema.complaints.brandId, opts.brandId))
@@ -783,6 +793,9 @@ export async function runBotForBrand(opts: {
 
     const avoidTitles = recent.map((r) => r.title);
     const avoidBodies = recent.map((r) => r.body);
+    const avoidDisplayNames = recent
+      .map((r) => r.anonName)
+      .filter((n): n is string => !!n);
     const recentScenarios = recent
       .map((r) => r.scenario)
       .filter((s): s is string => !!s)
@@ -861,6 +874,7 @@ export async function runBotForBrand(opts: {
             rating,
             avoidTitles,
             avoidBodies,
+            avoidDisplayNames,
             variationAngle,
           });
         } catch (e) {
@@ -889,6 +903,7 @@ export async function runBotForBrand(opts: {
         generated = candidate;
         recentScenarios.unshift(attemptScenario);
         avoidBodies.unshift(candidate.body);
+        avoidDisplayNames.unshift(candidate.displayName);
 
         const complaintId = await writeComplaint({
           brand,

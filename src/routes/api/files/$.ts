@@ -79,8 +79,9 @@ export const Route = createFileRoute("/api/files/$")({
             },
           });
         } catch (e) {
-          // Nesne yoksa S3 hata fırlatır
-          if ((e as { name?: string })?.name === "NoSuchKey") {
+          const name = (e as { name?: string; code?: string })?.name;
+          const code = (e as { code?: string })?.code;
+          if (name === "NoSuchKey" || code === "ENOENT") {
             return new Response("Not found", { status: 404 });
           }
           return errorResponse(e);

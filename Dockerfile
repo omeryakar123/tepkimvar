@@ -39,6 +39,10 @@ COPY --from=builder /app/node_modules/postgres ./node_modules/postgres
 # Prod bakım: marka/kategori seed scriptleri (DATABASE_URL ile çalıştırılır).
 COPY --from=builder /app/scripts ./scripts
 
+# MinIO yoksa yerel depolama (Coolify'da volume bağlayın: /app/data/storage)
+RUN mkdir -p /app/data/storage
+ENV STORAGE_LOCAL_PATH=/app/data/storage
+
 # Nitro node-server PORT'u dinler (Coolify enjekte eder).
 ENV PORT=3000
 EXPOSE 3000

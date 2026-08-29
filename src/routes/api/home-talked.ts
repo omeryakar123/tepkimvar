@@ -102,7 +102,10 @@ export const Route = createFileRoute("/api/home-talked")({
               verified: r.b.verified,
             };
             const dc = toDbComplaint(r.c, brand) as TalkedItem;
-            if (r.c.userId) {
+            if (dc.is_anonymous) {
+              dc.user_id = null;
+              dc.profiles = null;
+            } else if (r.c.userId) {
               const pr = userMap.get(r.c.userId);
               dc.profiles = pr
                 ? { full_name: pr.full_name, username: pr.username, avatar_url: pr.avatar_url }

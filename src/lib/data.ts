@@ -186,7 +186,9 @@ export type DbComplaint = {
 
 export function dbComplaintToUi(c: DbComplaint): Complaint {
   const cat = c.category_id ? categoryNameCache.get(c.category_id) : null;
-  const userName = c.profiles?.full_name ?? c.profiles?.username ?? "Kullanıcı";
+  const userName = c.is_anonymous
+    ? (c.anon_name?.trim() || "Anonim")
+    : (c.profiles?.full_name ?? c.profiles?.username ?? "Kullanıcı");
   return {
     id: c.id,
     publicId: c.public_id ?? c.short_id ?? undefined,

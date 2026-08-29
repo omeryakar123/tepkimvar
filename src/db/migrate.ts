@@ -25,3 +25,14 @@ try {
 } finally {
   await sql.end();
 }
+
+try {
+  const { logStorageBackendOnce, testStorageWrite, getStorageBackend } = await import(
+    "../lib/server/storage"
+  );
+  await logStorageBackendOnce();
+  await testStorageWrite();
+  console.log(`[storage] Yazma testi OK (${await getStorageBackend()})`);
+} catch (e) {
+  console.warn("[storage] Yazma testi başarısız — görsel yükleme çalışmayabilir:", e);
+}

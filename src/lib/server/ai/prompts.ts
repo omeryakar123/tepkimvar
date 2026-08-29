@@ -543,6 +543,49 @@ const NICKNAMES = [
   "mobil_oyuncu", "bonus_avcisi", "kayit_tut", "magdur_2024",
 ];
 
+/** Bot şikayetlerinde görünen rastgele Türkçe isimler (gerçek kullanıcı gibi). */
+const TR_FIRST_NAMES = [
+  "Ahmet", "Mehmet", "Mustafa", "Ali", "Hakan", "Burak", "Emre", "Can", "Oğuz", "Serkan",
+  "Kerem", "Tolga", "Murat", "Cem", "Barış", "Volkan", "Kaan", "Onur", "Yusuf", "Enes",
+  "Ayşe", "Fatma", "Elif", "Zeynep", "Selin", "Deniz", "Merve", "Esra", "Gamze", "Buse",
+  "Seda", "Pınar", "Derya", "Gizem", "Cansu", "Tuğba", "Hande", "Melis", "İrem", "Yasemin",
+] as const;
+
+const TR_LAST_INITIALS = [
+  "A", "B", "C", "D", "E", "F", "G", "H", "K", "M", "S", "T", "Y", "Ö", "Ü", "Ş",
+] as const;
+
+const BOT_NAME_BLOCKLIST = new Set(
+  ["şikayet botu", "sikayet botu", "sikayet-botu", "complaint bot", "bot", "kullanici", "kullanıcı"].map(
+    (s) => s.toLowerCase(),
+  ),
+);
+
+/** Sentetik şikayet yazar adı — her seferinde farklı Türk ismi. */
+export function pickTurkishDisplayName(avoid: string[] = []): string {
+  const avoidSet = new Set([
+    ...avoid.map((a) => a.trim().toLowerCase()).filter(Boolean),
+    ...BOT_NAME_BLOCKLIST,
+  ]);
+  for (let attempt = 0; attempt < 30; attempt++) {
+    const first = pick(TR_FIRST_NAMES);
+    const withInitial = Math.random() > 0.3;
+    const name = withInitial ? `${first} ${pick(TR_LAST_INITIALS)}.` : first;
+    if (!avoidSet.has(name.toLowerCase())) return name;
+  }
+  return `${pick(TR_FIRST_NAMES)} ${pick(TR_LAST_INITIALS)}.`;
+}
+
+/** AI/model çıktısı bot veya rumuz ise güvenli Türk ismine çevir. */
+export function normalizeBotDisplayName(raw: string | undefined | null, avoid: string[] = []): string {
+  const s = (raw ?? "").trim();
+  if (!s || BOT_NAME_BLOCKLIST.has(s.toLowerCase()) || /bot|sikayet|şikayet|kullanici/i.test(s)) {
+    return pickTurkishDisplayName(avoid);
+  }
+  if (s.length < 2 || s.length > 40) return pickTurkishDisplayName(avoid);
+  return s;
+}
+
 function fillTokens(text: string, lang: "tr" | "en"): string {
   const pools = TOKEN_POOLS[lang];
   return text
@@ -573,7 +616,7 @@ export function fallbackComplaint(input: {
     pick(DEMANDS[lang]),
   ].join(" ");
 
-  return { title, body, nickname: `${pick(NICKNAMES)}${int(1, 99)}` };
+  return { title, body, nickname: pickTurkishDisplayName() };
 }
 
 const RESPONSE_OPENERS: Record<ResponseTone, { tr: string; en: string }> = {

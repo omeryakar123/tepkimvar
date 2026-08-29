@@ -1,8 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ListObjectsV2Command } from "@aws-sdk/client-s3";
 import { audit } from "@/lib/server/audit";
 import { HttpError, errorResponse, requireStaff } from "@/lib/server/guard";
-import { BUCKET, deleteObject, ensureBucket, s3 } from "@/lib/server/storage";
+import { deleteObject, ensureBucket, listObjects } from "@/lib/server/storage";
 
 /**
  * Medya kütüphanesi (MinIO). Yükleme /api/upload üzerinden yapılır.
@@ -41,24 +40,15 @@ export const Route = createFileRoute("/api/admin/media")({
             throw new HttpError(400, "Geçersiz klasör");
 
           await ensureBucket();
-          const res = await s3.send(
-            new ListObjectsV2Command({
-              Bucket: BUCKET,
-              Prefix: `${folder}/`,
-              MaxKeys: 100,
-            }),
-          );
+          const rows = await listObjects(`${folder}/`, 100);
 
-          const items = (res.Contents ?? [])
-            .filter((o) => o.Key && !o.Key.endsWith("/"))
-            .sort(
-              (a, b) => (b.LastModified?.getTime() ?? 0) - (a.LastModified?.getTime() ?? 0),
-            )
+          const items = rows
+            .sort((a, b) => b.lastModified.getTime() - a.lastModified.getTime())
             .map((o) => ({
-              name: o.Key as string,
-              id: o.ETag ?? null,
-              updated_at: o.LastModified ? o.LastModified.toISOString() : null,
-              metadata: { size: o.Size ?? 0, mimetype: mimeOf(o.Key as string) },
+              name: o.key,
+              id: null,
+              updated_at: o.lastModified.toISOString(),
+              metadata: { size: o.size, mimetype: mimeOf(o.key) },
             }));
 
           return Response.json({ items });

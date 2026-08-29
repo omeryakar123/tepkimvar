@@ -66,6 +66,11 @@ async function enrichComplaints(
       .where(inArray(schema.profiles.id, ids));
     const map = new Map(profs.map((pr) => [pr.id, pr]));
     for (const it of items) {
+      if (it.is_anonymous) {
+        it.user_id = null;
+        it.profiles = null;
+        continue;
+      }
       if (it.user_id) {
         const pr = map.get(it.user_id);
         it.profiles = pr

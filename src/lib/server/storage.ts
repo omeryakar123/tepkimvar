@@ -1,9 +1,9 @@
 /**
- * MinIO / S3 uyumlu depolama katmanı.
+ * Depolama katmanı — S3/MinIO veya yerel disk (volume).
  *
- * Supabase Storage'ın yerine geçer. Bucket'lar "klasör" (prefix) olarak tek
- * bucket içinde tutulur: <bucket>/<folder>/<complaintId>/<dosya>.
- * Nesneler PRIVATE; erişim /api/files/$ ucundan yetki kontrolüyle veriliyor.
+ * Coolify'da MinIO ayrı stack ise S3_* env'leri + aynı Docker ağı gerekir.
+ * MinIO yoksa STORAGE_BACKEND=local (varsayılan) ile /app/data/storage kullanılır;
+ * kalıcılık için Coolify'da bu dizine persistent volume bağlayın.
  */
 import {
   S3Client,
@@ -12,33 +12,128 @@ import {
   DeleteObjectCommand,
   HeadBucketCommand,
   CreateBucketCommand,
+  ListObjectsV2Command,
 } from "@aws-sdk/client-s3";
+import {
+  LOCAL_ROOT,
+  ensureLocalRoot,
+  localDeleteObject,
+  localGetObject,
+  localListObjects,
+  localPutObject,
+} from "@/lib/server/storage-local";
 
-const endpoint = process.env.S3_ENDPOINT || "http://localhost:9000";
+export type StorageBackend = "s3" | "local";
+
+const endpoint = process.env.S3_ENDPOINT?.trim() || "";
 export const BUCKET = process.env.S3_BUCKET || "itirazvar";
+
+let resolvedBackend: StorageBackend | null = null;
+
+/** S3 yalnızca üç env de açıkça tanımlıysa tercih edilir. */
+export function getPreferredStorageBackend(): StorageBackend {
+  const forced = process.env.STORAGE_BACKEND?.trim().toLowerCase();
+  if (forced === "local" || forced === "s3") return forced;
+  const key = process.env.S3_ACCESS_KEY_ID?.trim();
+  const secret = process.env.S3_SECRET_ACCESS_KEY?.trim();
+  if (endpoint && key && secret) return "s3";
+  return "local";
+}
+
+/** Gerçek backend — S3 erişilemezse otomatik yerel diske düşer. */
+export async function getStorageBackend(): Promise<StorageBackend> {
+  if (resolvedBackend) return resolvedBackend;
+  const preferred = getPreferredStorageBackend();
+  if (preferred === "local") {
+    resolvedBackend = "local";
+    return "local";
+  }
+  const forced = process.env.STORAGE_BACKEND?.trim().toLowerCase();
+  if (forced === "s3") {
+    await ensureS3Bucket();
+    await s3ProbeWrite();
+    resolvedBackend = "s3";
+    return "s3";
+  }
+  try {
+    await ensureS3Bucket();
+    await s3ProbeWrite();
+    resolvedBackend = "s3";
+  } catch (e) {
+    console.warn("[storage] S3 erişilemedi, yerel diske düşülüyor:", e);
+    resolvedBackend = "local";
+  }
+  return resolvedBackend;
+}
+
+/** Senkron özet (log için); çözümlenmemişse tercih edilen backend. */
+export function getStorageBackendSync(): StorageBackend {
+  return resolvedBackend ?? getPreferredStorageBackend();
+}
+
+export function storageConfigSummary() {
+  const backend = getStorageBackendSync();
+  return {
+    preferred: getPreferredStorageBackend(),
+    active: backend,
+    endpoint: backend === "s3" ? endpoint : null,
+    bucket: backend === "s3" ? BUCKET : null,
+    localPath: backend === "local" ? LOCAL_ROOT : null,
+  };
+}
 
 export const s3 = new S3Client({
   region: process.env.S3_REGION || "us-east-1",
-  endpoint,
-  forcePathStyle: true, // MinIO için zorunlu
+  endpoint: endpoint || "http://127.0.0.1:9",
+  forcePathStyle: true,
   credentials: {
-    accessKeyId: process.env.S3_ACCESS_KEY_ID || "minioadmin",
-    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || "minioadmin",
+    accessKeyId: process.env.S3_ACCESS_KEY_ID || "unused",
+    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || "unused",
   },
 });
 
 let bucketReady = false;
-export async function ensureBucket(): Promise<void> {
+
+async function ensureS3Bucket(): Promise<void> {
   if (bucketReady) return;
-  try {
-    await s3.send(new HeadBucketCommand({ Bucket: BUCKET }));
-  } catch {
-    await s3.send(new CreateBucketCommand({ Bucket: BUCKET }));
-  }
+  await s3.send(new HeadBucketCommand({ Bucket: BUCKET }));
   bucketReady = true;
 }
 
-/** İzin verilen mantıksal klasörler (eski Supabase bucket adlarının karşılığı). */
+async function s3ProbeWrite(): Promise<void> {
+  const key = `_health/${Date.now()}.txt`;
+  await s3.send(
+    new PutObjectCommand({
+      Bucket: BUCKET,
+      Key: key,
+      Body: Buffer.from("ok"),
+      ContentType: "text/plain",
+    }),
+  );
+  await s3.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: key }));
+}
+
+export async function ensureBucket(): Promise<void> {
+  if ((await getStorageBackend()) === "local") {
+    await ensureLocalRoot();
+    return;
+  }
+  try {
+    await ensureS3Bucket();
+  } catch {
+    await s3.send(new CreateBucketCommand({ Bucket: BUCKET }));
+    bucketReady = true;
+  }
+}
+
+/** Başlangıç / admin teşhisi için kısa yazma testi. */
+export async function testStorageWrite(): Promise<void> {
+  const probeKey = `_health/${Date.now()}.txt`;
+  const body = Buffer.from("ok");
+  await putObject(probeKey, body, "text/plain");
+  await deleteObject(probeKey);
+}
+
 export const FOLDERS = [
   "avatars",
   "brand-logos",
@@ -54,8 +149,6 @@ export const FOLDERS = [
 ] as const;
 export type Folder = (typeof FOLDERS)[number];
 
-/* --------------------------- Sunucu tarafı doğrulama ----------------------- */
-// İstemci doğrulaması atlanabilir; asıl kural BURADA.
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"];
 const DOC_TYPES = [
   "application/pdf",
@@ -65,12 +158,11 @@ const DOC_TYPES = [
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   "text/plain",
 ];
-// SVG BİLEREK YOK: aynı origin'den servis edilen SVG stored-XSS vektörüdür.
 const VIDEO_TYPES = ["video/mp4", "video/webm", "video/quicktime"];
 
-export const MAX_IMAGE_BYTES = 10 * 1024 * 1024; // 10 MB
-export const MAX_FILE_BYTES = 25 * 1024 * 1024; // 25 MB
-export const MAX_VIDEO_BYTES = 100 * 1024 * 1024; // 100 MB
+export const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+export const MAX_FILE_BYTES = 25 * 1024 * 1024;
+export const MAX_VIDEO_BYTES = 100 * 1024 * 1024;
 
 export function validateUpload(
   folder: string,
@@ -79,7 +171,6 @@ export function validateUpload(
 ): { ok: true; folder: Folder } | { ok: false; error: string } {
   if (!FOLDERS.includes(folder as Folder)) return { ok: false, error: "Geçersiz klasör" };
 
-  // Video klasörü: yalnızca mp4/webm/mov, 100 MB'a kadar. SVG yine yasak.
   if (folder === "brand-videos") {
     if (!VIDEO_TYPES.includes(contentType))
       return { ok: false, error: "Sadece video yükleyebilirsiniz (mp4, webm, mov)" };
@@ -90,7 +181,8 @@ export function validateUpload(
   const isImageFolder = folder !== "complaint-files" && folder !== "brand-documents";
 
   if (isImageFolder) {
-    if (!IMAGE_TYPES.includes(contentType)) return { ok: false, error: "Sadece görsel yükleyebilirsiniz (SVG hariç)" };
+    if (!IMAGE_TYPES.includes(contentType))
+      return { ok: false, error: "Sadece görsel yükleyebilirsiniz (SVG hariç)" };
     if (size > MAX_IMAGE_BYTES) return { ok: false, error: "Görsel en fazla 10 MB olabilir" };
   } else {
     if (![...IMAGE_TYPES, ...DOC_TYPES].includes(contentType))
@@ -104,7 +196,6 @@ export function sanitizeName(name: string): string {
   return name.replace(/[^a-zA-Z0-9.\-_]/g, "_").slice(-100);
 }
 
-/** Tarayıcı boş type gönderdiğinde uzantıdan MIME tahmin et. */
 export function inferContentType(file: File): string {
   const t = file.type?.trim();
   if (t) return t;
@@ -123,7 +214,26 @@ export function inferContentType(file: File): string {
   return map[ext] ?? "application/octet-stream";
 }
 
+function s3ErrorHint(e: unknown): string {
+  const msg = e instanceof Error ? e.message : String(e);
+  if (/ECONNREFUSED|ENOTFOUND|ETIMEDOUT|connect/i.test(msg)) {
+    return (
+      `MinIO/S3'e bağlanılamadı (${endpoint}). Coolify'da MinIO stack'inin deploy edildiğinden, ` +
+      `uygulamanın aynı Docker ağına bağlı olduğundan ve S3_ENDPOINT=http://minio:9000 olduğundan emin olun. ` +
+      `Alternatif: STORAGE_BACKEND=local + /app/data/storage volume.`
+    );
+  }
+  if (/InvalidAccessKeyId|SignatureDoesNotMatch|Access Denied/i.test(msg)) {
+    return "S3 kimlik bilgileri hatalı. S3_ACCESS_KEY_ID ve S3_SECRET_ACCESS_KEY değerlerini kontrol edin.";
+  }
+  return `Depolama hatası: ${msg}`;
+}
+
 export async function putObject(key: string, body: Buffer, contentType: string): Promise<void> {
+  if ((await getStorageBackend()) === "local") {
+    await localPutObject(key, body, contentType);
+    return;
+  }
   try {
     await ensureBucket();
     await s3.send(
@@ -139,19 +249,55 @@ export async function putObject(key: string, body: Buffer, contentType: string):
       }),
     );
   } catch (e) {
-    console.error("[storage] putObject failed:", key, e);
-    throw new Error(
-      "Dosya depolama servisine yazılamadı. MinIO/S3 bağlantısını ve S3_* ortam değişkenlerini kontrol edin.",
-    );
+    console.error("[storage] putObject S3 failed:", key, e);
+    throw new Error(s3ErrorHint(e));
   }
 }
 
 export async function getObject(key: string) {
+  if ((await getStorageBackend()) === "local") {
+    await ensureLocalRoot();
+    return localGetObject(key);
+  }
   await ensureBucket();
   return s3.send(new GetObjectCommand({ Bucket: BUCKET, Key: key }));
 }
 
 export async function deleteObject(key: string): Promise<void> {
+  if ((await getStorageBackend()) === "local") {
+    await localDeleteObject(key);
+    return;
+  }
   await ensureBucket();
   await s3.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: key }));
 }
+
+export async function listObjects(prefix: string, maxKeys = 100) {
+  if ((await getStorageBackend()) === "local") {
+    return localListObjects(prefix, maxKeys);
+  }
+  await ensureBucket();
+  const res = await s3.send(
+    new ListObjectsV2Command({ Bucket: BUCKET, Prefix: prefix, MaxKeys: maxKeys }),
+  );
+  return (res.Contents ?? [])
+    .filter((o) => o.Key && !o.Key.endsWith("/"))
+    .map((o) => ({
+      key: o.Key as string,
+      size: o.Size ?? 0,
+      lastModified: o.LastModified ?? new Date(0),
+    }));
+}
+
+/** Sunucu ayağa kalkarken backend seçimini logla. */
+export async function logStorageBackendOnce(): Promise<void> {
+  if (logged) return;
+  logged = true;
+  const b = await getStorageBackend();
+  const cfg = storageConfigSummary();
+  console.log(
+    `[storage] active=${b} preferred=${cfg.preferred}`,
+    b === "s3" ? `endpoint=${cfg.endpoint} bucket=${cfg.bucket}` : `path=${cfg.localPath}`,
+  );
+}
+let logged = false;
