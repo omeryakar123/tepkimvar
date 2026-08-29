@@ -25,7 +25,42 @@ const SLUG_DOMAIN_OVERRIDES: Record<string, string> = {
   "betebet": "betebet.com",
   "superbetin": "superbetin.com",
   "youwin": "youwin.com",
+  "kazansana": "kazansana.com",
+  "evetabi": "evetabi.com",
+  "betnano": "betnano.com",
+  "bovbet": "bovbet.com",
+  "bahsine": "bahsine.com",
+  "hadibet": "hadibet.com",
+  "natobet": "natobet.com",
+  "exobet": "exobet.com",
+  "mexiwin": "mexiwin.com",
+  "pulibet": "pulibet.com",
+  "padisahbet": "padisahbet.com",
+  "galabet": "galabet.com",
+  "bahiscasino": "bahiscasino.com",
+  "favoribahis": "favoribahis.com",
+  "meritwin": "meritwin.com",
+  "neredebahis": "neredebahis.com",
+  "yasalbahis": "yasalbahis.com",
+  "tekelbet": "tekelbet.com",
+  "betmartin": "betmartin.com",
+  "sanscasino": "sanscasino.com",
+  "playbet": "playbet.io",
+  "hizlicasino": "hizlicasino.com",
+  "betsmove": "betsmove.com",
+  "virusbet": "virusbet.com",
 };
+
+/** superbonus14.pro/sponsorlar listesindeki markalar */
+const SUPERBONUS_SPONSOR_SLUGS = new Set([
+  "kazansana", "evetabi", "betnano", "bovbet", "bahsine", "hadibet", "natobet", "exobet",
+  "mexiwin", "pulibet", "padisahbet", "galabet", "bahiscasino", "favoribahis", "meritwin",
+  "neredebahis", "yasalbahis", "tekelbet", "betmartin", "sanscasino", "marsbahis", "playbet",
+  "hizlicasino", "betsmove", "virusbet",
+]);
+
+export const superbonusLogoUrl = (slug: string) =>
+  `https://superbonus14.pro/clients/logo/${slug.replace(/copy$/i, "")}.png`;
 
 const GAMBLING_SLUG_RE = /bet|bahis|casino|slot|poker|rulet|kumar|gambling/i;
 
@@ -84,7 +119,11 @@ export function brandLogoUrl(opts: {
   }
 
   if (dom) {
-    if (gambling || !opts.logoUrl) return faviconUrl(dom, size);
+    if (gambling || !opts.logoUrl) {
+      const slug = opts.slug?.trim().toLowerCase();
+      if (slug && SUPERBONUS_SPONSOR_SLUGS.has(slug)) return superbonusLogoUrl(slug);
+      return faviconUrl(dom, size);
+    }
     if (LOGO_DEV_KEY) {
       return `https://img.logo.dev/${dom}?token=${LOGO_DEV_KEY}&size=${size}&format=png&fallback=monogram`;
     }

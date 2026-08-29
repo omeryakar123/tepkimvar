@@ -29,6 +29,7 @@ const steps = [
   "scripts/seed-demo.mjs",
   "scripts/seed-casino-brands.mjs",
   "scripts/seed-casino-brands-big.mjs",
+  "scripts/seed-superbonus-brands.mjs",
   "scripts/seed-casino-complaints.mjs",
 ];
 
