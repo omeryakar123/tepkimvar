@@ -226,7 +226,7 @@ export function AuthForm({
                 {!corporate && (
                   <>
                     {" · "}
-                    <Link to="/register/kurumsal" className="text-brand font-medium hover:underline">Kurumsal kayıt</Link>
+                    <Link to="/register/marka-basvuru" className="text-brand font-medium hover:underline">Marka başvurusu</Link>
                   </>
                 )}
               </p>

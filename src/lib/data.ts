@@ -209,6 +209,13 @@ export const PAGE_SIZE = 12;
 /** Firma profil sayfasında en fazla gösterilecek şikayet. */
 export const BRAND_PROFILE_COMPLAINTS_LIMIT = 6;
 
+export async function fetchLiveFeed(opts: { limit?: number } = {}) {
+  await ensureCategoryCache();
+  const qs = buildQuery({ limit: opts.limit });
+  const { items } = await getJson<{ items: DbComplaint[] }>(`/api/live-feed${qs}`);
+  return items.map(dbComplaintToUi);
+}
+
 export async function fetchComplaintsList(opts: { limit?: number; brandSlug?: string; categorySlug?: string; sortBy?: "recent" | "trending"; search?: string } = {}) {
   await ensureCategoryCache();
   const qs = buildQuery({

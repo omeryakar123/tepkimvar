@@ -19,6 +19,7 @@ import {
   fetchBrandsList,
   fetchCategoriesWithCount,
   fetchComplaintsList,
+  fetchLiveFeed,
   fetchPlatformStats,
 } from "@/lib/data";
 import { publicPlatformStats } from "@/lib/public-stats";
@@ -39,16 +40,16 @@ const FALLBACK_STATS = publicPlatformStats({
 
 export const Route = createFileRoute("/_site/")({
   loader: async () => {
-    const [latest, categories, trending, platformStats, topBrands, trendBrands] =
+    const [liveFeed, categories, trending, platformStats, topBrands, trendBrands] =
       await Promise.all([
-        fetchComplaintsList({ limit: 6, sortBy: "recent" }).catch(() => [] as Complaint[]),
+        fetchLiveFeed({ limit: 6 }).catch(() => [] as Complaint[]),
         fetchCategoriesWithCount().catch(() => []),
         fetchComplaintsList({ limit: 6, sortBy: "trending" }).catch(() => [] as Complaint[]),
         fetchPlatformStats().catch(() => FALLBACK_STATS),
         fetchBrandsList({ limit: 5, sortBy: "resolution" }).catch(() => [] as Company[]),
         fetchBrandsList({ limit: 10, sortBy: "complaints" }).catch(() => [] as Company[]),
       ]);
-    return { latest, categories, trending, stats: platformStats, topBrands, trendBrands };
+    return { latest: liveFeed, categories, trending, stats: platformStats, topBrands, trendBrands };
   },
   head: () => {
     const base = seoHead({
@@ -108,7 +109,7 @@ function Home() {
     async function loadHomeData() {
       setFeedLoading(true);
       const results = await Promise.allSettled([
-        fetchComplaintsList({ limit: 6, sortBy: "recent" }),
+        fetchLiveFeed({ limit: 6 }),
         fetchComplaintsList({ limit: 6, sortBy: "trending" }),
         fetchBrandsList({ limit: 5, sortBy: "resolution" }),
         fetchBrandsList({ limit: 10, sortBy: "complaints" }),

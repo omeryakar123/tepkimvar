@@ -2,12 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { desc, eq } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { audit } from "@/lib/server/audit";
+import { provisionBrandPortalAccess, resolveBrandForApproval } from "@/lib/server/brand-application";
 import { HttpError, errorResponse, requireStaff } from "@/lib/server/guard";
 
 /**
- * Firma doğrulama başvuruları.
- * `?brandId=` verilirse o firmanın belgeleri döner — belge yolları YALNIZCA
- * personele açıktır (dosyanın kendisi /api/files/<path> ucundan servis edilir).
+ * Firma doğrulama / marka başvuru talepleri.
+ * `?brandId=` verilirse o firmanın belgeleri döner.
  */
 export const Route = createFileRoute("/api/admin/verification")({
   server: {
@@ -50,6 +50,10 @@ export const Route = createFileRoute("/api/admin/verification")({
             email: r.v.email,
             website: r.v.website,
             message: r.v.message,
+            telegram: r.v.telegram,
+            address: r.v.address,
+            photo_url: r.v.photoUrl,
+            request_type: r.v.requestType,
             status: r.v.status,
             reviewer_note: r.v.reviewerNote,
             created_at: r.v.createdAt,
@@ -62,7 +66,6 @@ export const Route = createFileRoute("/api/admin/verification")({
         }
       },
 
-      // Onayla / reddet. reviewer_id istemciden ALINMAZ — oturumdan.
       PATCH: async ({ request }) => {
         try {
           const user = await requireStaff(request);
@@ -70,15 +73,58 @@ export const Route = createFileRoute("/api/admin/verification")({
             id?: string;
             approve?: boolean;
             reviewerNote?: string | null;
+            assignBrandId?: string | null;
+            createBrand?: { name?: string; website?: string | null; slug?: string | null } | null;
+            memberRole?: "manager" | "agent" | "owner";
           };
           if (!b.id) throw new HttpError(400, "Başvuru belirtilmeli");
           if (typeof b.approve !== "boolean") throw new HttpError(400, "Geçersiz karar");
 
+          const [reqRow] = await db
+            .select()
+            .from(schema.brandVerificationRequests)
+            .where(eq(schema.brandVerificationRequests.id, b.id))
+            .limit(1);
+          if (!reqRow) throw new HttpError(404, "Başvuru bulunamadı");
+
           const status: "approved" | "rejected" = b.approve ? "approved" : "rejected";
+          let brandId = reqRow.brandId;
+          let credentials: { email: string; password: string } | null = null;
+
+          if (b.approve) {
+            brandId = await resolveBrandForApproval({
+              assignBrandId: b.assignBrandId,
+              createBrand: b.createBrand?.name
+                ? {
+                    name: b.createBrand.name,
+                    website: b.createBrand.website,
+                    slug: b.createBrand.slug,
+                  }
+                : null,
+              fallbackBrandId: reqRow.brandId,
+            });
+
+            if (reqRow.requestType === "brand_application") {
+              credentials = await provisionBrandPortalAccess({
+                brandId,
+                userId: reqRow.submittedBy,
+                email: reqRow.email,
+                contactName: reqRow.contactName,
+                phone: reqRow.phone,
+                memberRole: b.memberRole ?? "manager",
+              });
+            } else {
+              await db
+                .update(schema.brands)
+                .set({ verified: true, updatedAt: new Date() })
+                .where(eq(schema.brands.id, brandId));
+            }
+          }
 
           const [updated] = await db
             .update(schema.brandVerificationRequests)
             .set({
+              brandId,
               status,
               reviewerId: user.id,
               reviewerNote: b.reviewerNote?.trim().slice(0, 2000) || null,
@@ -86,27 +132,16 @@ export const Route = createFileRoute("/api/admin/verification")({
               updatedAt: new Date(),
             })
             .where(eq(schema.brandVerificationRequests.id, b.id))
-            .returning({
-              id: schema.brandVerificationRequests.id,
-              brandId: schema.brandVerificationRequests.brandId,
-            });
-          if (!updated) throw new HttpError(404, "Başvuru bulunamadı");
-
-          // Rozet: marka id'si başvuru kaydından okunur, istemciden değil.
-          if (b.approve) {
-            await db
-              .update(schema.brands)
-              .set({ verified: true, updatedAt: new Date() })
-              .where(eq(schema.brands.id, updated.brandId));
-          }
+            .returning({ id: schema.brandVerificationRequests.id });
 
           await audit(request, user.id, {
             action: `verification.${status}`,
             entityType: "brand",
-            entityId: updated.brandId,
+            entityId: brandId,
             severity: "warn",
           });
-          return Response.json({ ok: true });
+
+          return Response.json({ ok: true, brandId, credentials });
         } catch (e) {
           return errorResponse(e);
         }

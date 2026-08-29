@@ -49,6 +49,7 @@ export const FOLDERS = [
   "complaint-images",
   "complaint-files",
   "brand-documents",
+  "brand-application-photos",
   "brand-videos",
 ] as const;
 export type Folder = (typeof FOLDERS)[number];

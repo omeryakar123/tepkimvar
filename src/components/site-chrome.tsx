@@ -124,6 +124,9 @@ export function SiteNav() {
               <Link to="/sikayet-yaz" onClick={closeMenu} className="flex items-center gap-2 h-11 px-3 rounded-lg text-[14px] font-semibold text-brand hover:bg-brand-soft">
                 <PenLine className="size-4" /> Şikayet Yaz
               </Link>
+              <Link to="/register/marka-basvuru" onClick={closeMenu} className="flex items-center gap-2 h-11 px-3 rounded-lg text-[14px] font-medium text-navy hover:bg-surface">
+                <Building2 className="size-4" /> Marka Başvurusu
+              </Link>
               <Link to="/register/kurumsal" onClick={closeMenu} className="flex items-center gap-2 h-11 px-3 rounded-lg text-[14px] font-medium text-navy hover:bg-surface">
                 <Building2 className="size-4" /> Kurumsal Kayıt
               </Link>
@@ -179,7 +182,7 @@ export function SiteFooter() {
       ["Tüm Markalar", "/markalar"],
       ["Doğrulanmış Markalar", "/markalar", { dogrulanmis: true }],
       ["Premium Markalar", "/markalar", { premium: true }],
-      ["Marka Ekle", "/register"],
+      ["Marka Başvurusu", "/register/marka-basvuru"],
       ["Marka Yönetim", "/brand"],
     ] },
     { t: "Çok Aranan", l: [

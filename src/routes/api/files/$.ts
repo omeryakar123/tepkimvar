@@ -18,6 +18,15 @@ export const Route = createFileRoute("/api/files/$")({
           const key = (params as { _splat?: string })._splat ?? "";
           if (!key || key.includes("..")) return new Response("Not found", { status: 404 });
 
+          // Marka başvuru fotoğrafları yalnızca personel + yükleyen görebilir.
+          if (key.startsWith("brand-application-photos/")) {
+            const user = await optionalUser(request);
+            if (!user) return new Response("Not found", { status: 404 });
+            const ownerPrefix = `brand-application-photos/${user.id}/`;
+            const allowed = key.startsWith(ownerPrefix) || (await isStaff(user.id));
+            if (!allowed) return new Response("Not found", { status: 404 });
+          }
+
           // Bu dosya bir şikayet eki mi? Öyleyse görünürlük kuralını uygula.
           const [att] = await db
             .select({

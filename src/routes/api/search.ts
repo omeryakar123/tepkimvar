@@ -16,7 +16,7 @@ export const Route = createFileRoute("/api/search")({
 
         const [brands, complaints, blogs] = await Promise.all([
           db
-            .select({ id: schema.brands.id, slug: schema.brands.slug, name: schema.brands.name, logo_url: schema.brands.logoUrl })
+            .select({ id: schema.brands.id, slug: schema.brands.slug, name: schema.brands.name, logo_url: schema.brands.logoUrl, website: schema.brands.website })
             .from(schema.brands)
             .where(and(eq(schema.brands.isActive, true), or(ilike(schema.brands.name, like), ilike(schema.brands.slug, like))))
             .limit(6),

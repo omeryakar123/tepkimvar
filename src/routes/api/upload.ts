@@ -79,6 +79,8 @@ export const Route = createFileRoute("/api/upload")({
             prefix = `${folder}/${brandId}`;
           } else if (folder === "avatars") {
             prefix = `avatars/${user.id}`;
+          } else if (folder === "brand-application-photos") {
+            prefix = `brand-application-photos/${user.id}`;
           } else {
             // blog/banner/marka-belge klasörleri yalnızca personel
             if (!(await isStaff(user.id))) throw new HttpError(403, "Yetkiniz yok");

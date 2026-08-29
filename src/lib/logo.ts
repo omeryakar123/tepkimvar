@@ -1,5 +1,5 @@
 // Brand logo helper — uses uploaded logo_url when present,
-// falls back to Logo.dev CDN when brand has a website domain.
+// falls back to Logo.dev CDN or unavatar.io when brand has a website domain.
 import { proxyImage } from "./img";
 const LOGO_DEV_KEY = import.meta.env.VITE_LOVABLE_CONNECTOR_LOGO_DEV_API_KEY as string | undefined;
 
@@ -13,18 +13,38 @@ function normalizeDomain(input?: string | null): string | null {
   return s;
 }
 
+function isLikelyBrokenLogo(url: string): boolean {
+  const u = url.toLowerCase();
+  return u.includes("placeholder") || u.includes("via.placeholder") || u.endsWith(".svg");
+}
+
 export function brandLogoUrl(opts: {
   logoUrl?: string | null;
   website?: string | null;
   size?: number;
 }): string | null {
-  if (opts.logoUrl) {
-    if (opts.logoUrl.startsWith("http")) return proxyImage(opts.logoUrl);
-    // MinIO'ya yüklenen logolar göreceli gelir (/api/files/brand-logos/...).
-    if (opts.logoUrl.startsWith("/")) return opts.logoUrl;
-  }
   const dom = normalizeDomain(opts.website);
-  if (!dom || !LOGO_DEV_KEY) return null;
   const size = opts.size ?? 128;
-  return `https://img.logo.dev/${dom}?token=${LOGO_DEV_KEY}&size=${size}&format=png&fallback=monogram`;
+
+  if (opts.logoUrl) {
+    const raw = opts.logoUrl.trim();
+    if (raw.startsWith("/")) return raw;
+    if (raw.startsWith("http")) {
+      if (isLikelyBrokenLogo(raw)) {
+        // Bozuk placeholder — domain fallback'e düş.
+      } else {
+        const proxied = proxyImage(raw);
+        return proxied ?? raw;
+      }
+    }
+  }
+
+  if (dom) {
+    if (LOGO_DEV_KEY) {
+      return `https://img.logo.dev/${dom}?token=${LOGO_DEV_KEY}&size=${size}&format=png&fallback=monogram`;
+    }
+    return `https://unavatar.io/${dom}?fallback=false`;
+  }
+
+  return null;
 }
