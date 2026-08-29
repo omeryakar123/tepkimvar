@@ -70,7 +70,7 @@ export const Route = createFileRoute("/_site/")({
           "@type": "Organization",
           name: "tepkimvar",
           url: absUrl("/"),
-          logo: absUrl("/tepkim1.jpg"),
+          logo: absUrl("/tepkim-hero.png"),
           sameAs: ["https://t.me/tepkimvarplus"],
         }),
         jsonLd({
@@ -665,8 +665,8 @@ function Home() {
               className="group relative block overflow-hidden rounded-3xl ring-1 ring-rule shadow-lift focus-visible:ring-2 focus-visible:ring-brand"
             >
               <img
-                src="/tepkim1.jpg"
-                alt="Alışverişten önce markanın skorunu sorgula: çözüm oranı, yanıt hızı ve gerçek kullanıcı deneyimleri"
+                src="/tepkim-hero.png"
+                alt="Sesini duyur, çözümü takip et — tepkimvar.com ile markalar hakkında gerçek deneyimini paylaş"
                 width={1024}
                 height={504}
                 className="block w-full h-auto transition-transform duration-500 group-hover:scale-[1.02]"
