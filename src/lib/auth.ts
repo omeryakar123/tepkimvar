@@ -5,13 +5,33 @@ import { emailOTP } from "better-auth/plugins";
 import { db, schema } from "@/db";
 import { sendOtpEmail } from "@/lib/server/email";
 
+/** SITE_URL / TRUSTED_ORIGINS listesine www varyantını da ekler. */
+function expandTrustedOrigins(values: string[]): string[] {
+  const out = new Set(values);
+  for (const raw of values) {
+    try {
+      const u = new URL(raw);
+      const host = u.hostname;
+      const port = u.port ? `:${u.port}` : "";
+      if (host.startsWith("www.")) {
+        out.add(`${u.protocol}//${host.slice(4)}${port}`);
+      } else {
+        out.add(`${u.protocol}//www.${host}${port}`);
+      }
+    } catch {
+      // Geçersiz URL — atla.
+    }
+  }
+  return [...out];
+}
+
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL || "http://localhost:8080",
   secret: process.env.BETTER_AUTH_SECRET,
 
   // İzin verilen origin'ler. Coolify'da domain'i TRUSTED_ORIGINS'e ekle
   // (virgülle ayrılmış). BETTER_AUTH_URL / SITE_URL otomatik eklenir.
-  trustedOrigins: [
+  trustedOrigins: expandTrustedOrigins([
     ...new Set(
       [
         process.env.TRUSTED_ORIGINS,
@@ -23,7 +43,15 @@ export const auth = betterAuth({
         .map((s) => s.trim())
         .filter(Boolean),
     ),
-  ],
+  ]),
+
+  // Prod'da sign-in varsayılanı 3/10sn — başarısız origin denemeleri hızla 429'a düşer.
+  rateLimit: {
+    customRules: {
+      "/sign-in/email": { window: 60, max: 20 },
+      "/sign-up/email": { window: 60, max: 10 },
+    },
+  },
 
   database: drizzleAdapter(db, {
     provider: "pg",
