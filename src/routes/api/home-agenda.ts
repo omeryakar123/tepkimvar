@@ -1,12 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { and, desc, eq, inArray, notInArray, or, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, notInArray, or } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { toDbComplaint, type BrandNested, type DbComplaintShape } from "@/lib/db-shapes";
 import { errorResponse } from "@/lib/server/guard";
 
 const HIDDEN_STATUSES = ["pending", "rejected", "spam"] as const;
 
-/** Gündemdeki şikayetler — karışık sıra. */
+/** Gündemdeki şikayetler — en yeni önce (anasayfa + trend bölümü). */
 export const Route = createFileRoute("/api/home-agenda")({
   server: {
     handlers: {
@@ -27,7 +27,7 @@ export const Route = createFileRoute("/api/home-agenda")({
                 ),
               ),
             )
-            .orderBy(sql`RANDOM()`)
+            .orderBy(desc(schema.complaints.createdAt))
             .limit(limit);
 
           const items = await enrichComplaints(rows);

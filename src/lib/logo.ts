@@ -81,12 +81,14 @@ function isLikelyBrokenLogo(url: string): boolean {
     u.includes("via.placeholder") ||
     u.endsWith(".svg") ||
     u.includes("googleusercontent.com/a/default") ||
-    u.includes("unavatar.io/fallback")
+    u.includes("unavatar.io/fallback") ||
+    u.includes("superbonus14.pro/clients/logo")
   );
 }
 
 function faviconUrl(domain: string, size = 128): string {
   const sz = Math.min(256, Math.max(32, size));
+  // s2 favicons gstatic'ten daha güvenilir (casino domainlerinde 404 azalır).
   return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=${sz}`;
 }
 
@@ -119,9 +121,12 @@ export function brandLogoUrl(opts: {
   }
 
   if (dom) {
+    const slugKey = opts.slug?.trim().toLowerCase();
     if (gambling || !opts.logoUrl) {
-      const slug = opts.slug?.trim().toLowerCase();
-      if (slug && SUPERBONUS_SPONSOR_SLUGS.has(slug)) return superbonusLogoUrl(slug);
+      // superbonus URL'leri sık 404 — yalnızca DB'de kayıtlı değilse dene
+      if (slugKey && SUPERBONUS_SPONSOR_SLUGS.has(slugKey) && !opts.logoUrl?.includes("superbonus14.pro")) {
+        return superbonusLogoUrl(slugKey);
+      }
       return faviconUrl(dom, size);
     }
     if (LOGO_DEV_KEY) {

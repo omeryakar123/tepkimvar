@@ -62,28 +62,27 @@ export const Route = createFileRoute("/api/complaints")({
         if (search) conditions.push(ilike(schema.complaints.title, `%${search}%`));
 
         const where = and(...conditions);
-        const orderBy =
-          sortBy === "trending"
-            ? desc(schema.complaints.views)
-            : desc(schema.complaints.createdAt);
-
         const base = db
           .select({ c: schema.complaints, b: schema.brands })
           .from(schema.complaints)
           .innerJoin(schema.brands, eq(schema.complaints.brandId, schema.brands.id))
           .where(where)
-          .orderBy(orderBy)
           .$dynamic();
+
+        const ordered =
+          sortBy === "trending"
+            ? base.orderBy(desc(schema.complaints.createdAt), desc(schema.complaints.views))
+            : base.orderBy(desc(schema.complaints.createdAt));
 
         let total = 0;
         let rows: { c: typeof schema.complaints.$inferSelect; b: typeof schema.brands.$inferSelect }[];
 
         if (limitParam) {
-          rows = await base.limit(Number(limitParam));
+          rows = await ordered.limit(Number(limitParam));
           total = rows.length;
         } else if (pageParam) {
           const page = Math.max(1, Number(pageParam));
-          rows = await base.limit(pageSize).offset((page - 1) * pageSize);
+          rows = await ordered.limit(pageSize).offset((page - 1) * pageSize);
           const [{ count }] = await db
             .select({ count: sql<number>`count(*)` })
             .from(schema.complaints)
@@ -91,7 +90,7 @@ export const Route = createFileRoute("/api/complaints")({
             .where(where);
           total = Number(count);
         } else {
-          rows = await base;
+          rows = await ordered;
           total = rows.length;
         }
 

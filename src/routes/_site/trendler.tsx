@@ -11,7 +11,7 @@ export const Route = createFileRoute("/_site/trendler")({
   head: () => ({
     ...seoHead({
       title: "Trend Şikayetler — Gündemdeki Müşteri Şikayetleri | tepkimvar",
-      description: "Şu an en çok konuşulan müşteri şikayetleri: en çok görüntülenen ve desteklenen güncel şikayetleri takip edin.",
+      description: "Gündemdeki müşteri şikayetleri: en güncel şikayetler önce listelenir.",
       path: "/trendler",
     }),
   }),
@@ -37,7 +37,7 @@ function TrendsPage() {
         <div className="bg-card rounded-2xl ring-1 ring-rule p-6 sm:p-8 mb-6">
           <p className="eyebrow text-brand mb-1 inline-flex items-center gap-1"><TrendingUp className="size-3" /> Gündemde</p>
           <h1 className="font-display text-3xl font-black tracking-tight">Trend şikayetler</h1>
-          <p className="text-sm text-navy-mid mt-1">{total.toLocaleString("tr-TR")} şikayet — en çok okunan ve etkileşim alanlar.</p>
+          <p className="text-sm text-navy-mid mt-1">{total.toLocaleString("tr-TR")} şikayet — en güncel olanlar önce.</p>
         </div>
         {loading && items.length === 0 ? (
           <div className="bg-card rounded-2xl p-12 text-center text-navy-mid ring-1 ring-rule">Yükleniyor…</div>
