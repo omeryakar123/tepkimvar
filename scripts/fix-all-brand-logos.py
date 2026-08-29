@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Tüm markaların logo_url alanını tarar; eksik, kırık veya eski (monogram/unavatar/superbonus)
-logoları çalışan favicon kaynaklarıyla günceller.
+Tüm markaların logo_url alanını tarar; eksik, kırık veya monogram logoları düzeltir.
 
   DATABASE_URL=... python3 scripts/fix-all-brand-logos.py
   DATABASE_URL=... python3 scripts/fix-all-brand-logos.py --dry-run
+  DATABASE_URL=... python3 scripts/fix-all-brand-logos.py --retry-monograms
 """
 from __future__ import annotations
 
@@ -26,11 +26,10 @@ import psycopg2.extras
 SITE_ORIGIN = os.environ.get("SITE_URL", "https://tepkimvar.com").rstrip("/")
 CTX = ssl.create_default_context()
 UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/126 Safari/537.36"
-MIN_BYTES = 450
+MIN_BYTES = 200
 
-GAMBLING_RE = re.compile(r"bet|bahis|casino|slot|poker|rulet|kumar|gambling", re.I)
+GAMBLING_RE = re.compile(r"bet|bahis|casino|slot|poker|rulet|kumar|gambling|win|oyna", re.I)
 
-# Bilinen slug → alternatif domain(ler)
 DOMAIN_OVERRIDES: dict[str, list[str]] = {
     "meritking": ["mrking.com", "meritkinggiris.com"],
     "mrking": ["mrking.com"],
@@ -59,6 +58,14 @@ DOMAIN_OVERRIDES: dict[str, list[str]] = {
     "casifix": ["casifixgirisi.com", "casifix.com"],
     "casival": ["casivalgiris.com", "casival.com"],
     "meritqueen": ["meritqueengiris.com", "meritqueen.com"],
+    "bovbet": ["bovbet.com"],
+    "exobet": ["exobet.org", "exobetgiris.com", "exobet.com"],
+    "etrobet": ["etrobet.org", "etrobetgiris.com", "etrobet.com"],
+    "huhubeet": ["huhubet.com", "huhubetgiris.com"],
+    "meritliman": ["meritlimanbet.com", "meritlimangiris.com", "meritliman.com"],
+    "meybet": ["meybetgir.com", "meybetgiris.com", "meybet.com"],
+    "mobiloyna": ["mobiloynatr.com", "mobiloynagiris.com", "mobiloyna.com"],
+    "tekelbet": ["tekelbet.net", "tekelbet.com"],
 }
 
 BAD_PATTERNS = (
@@ -70,6 +77,7 @@ BAD_PATTERNS = (
     "via.placeholder",
     "placeholder.com",
     "googleusercontent.com/a/default",
+    "porkbun-logo",
 )
 
 
@@ -89,15 +97,45 @@ def fetch(url: str, timeout: int = 12) -> bytes | None:
             req_url = f"{SITE_ORIGIN}{req_url}"
         req = urllib.request.Request(req_url, headers={"User-Agent": UA})
         with urllib.request.urlopen(req, timeout=timeout, context=CTX) as r:
-            data = r.read(80_000)
+            data = r.read(120_000)
             ct = (r.headers.get("content-type") or "").lower()
             if r.status != 200:
                 return None
-            if "image" not in ct and not req_url.endswith(".ico"):
+            if "image" not in ct and not req_url.endswith((".ico", ".png", ".jpg", ".jpeg", ".webp")):
+                return None
+            if any(b in req_url.lower() for b in ("porkbun-logo",)):
                 return None
             return data if len(data) >= MIN_BYTES else None
     except Exception:
         return None
+
+
+def scrape_page_assets(domain: str) -> list[str]:
+    out: list[str] = []
+    for page in (f"https://{domain}", f"https://www.{domain}"):
+        try:
+            req = urllib.request.Request(page, headers={"User-Agent": UA})
+            with urllib.request.urlopen(req, timeout=10, context=CTX) as r:
+                html = r.read(180_000).decode("utf-8", "ignore")
+            for pat in (
+                r'<meta[^>]+property=["\']og:image["\'][^>]+content=["\']([^"\']+)',
+                r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:image',
+                r'<link[^>]+rel=["\']apple-touch-icon["\'][^>]+href=["\']([^"\']+)',
+                r'<link[^>]+href=["\']([^"\']+)["\'][^>]+rel=["\']apple-touch-icon',
+            ):
+                for m in re.finditer(pat, html, re.I):
+                    u = m.group(1).strip()
+                    if u.startswith("//"):
+                        u = "https:" + u
+                    elif u.startswith("/"):
+                        u = f"https://{domain}{u}"
+                    if u.startswith("http") and u not in out:
+                        out.append(u)
+            if out:
+                break
+        except Exception:
+            continue
+    return out
 
 
 def is_obviously_bad(logo: str | None) -> bool:
@@ -116,6 +154,7 @@ def is_stored_broken(logo: str | None) -> bool:
 def domain_candidates(slug: str, name: str, website: str | None) -> list[str]:
     out: list[str] = []
     primary = domain_from_website(website, slug)
+    base = slug.replace("_", "-")
 
     for d in DOMAIN_OVERRIDES.get(slug, []):
         if d not in out:
@@ -124,23 +163,28 @@ def domain_candidates(slug: str, name: str, website: str | None) -> list[str]:
     if primary and primary not in out:
         out.append(primary)
 
-    base = slug.replace("_", "-")
-    for d in (f"{base}.com", f"{base}.com.tr", f"{base}.net"):
+    for tld in (".com", ".com.tr", ".net", ".org", ".io"):
+        d = f"{base}{tld}"
         if d not in out:
             out.append(d)
 
     if GAMBLING_RE.search(slug) or GAMBLING_RE.search(name):
-        for suffix in ("giris", "girisi", "bet", "casino"):
+        for suffix in ("giris", "girisi", "gir", "bet", "casino", "tr"):
             d = f"{base}{suffix}.com"
             if d not in out:
                 out.append(d)
+        # yaygın yazım hataları
+        if "huhubeet" in slug:
+            for d in ("huhubet.com", "huhubetgiris.com"):
+                if d not in out:
+                    out.append(d)
 
     return out
 
 
 def logo_candidates(dom: str) -> list[str]:
     enc = urllib.parse.quote(f"https://{dom}", safe="")
-    return [
+    urls = [
         f"https://www.google.com/s2/favicons?domain={dom}&sz=128",
         f"https://www.google.com/s2/favicons?domain={dom}&sz=256",
         f"https://icons.duckduckgo.com/ip3/{dom}.ico",
@@ -149,6 +193,9 @@ def logo_candidates(dom: str) -> list[str]:
         f"https://www.{dom}/favicon.ico",
         f"https://{dom}/favicon.ico",
     ]
+    for asset in scrape_page_assets(dom):
+        urls.insert(0, asset)
+    return urls
 
 
 def monogram(name: str) -> str:
@@ -177,6 +224,7 @@ def best_logo_url(slug: str, name: str, website: str | None) -> tuple[str, str]:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--dry-run", action="store_true", help="DB güncelleme yapma")
+    parser.add_argument("--retry-monograms", action="store_true", help="Monogram olanları zorla yeniden dene")
     parser.add_argument("--workers", type=int, default=10)
     args = parser.parse_args()
 
@@ -202,6 +250,12 @@ def main() -> None:
             if fut.result():
                 to_fix.append(row)
 
+    if args.retry_monograms:
+        mono_slugs = {r["slug"] for r in rows if (r["logo_url"] or "").find("ui-avatars.com") >= 0}
+        for r in rows:
+            if r["slug"] in mono_slugs and r not in to_fix:
+                to_fix.append(r)
+
     print(f"Düzeltilecek: {len(to_fix)}")
 
     updated = 0
@@ -216,13 +270,16 @@ def main() -> None:
             row = futures[fut]
             new_url, src = fut.result()
             old = (row["logo_url"] or "").strip()
+            # Monogram → monogram atlamayı engelle; gerçek logo bulunduysa yaz
             if new_url == old:
+                skipped += 1
+                continue
+            if src == "monogram" and "ui-avatars.com" in old:
                 skipped += 1
                 continue
             tag = src.split("(")[0]
             stats[tag] = stats.get(tag, 0) + 1
-            if updated < 20 or updated % 25 == 0:
-                print(f"  {row['slug']:24} [{row['cat'] or '-':20}] → {src}")
+            print(f"  {row['slug']:24} [{row['cat'] or '-':20}] → {src}")
             if not args.dry_run:
                 cur.execute(
                     "UPDATE brands SET logo_url = %s, updated_at = now() WHERE id = %s",
@@ -242,12 +299,16 @@ def main() -> None:
           count(*) FILTER (WHERE logo_url LIKE '%google.com/s2/favicons%') AS s2,
           count(*) FILTER (WHERE logo_url LIKE '%duckduckgo.com%') AS ddg,
           count(*) FILTER (WHERE logo_url LIKE '%gstatic.com%') AS gstatic,
+          count(*) FILTER (WHERE logo_url LIKE '/api/files/%') AS minio,
           count(*) AS total
         FROM brands
         """
     )
     s = cur.fetchone()
-    print(f"Son durum — toplam: {s['total']}, s2: {s['s2']}, ddg: {s['ddg']}, gstatic: {s['gstatic']}, monogram: {s['monogram']}")
+    print(
+        f"Son durum — toplam: {s['total']}, s2: {s['s2']}, ddg: {s['ddg']}, "
+        f"gstatic: {s['gstatic']}, minio: {s['minio']}, monogram: {s['monogram']}"
+    )
 
     cur.close()
     conn.close()

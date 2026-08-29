@@ -10,7 +10,7 @@ const SLUG_DOMAIN_OVERRIDES: Record<string, string> = {
   "casibom": "casibom.com",
   "jojobet": "jojobet.com",
   "holiganbet": "holiganbet.com",
-  "meritking": "meritking.com",
+  "meritking": "mrking.com",
   "grandpashabet": "grandpashabet.com",
   "bets10": "bets10.com",
   "mobilbahis": "mobilbahis.com",
@@ -29,10 +29,16 @@ const SLUG_DOMAIN_OVERRIDES: Record<string, string> = {
   "evetabi": "evetabi.com",
   "betnano": "betnano.com",
   "bovbet": "bovbet.com",
+  "exobet": "exobet.org",
+  "etrobet": "etrobet.org",
+  "huhubeet": "huhubet.com",
+  "meritliman": "meritlimanbet.com",
+  "meybet": "meybetgir.com",
+  "mobiloyna": "mobiloynatr.com",
+  "tekelbet": "tekelbet.net",
   "bahsine": "bahsine.com",
   "hadibet": "hadibet.com",
   "natobet": "natobet.com",
-  "exobet": "exobet.com",
   "mexiwin": "mexiwin.com",
   "pulibet": "pulibet.com",
   "padisahbet": "padisahbet.com",
@@ -42,7 +48,6 @@ const SLUG_DOMAIN_OVERRIDES: Record<string, string> = {
   "meritwin": "meritwin.com",
   "neredebahis": "neredebahis.com",
   "yasalbahis": "yasalbahis.com",
-  "tekelbet": "tekelbet.com",
   "betmartin": "betmartin.com",
   "sanscasino": "sanscasino.com",
   "playbet": "playbet.io",
@@ -77,12 +82,14 @@ function normalizeDomain(input?: string | null): string | null {
 function isLikelyBrokenLogo(url: string): boolean {
   const u = url.toLowerCase();
   return (
+    u.includes("ui-avatars.com") ||
     u.includes("placeholder") ||
     u.includes("via.placeholder") ||
     u.endsWith(".svg") ||
     u.includes("googleusercontent.com/a/default") ||
     u.includes("unavatar.io/fallback") ||
-    u.includes("superbonus14.pro/clients/logo")
+    u.includes("superbonus14.pro/clients/logo") ||
+    u.includes("porkbun-logo")
   );
 }
 
@@ -113,8 +120,10 @@ export function brandLogoUrl(opts: {
 
   if (opts.logoUrl) {
     const raw = opts.logoUrl.trim();
-    if (raw.startsWith("/")) return raw;
-    if (raw.startsWith("http") && !isLikelyBrokenLogo(raw)) {
+    if (raw.startsWith("/")) {
+      // Kırık MinIO yolu — domain favicon'a düş
+      if (!dom) return raw;
+    } else if (raw.startsWith("http") && !isLikelyBrokenLogo(raw)) {
       const proxied = proxyImage(raw);
       if (!gambling || !isLikelyBrokenLogo(proxied ?? raw)) return proxied ?? raw;
     }

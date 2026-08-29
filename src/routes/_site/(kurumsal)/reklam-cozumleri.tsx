@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { seoHead } from "@/lib/seo";
 import { siteContactMailto } from "@/lib/contact";
-import { ArrowRight, Target, Sparkles, Radar, Check, BarChart3, Users, Globe, ShieldCheck, MessageCircle } from "lucide-react";
+import { ArrowRight, Target, Sparkles, BarChart3, Users, Globe, ShieldCheck, MessageCircle } from "lucide-react";
 
 export const Route = createFileRoute("/_site/(kurumsal)/reklam-cozumleri")({
   head: () => ({
@@ -23,41 +23,6 @@ function AdsPage() {
     { v: "21M+", k: "Aylık ziyaret", icon: Sparkles },
   ];
 
-  const models = [
-    {
-      title: "Premium Reklam",
-      icon: Sparkles,
-      accent: "from-brand/20 to-brand/5",
-      lead: "Marka sayfanızdaki reklam alanlarını 1 yıl boyunca siz yönetin.",
-      bullets: [
-        "Marka sayfanızda yalnızca sizin görselleriniz yayınlanır.",
-        "Kampanyaları takvime göre planlayın, hedeflemeyi özelleştirin.",
-        "Marka itibarınızı doğrudan yönetin.",
-      ],
-    },
-    {
-      title: "Hedefli Reklam",
-      icon: Target,
-      accent: "from-info/20 to-info/5",
-      lead: "Kullanıcı ve marka hedeflemesi ile doğru kitleye ulaşın.",
-      bullets: [
-        "Ziyaret geçmişine göre reklam gösterimi.",
-        "Seçtiğiniz marka sayfalarında görünürlük.",
-      ],
-    },
-    {
-      title: "Programatik Reklam",
-      icon: Radar,
-      accent: "from-accent-purple/20 to-accent-purple/5",
-      lead: "Facebook, Google gibi platformlarda otomatik yayın.",
-      bullets: [
-        "Hedef kitleye programatik erişim.",
-        "Performans odaklı marka bilinirliği.",
-        "Esnek bütçe ve raporlama.",
-      ],
-    },
-  ];
-
   return (
     <div className="min-h-screen bg-paper">
       {/* HERO */}
@@ -77,17 +42,17 @@ function AdsPage() {
             </p>
             <div className="mt-6 flex flex-col sm:flex-row gap-3">
               <a
-                href="#modeller"
+                href={siteContactMailto("Reklam çözümleri")}
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-brand text-brand-foreground px-6 h-11 text-[13px] font-semibold hover:bg-brand-hover transition"
               >
-                Modelleri incele <ArrowRight className="size-4" />
+                Satış ekibiyle görüş <ArrowRight className="size-4" />
               </a>
-              <a
-                href={siteContactMailto("Reklam çözümleri")}
+              <Link
+                to="/register/marka-basvuru"
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-card ring-1 ring-rule px-6 h-11 text-[13px] font-semibold hover:bg-surface transition"
               >
-                Satış ekibiyle görüş
-              </a>
+                Marka başvurusu yap
+              </Link>
             </div>
           </div>
         </div>
@@ -149,73 +114,15 @@ function AdsPage() {
         </div>
       </section>
 
-      {/* MODELS */}
-      <section id="modeller" className="bg-surface scroll-mt-20 py-12 sm:py-16">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="text-center max-w-xl mx-auto mb-8 sm:mb-10">
-            <h2 className="font-display font-bold text-[24px] sm:text-[28px] text-ink">Reklam modelleri</h2>
-            <p className="mt-2 text-[13px] text-navy-mid">İhtiyacınıza uygun paketi seçin; kurulumda yanınızdayız.</p>
-          </div>
-          <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {models.map((m) => {
-              const Icon = m.icon;
-              return (
-                <article
-                  key={m.title}
-                  className="bg-card rounded-2xl ring-1 ring-rule overflow-hidden flex flex-col hover:shadow-pop transition-shadow"
-                >
-                  <div className={`h-2 bg-gradient-to-r ${m.accent}`} />
-                  <div className="p-5 sm:p-6 flex flex-col flex-1">
-                    <span className="grid place-items-center size-11 rounded-xl bg-brand-soft text-brand w-fit">
-                      <Icon className="size-5" />
-                    </span>
-                    <h3 className="mt-4 font-display font-bold text-[17px] sm:text-[18px] text-ink">{m.title}</h3>
-                    <p className="mt-2 text-[13px] text-navy leading-relaxed">{m.lead}</p>
-                    <ul className="mt-4 space-y-2 flex-1">
-                      {m.bullets.map((b) => (
-                        <li key={b} className="flex items-start gap-2 text-[13px] text-navy">
-                          <Check className="size-4 text-brand mt-0.5 shrink-0" />
-                          <span>{b}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    <a
-                      href={siteContactMailto("Reklam çözümleri")}
-                      className="mt-5 inline-flex items-center justify-center gap-2 rounded-full bg-brand text-brand-foreground px-5 h-10 text-[13px] font-semibold hover:bg-brand-hover transition w-full"
-                    >
-                      İletişime geç <ArrowRight className="size-4" />
-                    </a>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="bg-ink text-paper">
-        <div className="mx-auto max-w-3xl px-4 sm:px-6 py-12 sm:py-16 text-center">
-          <h2 className="font-display font-bold text-[20px] sm:text-[26px] leading-snug">
-            tepkimvar Pro ile müşteri tabanınızı büyütün
-          </h2>
-          <p className="mt-3 text-[13px] sm:text-[14px] text-paper/75 max-w-md mx-auto">
-            Çözüm sunan markalar arasına katılın; Pro üyelik avantajlarından yararlanın.
-          </p>
-          <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
-            <a
-              href={siteContactMailto("Pro üyelik")}
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-card text-brand px-6 h-11 text-[13px] font-semibold hover:brightness-105 transition"
-            >
-              Pro üyelik için iletişim
-            </a>
-            <Link
-              to="/register/marka-basvuru"
-              className="inline-flex items-center justify-center gap-2 rounded-full ring-1 ring-paper/30 text-paper px-6 h-11 text-[13px] font-semibold hover:bg-paper/10 transition"
-            >
-              Marka başvurusu yap
-            </Link>
-          </div>
+      {/* BANNER */}
+      <section className="border-t border-rule">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8 sm:py-12">
+          <img
+            src="/reklam-cozumleri-banner.jpg"
+            alt="tepkimvar Pro — müşteri tabanınızı büyütün"
+            className="w-full rounded-2xl object-cover max-h-[420px] sm:max-h-[520px]"
+            loading="lazy"
+          />
         </div>
       </section>
     </div>
