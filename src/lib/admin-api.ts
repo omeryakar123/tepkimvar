@@ -80,11 +80,13 @@ export async function apiSendJson<T>(
 export async function uploadFile(
   file: File,
   folder: string,
+  brandId?: string,
 ): Promise<{ key: string; url: string } | null> {
   try {
     const fd = new FormData();
     fd.append("file", file);
     fd.append("folder", folder);
+    if (brandId) fd.append("brandId", brandId);
     const res = await fetch("/api/upload", { method: "POST", credentials: "include", body: fd });
     if (!res.ok) {
       toast.error(await readError(res));

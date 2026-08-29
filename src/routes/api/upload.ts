@@ -9,7 +9,7 @@ import {
   rateLimit,
   requireUser,
 } from "@/lib/server/guard";
-import { putObject, sanitizeName, validateUpload } from "@/lib/server/storage";
+import { putObject, sanitizeName, validateUpload, inferContentType } from "@/lib/server/storage";
 
 /**
  * Dosya yükleme (MinIO). GÜVENLİK:
@@ -39,8 +39,11 @@ export const Route = createFileRoute("/api/upload")({
 
           if (!(file instanceof File)) throw new HttpError(400, "Dosya bulunamadı");
 
-          const check = validateUpload(folder, file.type, file.size);
+          const contentType = inferContentType(file);
+          const check = validateUpload(folder, contentType, file.size);
           if (!check.ok) throw new HttpError(400, check.error);
+
+          const staff = await isStaff(user.id);
 
           // Sahiplik kuralları
           let prefix: string;
@@ -64,17 +67,22 @@ export const Route = createFileRoute("/api/upload")({
               (await isStaff(user.id));
             if (!allowed) throw new HttpError(403, "Bu şikayete dosya ekleyemezsiniz");
             prefix = `${folder}/${complaintId}`;
-          } else if (folder === "brand-logos" || folder === "brand-covers" || folder === "brand-gallery") {
-            // Marka görselleri: yalnızca o markanın temsilcisi veya personel.
-            // brandId istemciden gelir; üyelik doğrulanmadan ASLA kullanılmaz.
-            if (!brandId || !UUID_RE.test(brandId)) throw new HttpError(400, "Firma belirtilmeli");
+          } else if (
+            folder === "brand-logos" ||
+            folder === "brand-covers" ||
+            folder === "brand-gallery" ||
+            folder === "brand-videos"
+          ) {
+            // Marka görselleri: o markanın temsilcisi veya personel.
+            if (!brandId || !UUID_RE.test(brandId))
+              throw new HttpError(400, "Firma belirtilmeli (brandId)");
             const [b] = await db
               .select({ id: schema.brands.id })
               .from(schema.brands)
               .where(eq(schema.brands.id, brandId))
               .limit(1);
             if (!b) throw new HttpError(404, "Firma bulunamadı");
-            if (!(await isBrandMember(user.id, brandId)) && !(await isStaff(user.id)))
+            if (!(await isBrandMember(user.id, brandId)) && !staff)
               throw new HttpError(403, "Bu firmaya erişiminiz yok");
             prefix = `${folder}/${brandId}`;
           } else if (folder === "avatars") {
@@ -83,13 +91,13 @@ export const Route = createFileRoute("/api/upload")({
             prefix = `brand-application-photos/${user.id}`;
           } else {
             // blog/banner/marka-belge klasörleri yalnızca personel
-            if (!(await isStaff(user.id))) throw new HttpError(403, "Yetkiniz yok");
+            if (!staff) throw new HttpError(403, "Yetkiniz yok");
             prefix = folder;
           }
 
           const key = `${prefix}/${Date.now()}-${sanitizeName(file.name)}`;
           const buf = Buffer.from(await file.arrayBuffer());
-          await putObject(key, buf, file.type);
+          await putObject(key, buf, contentType);
 
           // Şikayet eklerini kayda geç
           if (complaintId) {
@@ -117,7 +125,7 @@ export const Route = createFileRoute("/api/upload")({
               replyId: linkedReplyId,
               uploaderId: user.id,
               storagePath: key,
-              fileType: file.type,
+              fileType: contentType,
               fileSize: file.size,
               visibility: vis,
             });

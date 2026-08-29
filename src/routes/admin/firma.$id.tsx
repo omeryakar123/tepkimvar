@@ -49,7 +49,7 @@ function AdminBrandEditPage() {
 
   async function uploadImage(file: File, kind: "logo" | "cover") {
     if (!b) return;
-    const up = await uploadFile(file, kind === "logo" ? "brand-logos" : "brand-covers");
+    const up = await uploadFile(file, kind === "logo" ? "brand-logos" : "brand-covers", b.id);
     if (!up) return;
     const field = kind === "logo" ? "logo_url" : "cover_url";
     if (!(await patch({ [field]: up.url }))) return;
@@ -59,7 +59,7 @@ function AdminBrandEditPage() {
 
   async function uploadVideo(file: File) {
     if (!b) return;
-    const up = await uploadFile(file, "brand-videos");
+    const up = await uploadFile(file, "brand-videos", b.id);
     if (!up) return;
     if (!(await patch({ cover_video: up.url }))) return;
     toast.success("Video yüklendi");
@@ -75,7 +75,7 @@ function AdminBrandEditPage() {
 
   async function addGalleryImage(file: File) {
     if (!b) return;
-    const up = await uploadFile(file, "brand-gallery");
+    const up = await uploadFile(file, "brand-gallery", b.id);
     if (!up) return;
     const next = [...(b.gallery ?? []), up.url];
     if (!(await patch({ gallery: next }))) return;

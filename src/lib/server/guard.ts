@@ -24,6 +24,9 @@ export function errorResponse(e: unknown): Response {
     return Response.json({ error: e.message }, { status: e.status });
   }
   console.error("[api]", e);
+  if (e instanceof Error && e.message.trim()) {
+    return Response.json({ error: e.message }, { status: 500 });
+  }
   return Response.json({ error: "Sunucu hatası" }, { status: 500 });
 }
 

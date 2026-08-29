@@ -104,22 +104,46 @@ export function sanitizeName(name: string): string {
   return name.replace(/[^a-zA-Z0-9.\-_]/g, "_").slice(-100);
 }
 
+/** Tarayıcı boş type gönderdiğinde uzantıdan MIME tahmin et. */
+export function inferContentType(file: File): string {
+  const t = file.type?.trim();
+  if (t) return t;
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+  const map: Record<string, string> = {
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    png: "image/png",
+    webp: "image/webp",
+    gif: "image/gif",
+    avif: "image/avif",
+    mp4: "video/mp4",
+    webm: "video/webm",
+    mov: "video/quicktime",
+  };
+  return map[ext] ?? "application/octet-stream";
+}
+
 export async function putObject(key: string, body: Buffer, contentType: string): Promise<void> {
-  await ensureBucket();
-  await s3.send(
-    new PutObjectCommand({
-      Bucket: BUCKET,
-      Key: key,
-      Body: body,
-      ContentType: contentType,
-      // İçeriğin tarayıcıda script olarak çalışmasını engelle.
-      // Görsel/video inline oynatılabilir; diğer her şey indirilir.
-      ContentDisposition:
-        contentType.startsWith("image/") || contentType.startsWith("video/")
-          ? "inline"
-          : "attachment",
-    }),
-  );
+  try {
+    await ensureBucket();
+    await s3.send(
+      new PutObjectCommand({
+        Bucket: BUCKET,
+        Key: key,
+        Body: body,
+        ContentType: contentType,
+        ContentDisposition:
+          contentType.startsWith("image/") || contentType.startsWith("video/")
+            ? "inline"
+            : "attachment",
+      }),
+    );
+  } catch (e) {
+    console.error("[storage] putObject failed:", key, e);
+    throw new Error(
+      "Dosya depolama servisine yazılamadı. MinIO/S3 bağlantısını ve S3_* ortam değişkenlerini kontrol edin.",
+    );
+  }
 }
 
 export async function getObject(key: string) {
