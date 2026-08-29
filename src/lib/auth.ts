@@ -10,11 +10,20 @@ export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET,
 
   // İzin verilen origin'ler. Coolify'da domain'i TRUSTED_ORIGINS'e ekle
-  // (virgülle ayrılmış). Varsayılan lokal dev portu 8080.
-  trustedOrigins: (process.env.TRUSTED_ORIGINS || "http://localhost:8080")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean),
+  // (virgülle ayrılmış). BETTER_AUTH_URL / SITE_URL otomatik eklenir.
+  trustedOrigins: [
+    ...new Set(
+      [
+        process.env.TRUSTED_ORIGINS,
+        process.env.BETTER_AUTH_URL,
+        process.env.SITE_URL,
+        "http://localhost:8080",
+      ]
+        .flatMap((v) => (v ?? "").split(","))
+        .map((s) => s.trim())
+        .filter(Boolean),
+    ),
+  ],
 
   database: drizzleAdapter(db, {
     provider: "pg",
