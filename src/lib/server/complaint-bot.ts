@@ -966,8 +966,7 @@ function errText(e: unknown): string {
 }
 
 /**
- * Cron girişi: botu AÇIK olan tüm aktif markalar için sırayla çalıştırır.
- * Sıralı çalışır — sağlayıcı rate limit'ine paralel istek yağdırmamak için.
+ * Cron girişi: botu AÇIK olan tüm aktif markalar için paralel (sınırlı) çalıştırır.
  */
 export async function runComplaintBotForAllBrands(opts: {
   trigger: "cron" | "manual";
@@ -979,16 +978,83 @@ export async function runComplaintBotForAllBrands(opts: {
     .innerJoin(schema.brands, eq(schema.brands.id, schema.brandBotConfigs.brandId))
     .where(and(eq(schema.brandBotConfigs.enabled, true), eq(schema.brands.isActive, true)));
 
-  const results: BotRunResult[] = [];
-  for (const row of rows) {
-    results.push(
-      await runBotForBrand({
-        brandId: row.brandId,
-        trigger: opts.trigger,
-        triggeredBy: opts.triggeredBy ?? null,
-      }),
-    );
-  }
+  const results = await runBotForBrands(
+    rows.map((r) => r.brandId),
+    {
+      trigger: opts.trigger,
+      triggeredBy: opts.triggeredBy ?? null,
+    },
+  );
 
   return { brands: rows.length, results };
+}
+
+export type RunBotForBrandOpts = {
+  brandId: string;
+  trigger: "cron" | "manual";
+  triggeredBy?: string | null;
+  count?: number;
+  scenario?: ScenarioKey;
+  rating?: number;
+  language?: LanguageCode;
+  ignoreEnabled?: boolean;
+};
+
+const DEFAULT_PARALLEL = 3;
+const MAX_PARALLEL = 8;
+
+function botParallelLimit(): number {
+  const n = Number(process.env.BOT_PARALLEL_BRANDS);
+  if (!Number.isFinite(n) || n < 1) return DEFAULT_PARALLEL;
+  return Math.min(MAX_PARALLEL, Math.round(n));
+}
+
+/** Sınırlı eşzamanlılıkla promise havuzu — ek bağımlılık yok. */
+async function mapPool<T, R>(
+  items: T[],
+  concurrency: number,
+  fn: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  if (!items.length) return [];
+  const results = new Array<R>(items.length);
+  let next = 0;
+  async function worker() {
+    while (next < items.length) {
+      const idx = next++;
+      results[idx] = await fn(items[idx], idx);
+    }
+  }
+  const workers = Math.min(Math.max(1, concurrency), items.length);
+  await Promise.all(Array.from({ length: workers }, () => worker()));
+  return results;
+}
+
+/** Seçili markalara aynı anda (sınırlı paralellik) şikayet üretir. */
+export async function runBotForBrands(
+  brandIds: string[],
+  opts: Omit<RunBotForBrandOpts, "brandId">,
+): Promise<BotRunResult[]> {
+  const unique = [...new Set(brandIds.filter(Boolean))];
+  if (!unique.length) return [];
+
+  return mapPool(unique, botParallelLimit(), (brandId) =>
+    runBotForBrand({ ...opts, brandId }),
+  );
+}
+
+export function summarizeBotResults(results: BotRunResult[]) {
+  const complaints = results.reduce((s, r) => s + r.complaintsGenerated, 0);
+  const responses = results.reduce((s, r) => s + r.responsesGenerated, 0);
+  const duplicates = results.reduce((s, r) => s + r.duplicatesDetected, 0);
+  const errors = results.flatMap((r) => r.errors);
+  const failed = results.filter((r) => r.status === "failed").length;
+  const skipped = results.filter((r) => r.status === "skipped").length;
+  const ok = results.filter((r) => r.status === "success" || r.status === "partial").length;
+
+  let status: "success" | "partial" | "failed" | "skipped" = "success";
+  if (ok === 0 && skipped === results.length) status = "skipped";
+  else if (failed === results.length) status = "failed";
+  else if (failed > 0 || skipped > 0) status = "partial";
+
+  return { status, complaints, responses, duplicates, errors };
 }

@@ -373,7 +373,7 @@ function AdminBotPage() {
             onClick={() => setGenerateOpen(true)}
             className="h-10 rounded-lg bg-brand text-brand-foreground px-4 text-sm font-semibold inline-flex items-center gap-2"
           >
-            <Sparkles className="size-4" /> Şikayet Üret
+            <Sparkles className="size-4" /> Şikayet Üret (çoklu)
           </button>
         </div>
       </div>
@@ -1159,7 +1159,8 @@ function GenerateModal({
   defaultBrand: string;
   onDone: () => void;
 }) {
-  const [brandId, setBrandId] = useState(defaultBrand);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [query, setQuery] = useState("");
   const [scenario, setScenario] = useState("");
   const [rating, setRating] = useState("");
   const [language, setLanguage] = useState("");
@@ -1167,19 +1168,41 @@ function GenerateModal({
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (open) setBrandId(defaultBrand);
+    if (!open) return;
+    setQuery("");
+    setSelected(defaultBrand ? [defaultBrand] : []);
   }, [open, defaultBrand]);
 
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return brands;
+    return brands.filter((b) => b.name.toLowerCase().includes(q));
+  }, [brands, query]);
+
+  function toggle(id: string) {
+    setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  }
+
+  function selectAllVisible() {
+    setSelected((prev) => [...new Set([...prev, ...filtered.map((b) => b.id)])]);
+  }
+
+  function clearAll() {
+    setSelected([]);
+  }
+
   async function submit() {
-    if (!brandId) return toast.error("Marka seçin");
+    if (!selected.length) return toast.error("En az bir marka seçin");
     setBusy(true);
     const res = await apiSendJson<{
+      brands: number;
       complaints: number;
       responses: number;
       duplicates: number;
       reason: string | null;
+      results?: { brand_name: string; complaints: number; status: string; reason: string | null }[];
     }>("/api/admin/bot/generate", "POST", {
-      brandId,
+      brandIds: selected,
       scenario: scenario || undefined,
       rating: rating ? Number(rating) : undefined,
       language: language || undefined,
@@ -1189,6 +1212,11 @@ function GenerateModal({
     if (!res) return;
     if (res.complaints === 0) {
       toast.warning(res.reason ?? "Şikayet üretilemedi (kopya tespiti olabilir)");
+    } else if (res.brands > 1) {
+      const ok = res.results?.filter((r) => r.complaints > 0).length ?? 0;
+      toast.success(
+        `${res.brands} markadan ${ok} tanesine toplam ${res.complaints} şikayet, ${res.responses} yanıt üretildi`,
+      );
     } else {
       toast.success(`${res.complaints} şikayet, ${res.responses} yanıt üretildi`);
     }
@@ -1197,7 +1225,7 @@ function GenerateModal({
   }
 
   return (
-    <Modal open={open} onClose={onClose} className="max-w-md bg-card rounded-2xl p-6 shadow-lift">
+    <Modal open={open} onClose={onClose} className="max-w-lg bg-card rounded-2xl p-6 shadow-lift">
       <div className="flex items-center gap-2 mb-4">
         <Sparkles className="size-5 text-brand" />
         <h3 className="font-display text-lg font-bold text-ink">Manuel şikayet üret</h3>
@@ -1207,18 +1235,53 @@ function GenerateModal({
       </div>
 
       <div className="space-y-3">
-        <select
-          value={brandId}
-          onChange={(e) => setBrandId(e.target.value)}
-          className="w-full h-10 rounded-lg ring-1 ring-rule px-3 text-sm bg-card"
-        >
-          <option value="">Marka seçin…</option>
-          {brands.map((b) => (
-            <option key={b.id} value={b.id}>
-              {b.name}
-            </option>
-          ))}
-        </select>
+        <div>
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <span className="text-[12px] font-medium text-navy-mid">
+              Markalar ({selected.length} seçili)
+            </span>
+            <div className="flex gap-2 text-[11px]">
+              <button type="button" onClick={selectAllVisible} className="text-brand hover:underline">
+                Görünenleri seç
+              </button>
+              <button type="button" onClick={clearAll} className="text-navy-mid hover:underline">
+                Temizle
+              </button>
+            </div>
+          </div>
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Marka ara…"
+            className="w-full h-9 rounded-lg ring-1 ring-rule px-3 text-sm bg-card mb-2"
+          />
+          <div className="max-h-44 overflow-y-auto rounded-lg ring-1 ring-rule divide-y divide-rule">
+            {filtered.length === 0 ? (
+              <p className="px-3 py-4 text-sm text-navy-mid text-center">Marka bulunamadı</p>
+            ) : (
+              filtered.map((b) => (
+                <label
+                  key={b.id}
+                  className="flex items-center gap-2.5 px-3 py-2 text-sm cursor-pointer hover:bg-surface/80"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selected.includes(b.id)}
+                    onChange={() => toggle(b.id)}
+                    className="rounded border-rule text-brand focus:ring-brand/40"
+                  />
+                  <span className="truncate text-ink">{b.name}</span>
+                </label>
+              ))
+            )}
+          </div>
+          {selected.length > 1 && (
+            <p className="mt-1.5 text-[11px] text-navy-mid">
+              Seçili {selected.length} markaya aynı anda şikayet yazılır (marka başına {count} adet).
+            </p>
+          )}
+        </div>
         <select
           value={scenario}
           onChange={(e) => setScenario(e.target.value)}
@@ -1256,7 +1319,9 @@ function GenerateModal({
           ))}
         </select>
         <label className="block">
-          <span className="text-[12px] font-medium text-navy-mid">Adet (en fazla 10)</span>
+          <span className="text-[12px] font-medium text-navy-mid">
+            Marka başına adet (en fazla 10)
+          </span>
           <input
             type="number"
             min={1}
@@ -1270,10 +1335,16 @@ function GenerateModal({
 
       <button
         onClick={submit}
-        disabled={busy}
+        disabled={busy || !selected.length}
         className="mt-5 w-full h-11 rounded-lg bg-brand text-brand-foreground text-sm font-semibold disabled:opacity-60"
       >
-        {busy ? "Üretiliyor…" : "Üret"}
+        {busy
+          ? selected.length > 1
+            ? `${selected.length} markaya yazılıyor…`
+            : "Üretiliyor…"
+          : selected.length > 1
+            ? `${selected.length} markaya üret`
+            : "Üret"}
       </button>
     </Modal>
   );
