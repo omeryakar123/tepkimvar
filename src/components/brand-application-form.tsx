@@ -1,12 +1,13 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link } from "@tanstack/react-router";
 import { Loader2, Mail, Lock, User as UserIcon, Building2, MapPin, Camera, Upload } from "lucide-react";
-import { authClient } from "@/lib/auth-client";
+import { authClient, useSession } from "@/lib/auth-client";
 import { PhoneInput } from "@/components/phone-input";
 import { toE164Tr } from "@/lib/phone";
 import { SITE_CONTACT_EMAIL } from "@/lib/contact";
 
 export function BrandApplicationForm() {
+  const { data: session } = useSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [password2, setPassword2] = useState("");
@@ -21,6 +22,13 @@ export function BrandApplicationForm() {
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const loggedIn = Boolean(session?.user);
+
+  useEffect(() => {
+    if (!session?.user) return;
+    if (session.user.email) setEmail(session.user.email);
+    if (session.user.name) setFullName(session.user.name);
+  }, [session?.user]);
 
   function onPhotoChange(file: File | null) {
     setPhotoFile(file);
@@ -34,9 +42,12 @@ export function BrandApplicationForm() {
     setMsg(null);
 
     if (!fullName.trim()) return setErr("Ad Soyad zorunludur.");
+    if (!loggedIn && !email.trim()) return setErr("E-posta zorunludur.");
     if (!toE164Tr(phone)) return setErr("Geçerli bir telefon numarası giriniz.");
-    if (password.length < 6) return setErr("Şifre en az 6 karakter olmalı.");
-    if (password !== password2) return setErr("Şifreler eşleşmiyor.");
+    if (!loggedIn) {
+      if (password.length < 6) return setErr("Şifre en az 6 karakter olmalı.");
+      if (password !== password2) return setErr("Şifreler eşleşmiyor.");
+    }
     if (!brandName.trim()) return setErr("Marka adı zorunludur.");
     if (!address.trim() || address.trim().length < 10) return setErr("Güncel adres en az 10 karakter olmalıdır.");
     if (!photoFile) return setErr("Telefon / kimlik fotoğrafı yüklemeniz gerekiyor.");
@@ -44,13 +55,23 @@ export function BrandApplicationForm() {
     setLoading(true);
     try {
       const e164 = toE164Tr(phone)!;
-      const { error } = await authClient.signUp.email({
-        email: email.toLowerCase(),
-        password,
-        name: fullName,
-        phone: e164,
-      });
-      if (error) throw new Error(error.message);
+      const normalizedEmail = (loggedIn ? session!.user.email : email).toLowerCase();
+
+      if (!session?.user) {
+        const { error } = await authClient.signUp.email({
+          email: normalizedEmail,
+          password,
+          name: fullName,
+          phone: e164,
+        });
+        if (error) {
+          const msg = error.message ?? "";
+          if (/already|exists|kayıtlı|mevcut/i.test(msg)) {
+            throw new Error("Bu e-posta zaten kayıtlı. Giriş yapıp tekrar deneyin.");
+          }
+          throw new Error(msg || "Hesap oluşturulamadı");
+        }
+      }
 
       const uploadForm = new FormData();
       uploadForm.append("file", photoFile);
@@ -73,7 +94,7 @@ export function BrandApplicationForm() {
         body: JSON.stringify({
           brandName: brandName.trim(),
           contactName: fullName.trim(),
-          email: email.toLowerCase(),
+          email: normalizedEmail,
           phone: e164,
           address: address.trim(),
           photoUrl,
@@ -119,10 +140,22 @@ export function BrandApplicationForm() {
             <form className="mt-5 space-y-3" onSubmit={handleSubmit}>
               <div className="text-[11px] font-bold uppercase tracking-wider text-navy-mid pt-1">Hesap Bilgileri</div>
               <Field icon={UserIcon} type="text" placeholder="Ad Soyad *" value={fullName} onChange={setFullName} required />
-              <Field icon={Mail} type="email" placeholder="E-posta (giriş için kullanılacak) *" value={email} onChange={setEmail} required />
+              <Field
+                icon={Mail}
+                type="email"
+                placeholder="E-posta (giriş için kullanılacak) *"
+                value={email}
+                onChange={setEmail}
+                required
+                readOnly={loggedIn}
+              />
               <PhoneInput value={phone} onChange={setPhone} required />
-              <Field icon={Lock} type="password" placeholder="Şifre *" value={password} onChange={setPassword} required minLength={6} />
-              <Field icon={Lock} type="password" placeholder="Şifre tekrar *" value={password2} onChange={setPassword2} required minLength={6} />
+              {!loggedIn && (
+                <>
+                  <Field icon={Lock} type="password" placeholder="Şifre *" value={password} onChange={setPassword} required minLength={6} />
+                  <Field icon={Lock} type="password" placeholder="Şifre tekrar *" value={password2} onChange={setPassword2} required minLength={6} />
+                </>
+              )}
 
               <div className="text-[11px] font-bold uppercase tracking-wider text-navy-mid pt-2">Marka Bilgileri</div>
               <Field icon={Building2} type="text" placeholder="Marka adı *" value={brandName} onChange={setBrandName} required />
@@ -194,9 +227,9 @@ export function BrandApplicationForm() {
 }
 
 function Field({
-  icon: Icon, type, placeholder, value, onChange, required, minLength,
+  icon: Icon, type, placeholder, value, onChange, required, minLength, readOnly,
 }: {
-  icon: typeof Mail; type: string; placeholder: string; value: string; onChange: (v: string) => void; required?: boolean; minLength?: number;
+  icon: typeof Mail; type: string; placeholder: string; value: string; onChange: (v: string) => void; required?: boolean; minLength?: number; readOnly?: boolean;
 }) {
   return (
     <div className="relative">
@@ -208,7 +241,8 @@ function Field({
         onChange={(e) => onChange(e.target.value)}
         required={required}
         minLength={minLength}
-        className="w-full h-11 rounded-lg ring-1 ring-rule bg-card pl-10 pr-3 text-sm placeholder:text-navy-mid focus:outline-none focus:ring-2 focus:ring-brand/40 transition"
+        readOnly={readOnly}
+        className={`w-full h-11 rounded-lg ring-1 ring-rule bg-card pl-10 pr-3 text-sm placeholder:text-navy-mid focus:outline-none focus:ring-2 focus:ring-brand/40 transition ${readOnly ? "opacity-70 cursor-default" : ""}`}
       />
     </div>
   );

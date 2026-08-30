@@ -25,7 +25,7 @@ import {
 } from "@/lib/data";
 import { PRIORITY_BRAND_LINKS } from "@/lib/featured-brands";
 import { publicPlatformStats } from "@/lib/public-stats";
-import { SITE_CONTACT_EMAIL } from "@/lib/contact";
+import { SITE_CONTACT_EMAIL, siteContactMailto } from "@/lib/contact";
 import { BrandAvatar } from "@/components/cards";
 import { LiveFeed } from "@/components/live-feed";
 import { MobileCarousel } from "@/components/mobile-carousel";
@@ -611,34 +611,55 @@ function Home() {
         </div>
       </section>
 
-      {/* PURPLE CTA — Tüketici deneyimi */}
-      <section className="bg-media text-media-foreground">
-        <div className="mx-auto max-w-3xl px-4 sm:px-6 py-16 text-center">
-          <h2 className="font-display font-bold text-[24px] leading-snug">
-            Tüketici deneyimi, sizin markanız.
-          </h2>
-          <p className="mt-3 text-[13.5px] text-media-foreground/80 leading-relaxed">
-            Müşteri geri bildirimlerini şeffafça yönetin, çözüm hızınızı artırın
-            ve marka itibarınızı güçlendirin.
-          </p>
-          <Link
-            to="/reklam-cozumleri"
-            className="mt-6 inline-flex items-center gap-2 rounded-full bg-brand text-brand-foreground px-6 h-11 text-[13px] font-semibold hover:bg-brand-hover transition"
-          >
-            Detaylı Bilgi Al
-          </Link>
+      {/* Pro CTA — koyu gradyan (beyaz bant yok) */}
+      <section className="bg-media text-media-foreground border-t border-white/10">
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 py-12 sm:py-16 overflow-hidden">
+          <div
+            className="pointer-events-none absolute -right-24 -top-24 size-80 rounded-full bg-brand/12 blur-3xl"
+            aria-hidden
+          />
+          <div
+            className="pointer-events-none absolute -left-20 bottom-0 size-64 rounded-full bg-accent-purple/12 blur-3xl"
+            aria-hidden
+          />
+          <div className="relative max-w-3xl mx-auto text-center">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/15 text-brand px-3 h-7 text-[11px] font-bold uppercase tracking-wider ring-1 ring-brand/25 mb-5">
+              <ShieldCheck className="size-3.5" />
+              tepkimvar Pro
+            </span>
+            <h2 className="font-display font-bold text-[22px] sm:text-[28px] leading-snug text-media-foreground">
+              tepkimvar Pro ile müşteri tabanınızı büyütün
+            </h2>
+            <p className="mt-3 text-[13px] sm:text-[14px] text-media-foreground/75 max-w-md mx-auto leading-relaxed">
+              Çözüm sunan markalar arasına katılın; Pro üyelik avantajlarından yararlanın.
+            </p>
+            <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
+              <a
+                href={siteContactMailto("Pro üyelik")}
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-brand text-brand-foreground px-6 h-11 text-[13px] font-semibold hover:bg-brand-hover transition"
+              >
+                Pro üyelik için iletişim
+              </a>
+              <Link
+                to="/register/marka-basvuru"
+                className="inline-flex items-center justify-center gap-2 rounded-full ring-1 ring-white/25 text-media-foreground px-6 h-11 text-[13px] font-semibold hover:bg-white/10 transition"
+              >
+                Marka başvurusu yap
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* KEŞFET & PAYLAŞ */}
-      <section className="bg-paper border-t border-rule">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-12 sm:py-16">
+      <section className="bg-media text-media-foreground pb-14 sm:pb-16">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <motion.div
             initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 24 }}
             whileInView={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.2 }}
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-media via-[oklch(0.2_0.022_262)] to-[oklch(0.24_0.03_285)] ring-1 ring-white/10 shadow-lift hero-glow"
+            className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[oklch(0.19_0.018_262)] via-[oklch(0.22_0.025_262)] to-[oklch(0.26_0.03_285)] ring-1 ring-white/10 shadow-lift hero-glow"
           >
             <div
               className="pointer-events-none absolute -right-20 -top-20 size-[min(420px,55vw)] rounded-full bg-brand/15 blur-3xl"
@@ -651,7 +672,7 @@ function Home() {
 
             <div className="relative grid md:grid-cols-2 gap-4 sm:gap-5 p-4 sm:p-6 lg:p-8">
               {/* Keşfet */}
-              <div className="flex flex-col rounded-2xl bg-white/[0.04] backdrop-blur-sm ring-1 ring-white/10 p-6 sm:p-8 lg:p-9">
+              <div className="flex flex-col rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-sm ring-1 ring-white/12 p-6 sm:p-8 lg:p-9">
                 <div className="flex flex-wrap items-center gap-2 mb-5">
                   <span className="font-display font-black text-[18px] text-media-foreground tracking-tight">
                     tepkimvar<span className="text-brand">.</span>
@@ -676,23 +697,31 @@ function Home() {
 
                 <Link
                   to="/markalar"
-                  className="mt-7 inline-flex w-fit items-center gap-2 rounded-full bg-brand text-brand-foreground px-6 h-11 text-[13px] font-semibold shadow-soft hover:bg-brand-hover transition"
+                  className="mt-auto pt-7 inline-flex w-fit items-center gap-2 rounded-full bg-brand text-brand-foreground px-6 h-11 text-[13px] font-semibold shadow-soft hover:bg-brand-hover transition"
                 >
                   Tereddüt yok, sorgula
                   <ArrowRight className="size-4" />
                 </Link>
               </div>
 
-              {/* Paylaş */}
-              <div className="flex flex-col rounded-2xl bg-white/[0.04] backdrop-blur-sm ring-1 ring-white/10 p-6 sm:p-8 lg:p-9">
-                <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-brand/20 text-brand px-3 h-7 text-[11px] font-bold uppercase tracking-wider ring-1 ring-brand/25">
-                  <MessageCircle className="size-3.5" />
-                  Topluluk
-                </span>
+              {/* Paylaş — sol kartla aynı koyu cam stili */}
+              <div className="flex flex-col rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-sm ring-1 ring-white/12 p-6 sm:p-8 lg:p-9">
+                <div className="flex flex-wrap items-center gap-2 mb-5">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/20 text-brand px-3 h-7 text-[11px] font-bold uppercase tracking-wider ring-1 ring-brand/25">
+                    <MessageCircle className="size-3.5" />
+                    Topluluk
+                  </span>
+                  <span className="h-4 w-px bg-white/15 hidden sm:block" aria-hidden />
+                  <span className="text-[12px] font-medium text-media-foreground/60">
+                    Deneyimini paylaş
+                  </span>
+                </div>
 
-                <h3 className="mt-5 font-display font-black text-[24px] sm:text-[28px] leading-[1.1] tracking-[-0.02em] text-media-foreground">
-                  Deneyimini paylaş!
-                </h3>
+                <h2 className="font-display font-black text-[26px] sm:text-[32px] lg:text-[36px] leading-[1.06] tracking-[-0.03em] text-media-foreground">
+                  Deneyimini
+                  <br />
+                  <span className="text-gradient-brand">paylaş!</span>
+                </h2>
 
                 <p className="mt-4 text-[14px] leading-relaxed text-media-foreground/75 max-w-md">
                   Kullandığın siteler hakkında gerçek deneyimini anlat. Yorumunu bırak,
@@ -701,7 +730,7 @@ function Home() {
 
                 <Link
                   to="/sikayet-yaz"
-                  className="mt-7 inline-flex w-fit items-center gap-2 rounded-full bg-brand text-brand-foreground px-6 h-11 text-[13px] font-semibold shadow-soft hover:bg-brand-hover transition"
+                  className="mt-auto pt-7 inline-flex w-fit items-center gap-2 rounded-full bg-brand text-brand-foreground px-6 h-11 text-[13px] font-semibold shadow-soft hover:bg-brand-hover transition"
                 >
                   Şikayetini yaz
                   <ArrowRight className="size-4" />

@@ -181,15 +181,18 @@ export function BrandAvatar({
   rounded?: string;
   tone?: "light" | "dark";
 }) {
-  const src = brandLogoUrl({ logoUrl, website, slug, size: size * 2 });
+  const [imgFailed, setImgFailed] = useState(false);
+  const src = imgFailed
+    ? null
+    : brandLogoUrl({ logoUrl, website, slug, size: size * 2 });
   const initials = name.slice(0, 2).toUpperCase();
   const shell =
     tone === "dark"
-      ? "ring-white/15 bg-white/10"
-      : "ring-rule bg-card";
+      ? "ring-white/15 bg-white/[0.92]"
+      : "ring-rule/80 bg-white shadow-[inset_0_0_0_1px_oklch(0.94_0.004_250)]";
   return (
     <div
-      className={`shrink-0 ${rounded} overflow-hidden ring-1 ${shell} grid place-items-center`}
+      className={`relative shrink-0 ${rounded} overflow-hidden ring-1 ${shell} grid place-items-center`}
       style={{ width: size, height: size }}
     >
       {src ? (
@@ -197,11 +200,15 @@ export function BrandAvatar({
           src={src}
           alt={name}
           loading="lazy"
-          className="w-[88%] h-[88%] object-contain"
-          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+          className="w-[82%] h-[82%] object-contain"
+          onError={() => setImgFailed(true)}
         />
       ) : (
-        <span className={`w-full h-full grid place-items-center font-bold text-[13px] ${avatarFor(slug)}`}>{initials}</span>
+        <span
+          className={`w-full h-full grid place-items-center font-bold text-[13px] ${avatarFor(slug)}`}
+        >
+          {initials}
+        </span>
       )}
     </div>
   );

@@ -114,13 +114,25 @@ function AdsPage() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="bg-media text-media-foreground">
-        <div className="mx-auto max-w-3xl px-4 sm:px-6 py-12 sm:py-16 text-center">
+      {/* CTA — bg-media her temada koyu kalır; beyaz bant yok */}
+      <section className="relative overflow-hidden bg-media text-media-foreground border-t border-white/10">
+        <div
+          className="pointer-events-none absolute -right-24 -top-24 size-80 rounded-full bg-brand/12 blur-3xl"
+          aria-hidden
+        />
+        <div
+          className="pointer-events-none absolute -left-20 bottom-0 size-64 rounded-full bg-accent-purple/12 blur-3xl"
+          aria-hidden
+        />
+        <div className="relative mx-auto max-w-3xl px-4 sm:px-6 py-12 sm:py-16 text-center">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/15 text-brand px-3 h-7 text-[11px] font-bold uppercase tracking-wider ring-1 ring-brand/25 mb-5">
+            <ShieldCheck className="size-3.5" />
+            tepkimvar Pro
+          </span>
           <h2 className="font-display font-bold text-[20px] sm:text-[26px] leading-snug">
             tepkimvar Pro ile müşteri tabanınızı büyütün
           </h2>
-          <p className="mt-3 text-[13px] sm:text-[14px] text-media-foreground/75 max-w-md mx-auto">
+          <p className="mt-3 text-[13px] sm:text-[14px] text-media-foreground/75 max-w-md mx-auto leading-relaxed">
             Çözüm sunan markalar arasına katılın; Pro üyelik avantajlarından yararlanın.
           </p>
           <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">

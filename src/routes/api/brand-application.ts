@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { eq } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { HttpError, errorResponse, rateLimit, requireUser } from "@/lib/server/guard";
+import { ensureDbPatches } from "@/lib/server/ensure-db-patches";
 
 function slugify(name: string): string {
   return name
@@ -23,6 +24,7 @@ export const Route = createFileRoute("/api/brand-application")({
     handlers: {
       POST: async ({ request }) => {
         try {
+          await ensureDbPatches();
           const user = await requireUser(request);
           rateLimit(`brand-app:${user.id}`, 3, 24 * 60 * 60_000);
 
