@@ -115,24 +115,24 @@ function AdsPage() {
       </section>
 
       {/* CTA */}
-      <section className="bg-ink text-paper">
+      <section className="bg-media text-media-foreground">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 py-12 sm:py-16 text-center">
           <h2 className="font-display font-bold text-[20px] sm:text-[26px] leading-snug">
             tepkimvar Pro ile müşteri tabanınızı büyütün
           </h2>
-          <p className="mt-3 text-[13px] sm:text-[14px] text-paper/75 max-w-md mx-auto">
+          <p className="mt-3 text-[13px] sm:text-[14px] text-media-foreground/75 max-w-md mx-auto">
             Çözüm sunan markalar arasına katılın; Pro üyelik avantajlarından yararlanın.
           </p>
           <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
             <a
               href={siteContactMailto("Pro üyelik")}
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-card text-brand px-6 h-11 text-[13px] font-semibold hover:brightness-105 transition"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-brand text-brand-foreground px-6 h-11 text-[13px] font-semibold hover:bg-brand-hover transition"
             >
               Pro üyelik için iletişim
             </a>
             <Link
               to="/register/marka-basvuru"
-              className="inline-flex items-center justify-center gap-2 rounded-full ring-1 ring-paper/30 text-paper px-6 h-11 text-[13px] font-semibold hover:bg-paper/10 transition"
+              className="inline-flex items-center justify-center gap-2 rounded-full ring-1 ring-white/25 text-media-foreground px-6 h-11 text-[13px] font-semibold hover:bg-white/10 transition"
             >
               Marka başvurusu yap
             </Link>

@@ -158,7 +158,7 @@ function Home() {
   return (
     <div className="min-h-screen bg-paper">
       {/* Top announcement bar */}
-      <div className="bg-ink text-paper/85 dark:bg-surface dark:text-navy text-[12.5px]">
+      <div className="bg-media text-media-foreground/85 text-[12.5px]">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 h-9 flex items-center justify-between">
           <span>
             Toplam çözülen şikayet:{" "}
@@ -168,7 +168,7 @@ function Home() {
           </span>
           <Link
             to="/markalar"
-            className="text-paper/55 dark:text-navy-mid hover:text-brand transition-colors text-[12px] sm:text-[12.5px]"
+            className="text-media-foreground/55 hover:text-brand transition-colors text-[12px] sm:text-[12.5px]"
           >
             Alışverişten önce marka skorunu sorgula →
           </Link>
@@ -408,33 +408,33 @@ function Home() {
       </section>
 
       {/* ÇÖZÜM BAŞARISI */}
-      <section className="bg-ink text-paper dark:bg-surface dark:text-ink">
+      <section className="bg-media text-media-foreground">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-16">
           <div className="text-center mb-8">
             <h2 className="font-display font-bold text-[26px]">
               Çözüm Başarısı
             </h2>
-            <p className="mt-2 text-paper/60 dark:text-navy-mid text-[13px]">
+            <p className="mt-2 text-media-foreground/60 text-[13px]">
               Şikayet çözüm oranı en yüksek markaların güncel listesi.
             </p>
           </div>
-          <div className="max-w-3xl mx-auto bg-card text-ink rounded-2xl overflow-hidden">
+          <div className="max-w-3xl mx-auto rounded-2xl overflow-hidden bg-white/[0.05] ring-1 ring-white/10">
             {top.map((b, i) => (
               <Link
                 key={b.slug}
                 to="/firma/$slug"
                 params={{ slug: b.slug }}
-                className={`flex items-center gap-4 px-5 py-4 hover:bg-surface transition ${i > 0 ? "border-t border-rule" : ""}`}
+                className={`flex items-center gap-4 px-5 py-4 hover:bg-white/[0.06] transition ${i > 0 ? "border-t border-white/10" : ""}`}
               >
-                <span className="grid place-items-center size-8 rounded-full bg-surface text-navy font-bold text-[13px] tabular-nums">
+                <span className="grid place-items-center size-8 rounded-full bg-white/10 text-media-foreground font-bold text-[13px] tabular-nums">
                   {i + 1}
                 </span>
-                <BrandAvatar name={b.name} slug={b.slug} logoUrl={b.logoUrl} website={b.website} size={40} rounded="rounded-lg" />
+                <BrandAvatar name={b.name} slug={b.slug} logoUrl={b.logoUrl} website={b.website} size={40} rounded="rounded-lg" tone="dark" />
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold text-[14px] truncate">
                     {b.name}
                   </div>
-                  <div className="text-[11.5px] text-navy-mid">
+                  <div className="text-[11.5px] text-media-foreground/55">
                     {b.categoryName}
                   </div>
                 </div>
@@ -442,7 +442,7 @@ function Home() {
                   <div className="text-[13px] font-bold text-brand tabular-nums">
                     %{b.resolutionRate.toFixed(0)}
                   </div>
-                  <div className="text-[10.5px] text-navy-mid">çözüm</div>
+                  <div className="text-[10.5px] text-media-foreground/55">çözüm</div>
                 </div>
               </Link>
             ))}
@@ -451,7 +451,7 @@ function Home() {
       </section>
 
       {/* ÖDÜLLER — split banner */}
-      <section className="bg-surface">
+      <section className="bg-paper border-y border-rule">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-16 grid md:grid-cols-2 gap-8 md:gap-10 items-center">
           <div>
             <div className="inline-flex items-center gap-2 text-[12px] font-bold uppercase tracking-wider text-brand mb-3">
@@ -473,18 +473,22 @@ function Home() {
             </Link>
           </div>
           <div className="relative w-full max-w-[320px] sm:max-w-[380px] md:max-w-[420px] lg:max-w-[460px] mx-auto md:ml-auto md:mr-0 mt-4 md:mt-0">
-            <div className="overflow-hidden rounded-2xl shadow-lift ring-1 ring-rule/60">
-              <img
-                src="/dogrulama-rozeti.jpg"
-                alt="Doğrulanmış marka rozeti — QR kod ile firma inceleme, müşteri memnuniyeti puanı"
-                width={1024}
-                height={494}
-                className="block w-full h-auto"
-                loading="lazy"
-              />
+            <div
+              className="relative overflow-hidden rounded-2xl p-1.5 bg-gradient-to-br from-media via-[oklch(0.22_0.025_262)] to-brand/30 shadow-lift ring-1 ring-white/10 hero-glow"
+            >
+              <div className="overflow-hidden rounded-[14px] ring-1 ring-white/10">
+                <img
+                  src="/dogrulama-rozeti.jpg"
+                  alt="Doğrulanmış marka rozeti — QR kod ile firma inceleme, müşteri memnuniyeti puanı"
+                  width={1024}
+                  height={494}
+                  className="block w-full h-auto"
+                  loading="lazy"
+                />
+              </div>
             </div>
-            <div className="absolute -top-2 -right-2 sm:-top-3 sm:-right-3 size-10 sm:size-14 rounded-full bg-accent-yellow pointer-events-none z-10 shadow-md" aria-hidden />
-            <div className="absolute -bottom-2 -left-2 sm:-bottom-3 sm:-left-3 size-8 sm:size-11 rounded-full bg-cyan-400 pointer-events-none z-10 shadow-md" aria-hidden />
+            <div className="absolute -top-2 -right-2 sm:-top-3 sm:-right-3 size-10 sm:size-14 rounded-full bg-brand/25 blur-sm pointer-events-none z-0" aria-hidden />
+            <div className="absolute -bottom-2 -left-2 sm:-bottom-3 sm:-left-3 size-8 sm:size-11 rounded-full bg-accent-purple/25 blur-sm pointer-events-none z-0" aria-hidden />
           </div>
         </div>
       </section>
@@ -608,18 +612,18 @@ function Home() {
       </section>
 
       {/* PURPLE CTA — Tüketici deneyimi */}
-      <section className="bg-ink text-paper dark:bg-surface dark:text-ink">
+      <section className="bg-media text-media-foreground">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 py-16 text-center">
           <h2 className="font-display font-bold text-[24px] leading-snug">
             Tüketici deneyimi, sizin markanız.
           </h2>
-          <p className="mt-3 text-[13.5px] text-paper/85 dark:text-navy leading-relaxed">
+          <p className="mt-3 text-[13.5px] text-media-foreground/80 leading-relaxed">
             Müşteri geri bildirimlerini şeffafça yönetin, çözüm hızınızı artırın
             ve marka itibarınızı güçlendirin.
           </p>
           <Link
             to="/reklam-cozumleri"
-            className="mt-6 inline-flex items-center gap-2 rounded-full bg-card text-accent-purple px-6 h-11 text-[13px] font-semibold hover:brightness-105 transition"
+            className="mt-6 inline-flex items-center gap-2 rounded-full bg-brand text-brand-foreground px-6 h-11 text-[13px] font-semibold hover:bg-brand-hover transition"
           >
             Detaylı Bilgi Al
           </Link>
@@ -627,45 +631,45 @@ function Home() {
       </section>
 
       {/* KEŞFET & PAYLAŞ */}
-      <section className="bg-surface border-t border-rule">
+      <section className="bg-paper border-t border-rule">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-12 sm:py-16">
           <motion.div
             initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 24 }}
             whileInView={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.2 }}
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="relative overflow-hidden rounded-[28px] bg-paper ring-1 ring-rule shadow-pop hero-glow"
+            className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-media via-[oklch(0.2_0.022_262)] to-[oklch(0.24_0.03_285)] ring-1 ring-white/10 shadow-lift hero-glow"
           >
             <div
-              className="pointer-events-none absolute -right-20 -top-20 size-[min(420px,55vw)] rounded-full bg-brand/10 blur-3xl"
+              className="pointer-events-none absolute -right-20 -top-20 size-[min(420px,55vw)] rounded-full bg-brand/15 blur-3xl"
               aria-hidden
             />
             <div
-              className="pointer-events-none absolute -bottom-16 -left-16 size-72 rounded-full bg-accent-purple/10 blur-3xl"
+              className="pointer-events-none absolute -bottom-16 -left-16 size-72 rounded-full bg-accent-purple/15 blur-3xl"
               aria-hidden
             />
 
             <div className="relative grid md:grid-cols-2 gap-4 sm:gap-5 p-4 sm:p-6 lg:p-8">
               {/* Keşfet */}
-              <div className="flex flex-col rounded-2xl bg-card/90 backdrop-blur-sm ring-1 ring-rule p-6 sm:p-8 lg:p-9">
+              <div className="flex flex-col rounded-2xl bg-white/[0.04] backdrop-blur-sm ring-1 ring-white/10 p-6 sm:p-8 lg:p-9">
                 <div className="flex flex-wrap items-center gap-2 mb-5">
-                  <span className="font-display font-black text-[18px] text-ink tracking-tight">
+                  <span className="font-display font-black text-[18px] text-media-foreground tracking-tight">
                     tepkimvar<span className="text-brand">.</span>
                   </span>
-                  <span className="h-4 w-px bg-rule-strong hidden sm:block" aria-hidden />
-                  <span className="text-[12px] font-medium text-navy-mid">
+                  <span className="h-4 w-px bg-white/15 hidden sm:block" aria-hidden />
+                  <span className="text-[12px] font-medium text-media-foreground/60">
                     Web sitemizi keşfedin:{" "}
                     <span className="text-brand font-semibold">tepkimvar.com</span>
                   </span>
                 </div>
 
-                <h2 className="font-display font-black text-[26px] sm:text-[32px] lg:text-[36px] leading-[1.06] tracking-[-0.03em] text-ink">
+                <h2 className="font-display font-black text-[26px] sm:text-[32px] lg:text-[36px] leading-[1.06] tracking-[-0.03em] text-media-foreground">
                   Sesini duyur,
                   <br />
                   <span className="text-gradient-brand">çözümü takip et!</span>
                 </h2>
 
-                <p className="mt-4 text-[14px] leading-relaxed text-navy max-w-md">
+                <p className="mt-4 text-[14px] leading-relaxed text-media-foreground/75 max-w-md">
                   Alışverişten önce marka skorunu sorgula; çözüm oranı, yanıt hızı ve
                   gerçek kullanıcı deneyimlerini gör.
                 </p>
@@ -679,18 +683,18 @@ function Home() {
                 </Link>
               </div>
 
-              {/* Paylaş — Keşfet kartı ile aynı stil */}
-              <div className="flex flex-col rounded-2xl bg-card/90 backdrop-blur-sm ring-1 ring-rule p-6 sm:p-8 lg:p-9">
-                <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-brand-soft text-brand px-3 h-7 text-[11px] font-bold uppercase tracking-wider">
+              {/* Paylaş */}
+              <div className="flex flex-col rounded-2xl bg-white/[0.04] backdrop-blur-sm ring-1 ring-white/10 p-6 sm:p-8 lg:p-9">
+                <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-brand/20 text-brand px-3 h-7 text-[11px] font-bold uppercase tracking-wider ring-1 ring-brand/25">
                   <MessageCircle className="size-3.5" />
                   Topluluk
                 </span>
 
-                <h3 className="mt-5 font-display font-black text-[24px] sm:text-[28px] leading-[1.1] tracking-[-0.02em] text-ink">
+                <h3 className="mt-5 font-display font-black text-[24px] sm:text-[28px] leading-[1.1] tracking-[-0.02em] text-media-foreground">
                   Deneyimini paylaş!
                 </h3>
 
-                <p className="mt-4 text-[14px] leading-relaxed text-navy max-w-md">
+                <p className="mt-4 text-[14px] leading-relaxed text-media-foreground/75 max-w-md">
                   Kullandığın siteler hakkında gerçek deneyimini anlat. Yorumunu bırak,
                   başkalarının doğru karar vermesine yardımcı ol.
                 </p>

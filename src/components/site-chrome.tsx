@@ -217,7 +217,7 @@ export function SiteFooter() {
     ["İletişim", "/iletisim"],
   ] as const;
   return (
-    <footer className="mt-0 bg-ink text-paper/80 dark:bg-surface dark:text-navy border-t border-transparent dark:border-rule">
+    <footer className="mt-0 bg-media text-media-foreground/80 border-t border-white/10">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 py-14">
         <div className="flex items-center justify-between mb-10">
           <Link to="/" className="font-display font-black text-[22px] tracking-tight text-paper dark:text-ink">

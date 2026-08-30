@@ -165,13 +165,31 @@ export function BrandProfileComplaintCard({
 }
 
 export function BrandAvatar({
-  name, slug, logoUrl, website, size = 48, rounded = "rounded-xl",
-}: { name: string; slug: string; logoUrl?: string | null; website?: string | null; size?: number; rounded?: string }) {
+  name,
+  slug,
+  logoUrl,
+  website,
+  size = 48,
+  rounded = "rounded-xl",
+  tone = "light",
+}: {
+  name: string;
+  slug: string;
+  logoUrl?: string | null;
+  website?: string | null;
+  size?: number;
+  rounded?: string;
+  tone?: "light" | "dark";
+}) {
   const src = brandLogoUrl({ logoUrl, website, slug, size: size * 2 });
   const initials = name.slice(0, 2).toUpperCase();
+  const shell =
+    tone === "dark"
+      ? "ring-white/15 bg-white/10"
+      : "ring-rule bg-card";
   return (
     <div
-      className={`shrink-0 ${rounded} overflow-hidden ring-1 ring-rule bg-card grid place-items-center`}
+      className={`shrink-0 ${rounded} overflow-hidden ring-1 ${shell} grid place-items-center`}
       style={{ width: size, height: size }}
     >
       {src ? (
@@ -179,7 +197,7 @@ export function BrandAvatar({
           src={src}
           alt={name}
           loading="lazy"
-          className="w-full h-full object-contain"
+          className="w-[88%] h-[88%] object-contain"
           onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
         />
       ) : (
