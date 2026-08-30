@@ -36,6 +36,7 @@ const DOMAIN_OVERRIDES = {
   "lord-palace-casino": "lordpalacecasino.com",
   istanbulbahis: "istanbulbahis.com",
   jojobet: "jojobet.com",
+  matbet: "matbet.com",
   mavibet: "mavibet.com",
   holiganbet: "holiganbet.com",
 };
@@ -43,8 +44,6 @@ const DOMAIN_OVERRIDES = {
 const LOGO_OVERRIDES = {
   matbet: "/brand-logos/matbet.png",
 };
-
-const NO_WEBSITE = new Set(["matbet"]);
 
 function logoUrl(name, slug) {
   if (LOGO_OVERRIDES[slug]) return LOGO_OVERRIDES[slug];
@@ -81,7 +80,7 @@ for (const name of names) {
     continue;
   }
   const dom = DOMAIN_OVERRIDES[slug] ?? `${slug.replace(/-/g, "")}.com`;
-  const website = NO_WEBSITE.has(slug) ? null : dom.startsWith("http") ? dom : `https://${dom}`;
+  const website = dom.startsWith("http") ? dom : `https://${dom}`;
   const total = rnd(20, 180);
   const resolvedPct = rnd(8, 35);
   const resolved = Math.round((total * resolvedPct) / 100);
@@ -101,4 +100,46 @@ for (const name of names) {
 
 const [{ n }] = await sql`SELECT count(*)::int n FROM brands WHERE category_id = ${cat.id}`;
 console.log(`Eklendi: ${added}, atlandı: ${skipped}, kategori toplam: ${n}`);
+
+/** Mevcut kayıtları bilişim-teknoloji kategorisine taşır / günceller */
+const ENSURE_BILISIM = [
+  { name: "Matbet", slug: "matbet", website: "https://matbet.com", logo_url: "/brand-logos/matbet.png" },
+];
+
+let ensured = 0;
+for (const b of ENSURE_BILISIM) {
+  const [row] = await sql`SELECT id FROM brands WHERE slug = ${b.slug}`;
+  if (row) {
+    await sql`
+      UPDATE brands SET
+        name = ${b.name},
+        category_id = ${cat.id},
+        website = ${b.website},
+        logo_url = ${b.logo_url},
+        is_active = true,
+        updated_at = now()
+      WHERE id = ${row.id}`;
+    ensured++;
+    console.log(`  ↻ ${b.name} → bilisim-teknoloji`);
+  } else {
+    const total = rnd(40, 220);
+    const resolvedPct = rnd(12, 38);
+    const resolved = Math.round((total * resolvedPct) / 100);
+    await sql`
+      INSERT INTO brands (
+        slug, name, category_id, website, city, logo_url, verified, premium,
+        rating, rating_count, total_complaints, complaints_resolved,
+        resolution_rate, avg_response_minutes, is_active
+      ) VALUES (
+        ${b.slug}, ${b.name}, ${cat.id}, ${b.website}, ${"İstanbul"},
+        ${b.logo_url}, false, false,
+        ${(rnd(22, 38) / 10).toFixed(2)}, ${rnd(20, 180)}, ${total},
+        ${resolved}, ${resolvedPct}, ${rnd(90, 2400)}, true
+      )`;
+    ensured++;
+    console.log(`  + ${b.name} → bilisim-teknoloji`);
+  }
+}
+if (ensured) console.log(`Bilişim upsert: ${ensured} marka`);
+
 await sql.end();

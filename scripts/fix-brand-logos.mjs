@@ -16,9 +16,14 @@ import { fileURLToPath } from "node:url";
 const __dir = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dir, "..");
 
-/** Site olmayan markalar — public/brand-logos/ altında barındırılır */
-const STATIC_LOGOS = {
-  matbet: "/brand-logos/matbet.png",
+/** Yerel logo + website — bilişim-teknoloji kategorisinde sabit markalar */
+const STATIC_BRANDS = {
+  matbet: {
+    name: "Matbet",
+    logo: "/brand-logos/matbet.png",
+    website: "https://matbet.com",
+    category: "bilisim-teknoloji",
+  },
 };
 
 const FAVICON_PROXY = ["google.com/s2/favicons", "gstatic.com/favicon", "duckduckgo.com/ip3"];
@@ -34,7 +39,7 @@ const GAMBLING_RE = /bet|bahis|casino|slot|poker|rulet|kumar|gambling/i;
 
 const DOMAIN_OVERRIDES = {
   jojobet: "jojobet.com",
-  matbet: null,
+  matbet: "matbet.com",
   mavibet: "mavibet.com",
   holiganbet: "holiganbet.com",
   casibom: "casibom.com",
@@ -163,13 +168,14 @@ async function trySiteIcons(domain) {
 }
 
 async function bestLogo(slug, name, website) {
-  if (STATIC_LOGOS[slug]) {
-    const localPath = join(ROOT, "public", STATIC_LOGOS[slug].replace(/^\//, ""));
+  const staticBrand = STATIC_BRANDS[slug];
+  if (staticBrand) {
+    const localPath = join(ROOT, "public", staticBrand.logo.replace(/^\//, ""));
     try {
       const buf = readFileSync(localPath);
-      return { url: STATIC_LOGOS[slug], buf, type: "image/png", size: buf.length, src: "static" };
+      return { url: staticBrand.logo, buf, type: "image/png", size: buf.length, src: "static" };
     } catch {
-      return { url: STATIC_LOGOS[slug], buf: null, type: "image/png", size: 0, src: "static" };
+      return { url: staticBrand.logo, buf: null, type: "image/png", size: 0, src: "static" };
     }
   }
 
@@ -246,15 +252,33 @@ for (const row of toFix) {
 
 console.log(`Güncellenen logo: ${updated}`);
 
-for (const [slug] of Object.entries(STATIC_LOGOS)) {
-  const hit = await bestLogo(slug, slug, null);
-  const logoUrl = hit ? await persistLogo(slug, hit) : STATIC_LOGOS[slug];
+for (const [slug, meta] of Object.entries(STATIC_BRANDS)) {
+  const hit = await bestLogo(slug, meta.name, meta.website);
+  const logoUrl = hit ? await persistLogo(slug, hit) : meta.logo;
+  const [catRow] = await sql`SELECT id FROM categories WHERE slug = ${meta.category}`;
+  if (!catRow) continue;
+
   const rows = await sql`
-    UPDATE brands SET logo_url = ${logoUrl}, website = NULL, updated_at = now()
+    UPDATE brands SET
+      name = ${meta.name},
+      logo_url = ${logoUrl},
+      website = ${meta.website},
+      category_id = ${catRow.id},
+      is_active = true,
+      updated_at = now()
     WHERE slug = ${slug}
     RETURNING slug
   `;
-  if (rows.length) console.log(`  Sabit logo: ${slug} → ${logoUrl}`);
+  if (rows.length) {
+    console.log(`  Sabit marka: ${slug} → ${meta.category}, ${meta.website}`);
+    continue;
+  }
+
+  await sql`
+    INSERT INTO brands (slug, name, category_id, website, city, logo_url, verified, premium, is_active)
+    VALUES (${slug}, ${meta.name}, ${catRow.id}, ${meta.website}, ${"İstanbul"}, ${logoUrl}, false, false, true)
+  `;
+  console.log(`  + Sabit marka eklendi: ${slug} → ${meta.category}`);
 }
 
 await sql.end();
