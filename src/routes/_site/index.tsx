@@ -626,73 +626,80 @@ function Home() {
         </div>
       </section>
 
-      {/* KEŞFET & PAYLAŞ — gradyan banner */}
-      <section>
+      {/* KEŞFET & PAYLAŞ */}
+      <section className="bg-surface border-t border-rule">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-12 sm:py-16">
           <motion.div
-            initial={
-              reduceMotion ? { opacity: 0 } : { opacity: 0, y: 28, scale: 0.98 }
-            }
-            whileInView={
-              reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }
-            }
-            viewport={{ once: true, amount: 0.25 }}
-            transition={{ type: "spring", damping: 22, stiffness: 110 }}
-            className="relative overflow-hidden rounded-3xl ring-1 ring-rule shadow-lift"
+            initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 24 }}
+            whileInView={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className="relative overflow-hidden rounded-[28px] bg-paper ring-1 ring-rule shadow-pop hero-glow"
           >
             <div
-              className="absolute inset-0 bg-gradient-to-br from-ink via-[#152535] to-brand"
+              className="pointer-events-none absolute -right-20 -top-20 size-[min(420px,55vw)] rounded-full bg-brand/10 blur-3xl"
               aria-hidden
             />
             <div
-              className="absolute inset-0 opacity-60 bg-[radial-gradient(ellipse_80%_60%_at_0%_0%,oklch(0.72_0.14_195/0.35),transparent_55%),radial-gradient(ellipse_70%_50%_at_100%_100%,oklch(0.55_0.18_290/0.25),transparent_50%)]"
-              aria-hidden
-            />
-            <div
-              className="absolute -top-24 -right-24 size-64 rounded-full bg-brand/20 blur-3xl"
+              className="pointer-events-none absolute -bottom-16 -left-16 size-72 rounded-full bg-accent-purple/10 blur-3xl"
               aria-hidden
             />
 
-            <div className="relative grid lg:grid-cols-2 gap-10 lg:gap-12 p-8 sm:p-10 lg:p-14">
-              <div className="flex flex-col">
-                <div className="font-display font-black text-[22px] sm:text-[26px] tracking-tight text-paper leading-none">
-                  tepkimvar<span className="text-brand">.</span>
-                </div>
-                <p className="mt-3 text-[13px] sm:text-[14px] text-paper/65">
-                  Web Sitemizi Keşfedin:{" "}
-                  <span className="font-semibold text-brand">tepkimvar.com</span>
-                </p>
-
-                <h2 className="mt-8 font-display font-black text-[28px] sm:text-[34px] lg:text-[38px] leading-[1.08] tracking-[-0.02em] text-paper">
-                  Sesini Duyur,
-                  <br />
-                  <span className="bg-gradient-to-r from-brand to-[oklch(0.72_0.16_290)] bg-clip-text text-transparent">
-                    Çözümü Takip Et!
+            <div className="relative grid md:grid-cols-2 gap-4 sm:gap-5 p-4 sm:p-6 lg:p-8">
+              {/* Keşfet */}
+              <div className="flex flex-col rounded-2xl bg-card/90 backdrop-blur-sm ring-1 ring-rule p-6 sm:p-8 lg:p-9">
+                <div className="flex flex-wrap items-center gap-2 mb-5">
+                  <span className="font-display font-black text-[18px] text-ink tracking-tight">
+                    tepkimvar<span className="text-brand">.</span>
                   </span>
+                  <span className="h-4 w-px bg-rule-strong hidden sm:block" aria-hidden />
+                  <span className="text-[12px] font-medium text-navy-mid">
+                    Web sitemizi keşfedin:{" "}
+                    <span className="text-brand font-semibold">tepkimvar.com</span>
+                  </span>
+                </div>
+
+                <h2 className="font-display font-black text-[26px] sm:text-[32px] lg:text-[36px] leading-[1.06] tracking-[-0.03em] text-ink">
+                  Sesini duyur,
+                  <br />
+                  <span className="text-gradient-brand">çözümü takip et!</span>
                 </h2>
+
+                <p className="mt-4 text-[14px] leading-relaxed text-navy max-w-md">
+                  Alışverişten önce marka skorunu sorgula; çözüm oranı, yanıt hızı ve
+                  gerçek kullanıcı deneyimlerini gör.
+                </p>
 
                 <Link
                   to="/markalar"
-                  className="mt-8 inline-flex w-fit items-center gap-2 rounded-full bg-brand text-brand-foreground px-6 h-11 text-[13px] sm:text-[14px] font-semibold shadow-soft hover:brightness-110 transition"
+                  className="mt-7 inline-flex w-fit items-center gap-2 rounded-full bg-brand text-brand-foreground px-6 h-11 text-[13px] font-semibold shadow-soft hover:bg-brand-hover transition"
                 >
-                  Tereddüt Yok, Sorgula
+                  Tereddüt yok, sorgula
                   <ArrowRight className="size-4" />
                 </Link>
               </div>
 
-              <div className="flex flex-col justify-center border-t border-paper/10 pt-8 lg:border-t-0 lg:border-l lg:pl-12 lg:pt-0">
-                <h3 className="font-display font-bold text-[22px] sm:text-[26px] text-paper leading-snug">
-                  Deneyimini Paylaş!
+              {/* Paylaş */}
+              <div className="flex flex-col rounded-2xl bg-gradient-to-br from-ink to-navy-deep text-paper p-6 sm:p-8 lg:p-9 ring-1 ring-ink/10">
+                <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-brand/20 text-brand px-3 h-7 text-[11px] font-bold uppercase tracking-wider">
+                  <MessageCircle className="size-3.5" />
+                  Topluluk
+                </span>
+
+                <h3 className="mt-5 font-display font-black text-[24px] sm:text-[28px] leading-[1.1] tracking-[-0.02em]">
+                  Deneyimini paylaş!
                 </h3>
-                <p className="mt-4 text-[14px] sm:text-[15px] text-paper/80 leading-relaxed">
+
+                <p className="mt-4 text-[14px] leading-relaxed text-paper/75">
                   Kullandığın siteler hakkında gerçek deneyimini anlat. Yorumunu bırak,
-                  başkalarının doğru karar vermesine yardımcı ol!
+                  başkalarının doğru karar vermesine yardımcı ol.
                 </p>
+
                 <Link
                   to="/sikayet-yaz"
-                  className="mt-6 inline-flex w-fit items-center gap-2 rounded-full ring-1 ring-paper/25 text-paper px-6 h-11 text-[13px] font-semibold hover:bg-paper/10 transition"
+                  className="mt-7 inline-flex w-fit items-center gap-2 rounded-full bg-paper text-ink px-6 h-11 text-[13px] font-semibold hover:brightness-105 transition"
                 >
-                  Şikayetini Yaz
+                  Şikayetini yaz
                   <ArrowRight className="size-4" />
                 </Link>
               </div>
