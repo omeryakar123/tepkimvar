@@ -61,7 +61,12 @@ export const Route = createFileRoute("/api/admin/stats")({
 
           const url = process.env.DATABASE_URL;
           let complaint_flow: { day: string; pending: number; approved: number; answered: number; resolved: number; total: number }[] = [];
-          let page_views = { total: 0, today: 0, week: 0, daily: { day: string; views: number }[] };
+          let page_views: {
+            total: number;
+            today: number;
+            week: number;
+            daily: { day: string; views: number }[];
+          } = { total: 0, today: 0, week: 0, daily: [] };
 
           if (url) {
             const pg = postgres(url, { max: 1 });
