@@ -67,6 +67,12 @@ export const Route = createFileRoute("/api/admin/stats")({
             week: number;
             daily: { day: string; views: number }[];
           } = { total: 0, today: 0, week: 0, daily: [] };
+          let user_signups: {
+            total: number;
+            today: number;
+            week: number;
+            daily: { day: string; signups: number }[];
+          } = { total: 0, today: 0, week: 0, daily: [] };
 
           if (url) {
             const pg = postgres(url, { max: 1 });
@@ -98,8 +104,26 @@ export const Route = createFileRoute("/api/admin/stats")({
               WHERE created_at >= now() - interval '6 days'
               GROUP BY 1 ORDER BY 1
             `.catch(() => []);
+            const [us] = await pg`
+              SELECT
+                count(*)::int AS total,
+                count(*) FILTER (
+                  WHERE created_at >= date_trunc('day', now() AT TIME ZONE 'Europe/Istanbul')
+                )::int AS today,
+                count(*) FILTER (WHERE created_at >= now() - interval '7 days')::int AS week
+              FROM "user"
+            `.catch(() => [{ total: 0, today: 0, week: 0 }]);
+            const usDaily = await pg`
+              SELECT
+                to_char(date_trunc('day', created_at AT TIME ZONE 'Europe/Istanbul'), 'YYYY-MM-DD') AS day,
+                count(*)::int AS signups
+              FROM "user"
+              WHERE created_at >= now() - interval '6 days'
+              GROUP BY 1 ORDER BY 1
+            `.catch(() => []);
             await pg.end();
             page_views = { ...pv, daily: pvDaily };
+            user_signups = { ...us, daily: usDaily };
           }
 
           return Response.json({
@@ -114,6 +138,7 @@ export const Route = createFileRoute("/api/admin/stats")({
             verified,
             complaint_flow,
             page_views,
+            user_signups,
           });
         } catch (e) {
           return errorResponse(e);

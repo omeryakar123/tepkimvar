@@ -38,6 +38,7 @@ type Stats = {
   verified: number;
   complaint_flow: FlowDay[];
   page_views: { total: number; today: number; week: number; daily: { day: string; views: number }[] };
+  user_signups: { total: number; today: number; week: number; daily: { day: string; signups: number }[] };
 };
 
 function AdminDashboard() {
@@ -54,6 +55,8 @@ function AdminDashboard() {
   const maxFlow = Math.max(1, ...flow.map((d) => d.total));
   const pvDaily = s?.page_views?.daily ?? [];
   const maxPv = Math.max(1, ...pvDaily.map((d) => d.views));
+  const signupDaily = s?.user_signups?.daily ?? [];
+  const maxSignup = Math.max(1, ...signupDaily.map((d) => d.signups));
 
   return (
     <div className="px-6 lg:px-10 py-8 space-y-8">
@@ -66,6 +69,8 @@ function AdminDashboard() {
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
         <Stat icon={Building2} label="Toplam Firma" value={s?.brands} tone="brand" />
         <Stat icon={Users} label="Toplam Kullanıcı" value={s?.users} tone="ink" />
+        <Stat icon={Users} label="Bugün kayıt olan" value={s?.user_signups?.today} tone="brand" />
+        <Stat icon={Users} label="Bu hafta kayıt (7g)" value={s?.user_signups?.week} tone="ink" />
         <Stat icon={MessageSquare} label="Toplam Şikayet" value={s?.complaints} tone="ink" />
         <Stat icon={Clock} label="Bugünkü Şikayet" value={s?.today} tone="brand" />
         <Stat icon={AlertOctagon} label="Bekleyen Onay" value={s?.pending} tone="warn" />
@@ -76,7 +81,7 @@ function AdminDashboard() {
         <Stat icon={ShieldCheck} label="Doğrulanmış Firma" value={s?.verified} tone="brand" />
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-4">
+      <div className="grid lg:grid-cols-2 xl:grid-cols-3 gap-4">
         <div className="bg-card rounded-2xl ring-1 ring-rule p-6">
           <h2 className="font-display text-lg font-bold text-ink">Şikayet Akışı</h2>
           <p className="text-[13px] text-navy-mid mt-1">Son 7 günde durum dağılımı (canlı veri).</p>
@@ -154,6 +159,32 @@ function AdminDashboard() {
           <div className="mt-4 text-[12px] text-navy-mid">
             Toplam: <b className="text-ink">{s?.page_views?.total?.toLocaleString("tr-TR") ?? "—"}</b>
             {" · "}Bu hafta: <b className="text-ink">{s?.page_views?.week?.toLocaleString("tr-TR") ?? "—"}</b>
+          </div>
+        </div>
+
+        <div className="bg-card rounded-2xl ring-1 ring-rule p-6">
+          <h2 className="font-display text-lg font-bold text-ink">Günlük Kayıtlar</h2>
+          <p className="text-[13px] text-navy-mid mt-1">Son 7 günde yeni üye kayıtları.</p>
+          {signupDaily.length === 0 ? (
+            <p className="mt-8 text-center text-navy-mid text-sm">Henüz kayıt verisi yok.</p>
+          ) : (
+            <div className="mt-6 flex items-end gap-2 h-44">
+              {signupDaily.map((d) => (
+                <div key={d.day} className="flex-1 flex flex-col items-center gap-1">
+                  <div
+                    className="w-full rounded-md bg-accent-purple/80 min-h-[4px]"
+                    style={{ height: `${(d.signups / maxSignup) * 144}px` }}
+                  />
+                  <span className="text-[10px] text-navy-mid">{d.day.slice(5)}</span>
+                  <span className="text-[10px] font-semibold text-ink">{d.signups}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="mt-4 text-[12px] text-navy-mid">
+            Toplam üye: <b className="text-ink">{s?.user_signups?.total?.toLocaleString("tr-TR") ?? "—"}</b>
+            {" · "}Bugün: <b className="text-ink">{s?.user_signups?.today?.toLocaleString("tr-TR") ?? "—"}</b>
+            {" · "}Bu hafta: <b className="text-ink">{s?.user_signups?.week?.toLocaleString("tr-TR") ?? "—"}</b>
           </div>
         </div>
       </div>
