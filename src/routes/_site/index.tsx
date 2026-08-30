@@ -611,19 +611,25 @@ function Home() {
         </div>
       </section>
 
-      {/* Pro CTA — koyu gradyan (beyaz bant yok) */}
-      <section className="bg-media text-media-foreground border-t border-white/10">
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 py-12 sm:py-16 overflow-hidden">
-          <div
-            className="pointer-events-none absolute -right-24 -top-24 size-80 rounded-full bg-brand/12 blur-3xl"
-            aria-hidden
-          />
-          <div
-            className="pointer-events-none absolute -left-20 bottom-0 size-64 rounded-full bg-accent-purple/12 blur-3xl"
-            aria-hidden
-          />
-          <div className="relative max-w-3xl mx-auto text-center">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/15 text-brand px-3 h-7 text-[11px] font-bold uppercase tracking-wider ring-1 ring-brand/25 mb-5">
+      {/* Pro + KEŞFET — site gradyanları, beyaz yok */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-media via-[oklch(0.17_0.018_262)] to-[oklch(0.13_0.022_285)] text-media-foreground">
+        <div
+          className="pointer-events-none absolute -right-32 -top-32 size-[min(520px,70vw)] rounded-full bg-brand/14 blur-3xl"
+          aria-hidden
+        />
+        <div
+          className="pointer-events-none absolute -left-24 top-1/3 size-80 rounded-full bg-accent-purple/14 blur-3xl"
+          aria-hidden
+        />
+        <div
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-brand/8 to-transparent"
+          aria-hidden
+        />
+
+        {/* Pro CTA */}
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 pt-12 sm:pt-16 pb-8 sm:pb-10">
+          <div className="max-w-3xl mx-auto text-center">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/15 text-brand px-3 h-7 text-[11px] font-bold uppercase tracking-wider ring-1 ring-brand/30 mb-5">
               <ShieldCheck className="size-3.5" />
               tepkimvar Pro
             </span>
@@ -636,49 +642,47 @@ function Home() {
             <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
               <a
                 href={siteContactMailto("Pro üyelik")}
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-brand text-brand-foreground px-6 h-11 text-[13px] font-semibold hover:bg-brand-hover transition"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-brand text-brand-foreground px-6 h-11 text-[13px] font-semibold hover:bg-brand-hover transition shadow-soft"
               >
                 Pro üyelik için iletişim
               </a>
               <Link
                 to="/register/marka-basvuru"
-                className="inline-flex items-center justify-center gap-2 rounded-full ring-1 ring-white/25 text-media-foreground px-6 h-11 text-[13px] font-semibold hover:bg-white/10 transition"
+                className="inline-flex items-center justify-center gap-2 rounded-full ring-1 ring-brand/40 text-media-foreground px-6 h-11 text-[13px] font-semibold hover:bg-brand/10 transition"
               >
                 Marka başvurusu yap
               </Link>
             </div>
           </div>
         </div>
-      </section>
 
-      {/* KEŞFET & PAYLAŞ */}
-      <section className="bg-media text-media-foreground pb-14 sm:pb-16">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        {/* KEŞFET & PAYLAŞ */}
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 pb-14 sm:pb-16">
           <motion.div
             initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 24 }}
             whileInView={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.2 }}
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[oklch(0.19_0.018_262)] via-[oklch(0.22_0.025_262)] to-[oklch(0.26_0.03_285)] ring-1 ring-white/10 shadow-lift hero-glow"
+            className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[oklch(0.15_0.02_262)] via-[oklch(0.19_0.028_285)] to-[oklch(0.22_0.04_162)] ring-1 ring-brand/25 shadow-lift"
           >
             <div
-              className="pointer-events-none absolute -right-20 -top-20 size-[min(420px,55vw)] rounded-full bg-brand/15 blur-3xl"
+              className="pointer-events-none absolute -right-20 -top-20 size-[min(420px,55vw)] rounded-full bg-brand/18 blur-3xl"
               aria-hidden
             />
             <div
-              className="pointer-events-none absolute -bottom-16 -left-16 size-72 rounded-full bg-accent-purple/15 blur-3xl"
+              className="pointer-events-none absolute -bottom-16 -left-16 size-72 rounded-full bg-accent-purple/18 blur-3xl"
               aria-hidden
             />
 
-            <div className="relative grid md:grid-cols-2 gap-4 sm:gap-5 p-4 sm:p-6 lg:p-8">
+            <div className="relative grid md:grid-cols-2 md:divide-x md:divide-brand/15 gap-0 p-4 sm:p-6 lg:p-8">
               {/* Keşfet */}
-              <div className="flex flex-col rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-sm ring-1 ring-white/12 p-6 sm:p-8 lg:p-9">
+              <div className="flex flex-col p-4 sm:p-6 lg:p-8 md:pr-8 lg:pr-10">
                 <div className="flex flex-wrap items-center gap-2 mb-5">
                   <span className="font-display font-black text-[18px] text-media-foreground tracking-tight">
                     tepkimvar<span className="text-brand">.</span>
                   </span>
-                  <span className="h-4 w-px bg-white/15 hidden sm:block" aria-hidden />
-                  <span className="text-[12px] font-medium text-media-foreground/60">
+                  <span className="h-4 w-px bg-brand/25 hidden sm:block" aria-hidden />
+                  <span className="text-[12px] font-medium text-media-foreground/65">
                     Web sitemizi keşfedin:{" "}
                     <span className="text-brand font-semibold">tepkimvar.com</span>
                   </span>
@@ -704,15 +708,15 @@ function Home() {
                 </Link>
               </div>
 
-              {/* Paylaş — sol kartla aynı koyu cam stili */}
-              <div className="flex flex-col rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-sm ring-1 ring-white/12 p-6 sm:p-8 lg:p-9">
+              {/* Paylaş */}
+              <div className="flex flex-col p-4 sm:p-6 lg:p-8 md:pl-8 lg:pl-10 border-t md:border-t-0 border-brand/15">
                 <div className="flex flex-wrap items-center gap-2 mb-5">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/20 text-brand px-3 h-7 text-[11px] font-bold uppercase tracking-wider ring-1 ring-brand/25">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/20 text-brand px-3 h-7 text-[11px] font-bold uppercase tracking-wider ring-1 ring-brand/30">
                     <MessageCircle className="size-3.5" />
                     Topluluk
                   </span>
-                  <span className="h-4 w-px bg-white/15 hidden sm:block" aria-hidden />
-                  <span className="text-[12px] font-medium text-media-foreground/60">
+                  <span className="h-4 w-px bg-brand/25 hidden sm:block" aria-hidden />
+                  <span className="text-[12px] font-medium text-media-foreground/65">
                     Deneyimini paylaş
                   </span>
                 </div>

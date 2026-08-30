@@ -5,6 +5,7 @@ import { authClient } from "@/lib/auth-client";
 import { highestRoleRedirect, type AppRole } from "@/hooks/use-auth";
 import { PhoneInput } from "@/components/phone-input";
 import { toE164Tr } from "@/lib/phone";
+import { SiteLogoHeader } from "@/components/site-logo-mark";
 
 type Mode = "login" | "register" | "reset";
 type Variant = "user" | "admin" | "brand";
@@ -131,15 +132,7 @@ export function AuthForm({
   return (
     <div className="min-h-screen bg-canvas grid place-items-center px-4 py-12">
       <div className="w-full max-w-md">
-        <Link to="/" className="flex items-center gap-2 justify-center mb-8">
-          <span className="grid place-items-center size-9 rounded-lg bg-brand text-brand-foreground font-black text-base">i</span>
-          <span className="font-display font-black text-[22px] tracking-tight text-ink">
-            tepkimvar<span className="text-brand">.</span>
-          </span>
-          {variant !== "user" && (
-            <span className="ml-2 text-[10px] uppercase tracking-wider font-bold bg-ink text-paper dark:bg-surface dark:text-ink px-2 py-0.5 rounded-full">{t.brand}</span>
-          )}
-        </Link>
+        <SiteLogoHeader badge={variant !== "user" ? t.brand : undefined} />
 
         <div className="bg-card rounded-2xl ring-1 ring-rule p-7">
           <h1 className="text-xl font-semibold tracking-tight text-ink">

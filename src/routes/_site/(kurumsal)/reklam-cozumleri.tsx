@@ -114,18 +114,18 @@ function AdsPage() {
         </div>
       </section>
 
-      {/* CTA — bg-media her temada koyu kalır; beyaz bant yok */}
-      <section className="relative overflow-hidden bg-media text-media-foreground border-t border-white/10">
+      {/* CTA — site gradyanları (bg-ink / beyaz yok) */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-media via-[oklch(0.17_0.018_262)] to-[oklch(0.13_0.022_285)] text-media-foreground">
         <div
-          className="pointer-events-none absolute -right-24 -top-24 size-80 rounded-full bg-brand/12 blur-3xl"
+          className="pointer-events-none absolute -right-24 -top-24 size-80 rounded-full bg-brand/14 blur-3xl"
           aria-hidden
         />
         <div
-          className="pointer-events-none absolute -left-20 bottom-0 size-64 rounded-full bg-accent-purple/12 blur-3xl"
+          className="pointer-events-none absolute -left-20 bottom-0 size-64 rounded-full bg-accent-purple/14 blur-3xl"
           aria-hidden
         />
         <div className="relative mx-auto max-w-3xl px-4 sm:px-6 py-12 sm:py-16 text-center">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/15 text-brand px-3 h-7 text-[11px] font-bold uppercase tracking-wider ring-1 ring-brand/25 mb-5">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/15 text-brand px-3 h-7 text-[11px] font-bold uppercase tracking-wider ring-1 ring-brand/30 mb-5">
             <ShieldCheck className="size-3.5" />
             tepkimvar Pro
           </span>
@@ -138,13 +138,13 @@ function AdsPage() {
           <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
             <a
               href={siteContactMailto("Pro üyelik")}
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-brand text-brand-foreground px-6 h-11 text-[13px] font-semibold hover:bg-brand-hover transition"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-brand text-brand-foreground px-6 h-11 text-[13px] font-semibold hover:bg-brand-hover transition shadow-soft"
             >
               Pro üyelik için iletişim
             </a>
             <Link
               to="/register/marka-basvuru"
-              className="inline-flex items-center justify-center gap-2 rounded-full ring-1 ring-white/25 text-media-foreground px-6 h-11 text-[13px] font-semibold hover:bg-white/10 transition"
+              className="inline-flex items-center justify-center gap-2 rounded-full ring-1 ring-brand/40 text-media-foreground px-6 h-11 text-[13px] font-semibold hover:bg-brand/10 transition"
             >
               Marka başvurusu yap
             </Link>
