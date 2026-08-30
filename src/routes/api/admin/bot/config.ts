@@ -32,6 +32,7 @@ function serializeConfig(c: Awaited<ReturnType<typeof getBotConfig>>) {
   return {
     brand_id: c.brandId,
     enabled: c.enabled,
+    generate_responses: c.generateResponses,
     daily_target: c.dailyTarget,
     min_rating: c.minRating,
     max_rating: c.maxRating,

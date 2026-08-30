@@ -9,6 +9,8 @@ const SLUG_DOMAIN_OVERRIDES: Record<string, string> = {
   "betwoon-casino": "betwoon.com",
   "casibom": "casibom.com",
   "jojobet": "jojobet.com",
+  "matbet": "matbet.com",
+  "mavibet": "mavibet.com",
   "holiganbet": "holiganbet.com",
   "meritking": "mrking.com",
   "grandpashabet": "grandpashabet.com",

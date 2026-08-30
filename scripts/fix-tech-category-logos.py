@@ -29,8 +29,20 @@ DOMAIN_OVERRIDES = {
     "mrking": ["mrking.com"],
     "mostbet": ["mostbet.com"],
     "1xbet": ["1xbet.com"],
+    "21-com": ["21.com"],
     "arcelik": ["arcelik.com.tr", "arcelik.com"],
     "playbet": ["playbet.io", "playbet.com"],
+    "grandpashabet": ["grandpashabet.com"],
+    "sans-casino": ["sanscasino.com"],
+    "lord-palace-casino": ["lordpalacecasino.com"],
+    "istanbulbahis": ["istanbulbahis.com"],
+    "jojobet": ["jojobet.com"],
+    "matbet": ["matbet.com"],
+    "mavibet": ["mavibet.com"],
+    "holiganbet": ["holiganbet.com"],
+    "casibom": ["casibom.com"],
+    "marsbahis": ["marsbahis.com"],
+    "stake": ["stake.com"],
 }
 
 GSTATIC_BAD = "t3.gstatic.com/faviconV2"

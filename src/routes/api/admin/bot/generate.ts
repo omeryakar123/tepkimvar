@@ -36,6 +36,7 @@ export const Route = createFileRoute("/api/admin/bot/generate")({
             rating?: number;
             language?: string;
             count?: number;
+            withResponse?: boolean;
           };
 
           const brandIds = parseBrandIds(b);
@@ -68,6 +69,7 @@ export const Route = createFileRoute("/api/admin/bot/generate")({
             rating,
             language,
             ignoreEnabled: true,
+            withResponse: b.withResponse,
           };
 
           const results =

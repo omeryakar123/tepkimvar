@@ -72,6 +72,7 @@ type Stats = {
 type BotConfig = {
   brand_id: string;
   enabled: boolean;
+  generate_responses: boolean;
   daily_target: number;
   min_rating: number;
   max_rating: number;
@@ -287,6 +288,7 @@ function AdminBotPage() {
     const ok = await apiSend("/api/admin/bot/config", "PUT", {
       brandId: config.brand_id,
       enabled: config.enabled,
+      generateResponses: config.generate_responses,
       dailyTarget: config.daily_target,
       minRating: config.min_rating,
       maxRating: config.max_rating,
@@ -504,6 +506,20 @@ function AdminBotPage() {
               />
               <span className="text-[13.5px] font-semibold text-ink">
                 Complaint Bot açık (günlük cron bu markayı işler)
+              </span>
+            </label>
+
+            <label className="flex items-center gap-3 md:col-span-2 xl:col-span-3">
+              <input
+                type="checkbox"
+                checked={config.generate_responses}
+                onChange={(e) =>
+                  setConfig({ ...config, generate_responses: e.target.checked })
+                }
+                className="size-4 accent-[var(--brand)]"
+              />
+              <span className="text-[13.5px] font-semibold text-ink">
+                Marka yanıtı üret (kapalıysa yalnızca cevapsız şikayet yazılır)
               </span>
             </label>
 
@@ -1165,11 +1181,13 @@ function GenerateModal({
   const [rating, setRating] = useState("");
   const [language, setLanguage] = useState("");
   const [count, setCount] = useState(1);
+  const [withResponse, setWithResponse] = useState(true);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (!open) return;
     setQuery("");
+    setWithResponse(true);
     setSelected(defaultBrand ? [defaultBrand] : []);
   }, [open, defaultBrand]);
 
@@ -1207,6 +1225,7 @@ function GenerateModal({
       rating: rating ? Number(rating) : undefined,
       language: language || undefined,
       count,
+      withResponse,
     });
     setBusy(false);
     if (!res) return;
@@ -1318,6 +1337,15 @@ function GenerateModal({
             </option>
           ))}
         </select>
+        <label className="flex items-center gap-3">
+          <input
+            type="checkbox"
+            checked={withResponse}
+            onChange={(e) => setWithResponse(e.target.checked)}
+            className="size-4 accent-[var(--brand)]"
+          />
+          <span className="text-[13.5px] font-medium text-ink">Marka yanıtı da üret</span>
+        </label>
         <label className="block">
           <span className="text-[12px] font-medium text-navy-mid">
             Marka başına adet (en fazla 10)

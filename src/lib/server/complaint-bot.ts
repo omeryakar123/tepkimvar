@@ -42,6 +42,7 @@ import {
 export type BotConfig = {
   brandId: string;
   enabled: boolean;
+  generateResponses: boolean;
   dailyTarget: number;
   minRating: number;
   maxRating: number;
@@ -58,6 +59,7 @@ export type BotConfig = {
 /** Kayıt yoksa bot KAPALI kabul edilir — mevcut markalar etkilenmez. */
 export const DEFAULT_BOT_CONFIG: Omit<BotConfig, "brandId" | "lastRunAt"> = {
   enabled: false,
+  generateResponses: true,
   dailyTarget: 3,
   minRating: 1,
   maxRating: 5,
@@ -98,6 +100,7 @@ function rowToConfig(row: typeof schema.brandBotConfigs.$inferSelect): BotConfig
   return {
     brandId: row.brandId,
     enabled: row.enabled,
+    generateResponses: row.generateResponses ?? true,
     dailyTarget: clamp(row.dailyTarget, 0, MAX_PER_RUN),
     minRating: clamp(row.minRating, 1, 5),
     maxRating: clamp(row.maxRating, 1, 5),
@@ -129,6 +132,7 @@ export async function getBotConfig(brandId: string): Promise<BotConfig> {
 
 export type BotConfigPatch = Partial<{
   enabled: boolean;
+  generateResponses: boolean;
   dailyTarget: number;
   minRating: number;
   maxRating: number;
@@ -153,6 +157,7 @@ export async function saveBotConfig(brandId: string, patch: BotConfigPatch): Pro
   const next: BotConfig = {
     brandId,
     enabled: patch.enabled ?? current.enabled,
+    generateResponses: patch.generateResponses ?? current.generateResponses,
     dailyTarget: clamp(Math.round(patch.dailyTarget ?? current.dailyTarget), 0, MAX_PER_RUN),
     minRating,
     // min > max girilirse sessizce düzelt (UI'da da engelli).
@@ -189,6 +194,7 @@ export async function saveBotConfig(brandId: string, patch: BotConfigPatch): Pro
   const values = {
     brandId,
     enabled: next.enabled,
+    generateResponses: next.generateResponses,
     dailyTarget: next.dailyTarget,
     minRating: next.minRating,
     maxRating: next.maxRating,
@@ -692,6 +698,8 @@ export async function runBotForBrand(opts: {
   language?: LanguageCode;
   /** Manuel çağrıda bot kapalı olsa da üret. */
   ignoreEnabled?: boolean;
+  /** Manuel üretimde marka yanıtı yazılsın mı (yoksa marka ayarı). */
+  withResponse?: boolean;
 }): Promise<BotRunResult> {
   const [brand] = await db
     .select({
@@ -725,6 +733,8 @@ export async function runBotForBrand(opts: {
   if (!config.enabled && !opts.ignoreEnabled) {
     return { ...base, status: "skipped", reason: "Bot kapalı" };
   }
+
+  const shouldGenerateResponse = opts.withResponse ?? config.generateResponses;
 
   if (running.has(opts.brandId)) {
     return { ...base, status: "skipped", reason: "Bu marka için çalışma sürüyor" };
@@ -822,29 +832,31 @@ export async function runBotForBrand(opts: {
       .orderBy(desc(schema.complaints.createdAt))
       .limit(MAX_RETRY_PER_RUN);
 
-    for (const item of stuck) {
-      try {
-        const retryRating = item.rating ?? generateRating(effectiveConfig);
-        const response = await generateComplaintResponse({
-          brandName: brand.name,
-          title: item.title,
-          body: item.body,
-          scenario: item.scenario ?? "customer_support",
-          config: { ...effectiveConfig, language: (item.language as LanguageCode) ?? effectiveConfig.language },
-          rating: retryRating,
-        });
-        await writeResponse({
-          complaintId: item.id,
-          text: response.text,
-          language: item.language ?? effectiveConfig.language,
-          botUserId,
-          generatedBy,
-          rating: retryRating,
-        });
-        result.responsesGenerated++;
-        result.retriedResponses++;
-      } catch (e) {
-        result.errors.push(`Yanıt yeniden denemesi başarısız (${item.id}): ${errText(e)}`);
+    if (shouldGenerateResponse) {
+      for (const item of stuck) {
+        try {
+          const retryRating = item.rating ?? generateRating(effectiveConfig);
+          const response = await generateComplaintResponse({
+            brandName: brand.name,
+            title: item.title,
+            body: item.body,
+            scenario: item.scenario ?? "customer_support",
+            config: { ...effectiveConfig, language: (item.language as LanguageCode) ?? effectiveConfig.language },
+            rating: retryRating,
+          });
+          await writeResponse({
+            complaintId: item.id,
+            text: response.text,
+            language: item.language ?? effectiveConfig.language,
+            botUserId,
+            generatedBy,
+            rating: retryRating,
+          });
+          result.responsesGenerated++;
+          result.retriedResponses++;
+        } catch (e) {
+          result.errors.push(`Yanıt yeniden denemesi başarısız (${item.id}): ${errText(e)}`);
+        }
       }
     }
 
@@ -918,34 +930,36 @@ export async function runBotForBrand(opts: {
         result.complaintsGenerated++;
         avoidTitles.unshift(candidate.title);
 
-        /* --- 3) Yanıt üret ------------------------------------------------- */
-        try {
-          const response = await generateComplaintResponse({
-            brandName: brand.name,
-            title: candidate.title,
-            body: candidate.body,
-            scenario: attemptScenario,
-            config: effectiveConfig,
-            rating,
-          });
-          await writeResponse({
-            complaintId,
-            text: response.text,
-            language: effectiveConfig.language,
-            botUserId,
-            generatedBy,
-            rating,
-          });
-          result.responsesGenerated++;
-        } catch (e) {
-          // Şikayet duruyor, yanıt yok: işaretle ki sonraki çalışmada
-          // YENİDEN ÜRETİLMESİN, sadece yanıtı tekrar denensin.
-          const message = errText(e);
-          result.errors.push(`Yanıt üretilemedi (${complaintId}): ${message}`);
-          await db
-            .update(schema.complaints)
-            .set({ botError: message.slice(0, 500), updatedAt: new Date() })
-            .where(eq(schema.complaints.id, complaintId));
+        /* --- 3) Yanıt üret (isteğe bağlı) ----------------------------------- */
+        if (shouldGenerateResponse) {
+          try {
+            const response = await generateComplaintResponse({
+              brandName: brand.name,
+              title: candidate.title,
+              body: candidate.body,
+              scenario: attemptScenario,
+              config: effectiveConfig,
+              rating,
+            });
+            await writeResponse({
+              complaintId,
+              text: response.text,
+              language: effectiveConfig.language,
+              botUserId,
+              generatedBy,
+              rating,
+            });
+            result.responsesGenerated++;
+          } catch (e) {
+            // Şikayet duruyor, yanıt yok: işaretle ki sonraki çalışmada
+            // YENİDEN ÜRETİLMESİN, sadece yanıtı tekrar denensin.
+            const message = errText(e);
+            result.errors.push(`Yanıt üretilemedi (${complaintId}): ${message}`);
+            await db
+              .update(schema.complaints)
+              .set({ botError: message.slice(0, 500), updatedAt: new Date() })
+              .where(eq(schema.complaints.id, complaintId));
+          }
         }
       }
     }

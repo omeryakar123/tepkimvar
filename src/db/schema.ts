@@ -420,6 +420,8 @@ export const brandBotConfigs = pgTable("brand_bot_configs", {
     .unique()
     .references(() => brands.id, { onDelete: "cascade" }),
   enabled: boolean("enabled").default(false).notNull(),
+  /** false ise şikayet üretilir ama marka yanıtı yazılmaz. */
+  generateResponses: boolean("generate_responses").default(true).notNull(),
   dailyTarget: integer("daily_target").default(3).notNull(),
   minRating: smallint("min_rating").default(1).notNull(),
   maxRating: smallint("max_rating").default(5).notNull(),
