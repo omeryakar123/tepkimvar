@@ -16,7 +16,8 @@ URL = os.environ.get("DATABASE_URL")
 if not URL:
     sys.exit("DATABASE_URL tanımlı değil")
 
-KEEP_SLUGS = ("bovbet", "kazansana")
+KEEP_SLUGS = ("bovbet", "kazansana", "bahsine")
+STRIP_CATEGORIES = ("bilisim-teknoloji", "telekomunikasyon")
 
 
 def main() -> None:
@@ -34,10 +35,15 @@ def main() -> None:
         SELECT c.id
         FROM complaints c
         JOIN brands b ON b.id = c.brand_id
-        WHERE b.slug NOT IN %s
+        LEFT JOIN categories cat ON cat.id = b.category_id
+        LEFT JOIN categories ccat ON ccat.id = c.category_id
+        WHERE (
+          COALESCE(cat.slug, ccat.slug) IN %s
+          OR b.slug NOT IN %s
+        )
           AND (c.brand_response IS NOT NULL OR c.status = 'answered')
         """,
-        (KEEP_SLUGS,),
+        (STRIP_CATEGORIES, KEEP_SLUGS),
     )
     ids = [r[0] for r in cur.fetchall()]
     print(f"Etkilenecek şikayet: {len(ids)}")
@@ -52,13 +58,21 @@ def main() -> None:
     cur.execute(
         """
         DELETE FROM complaint_replies cr
-        USING complaints c, brands b
-        WHERE cr.complaint_id = c.id
-          AND b.id = c.brand_id
-          AND b.slug NOT IN %s
-          AND cr.is_brand = true
+        WHERE cr.is_brand = true
+          AND EXISTS (
+            SELECT 1
+            FROM complaints c
+            JOIN brands b ON b.id = c.brand_id
+            LEFT JOIN categories cat ON cat.id = b.category_id
+            LEFT JOIN categories ccat ON ccat.id = c.category_id
+            WHERE c.id = cr.complaint_id
+              AND (
+                COALESCE(cat.slug, ccat.slug) IN %s
+                OR b.slug NOT IN %s
+              )
+          )
         """,
-        (KEEP_SLUGS,),
+        (STRIP_CATEGORIES, KEEP_SLUGS),
     )
     deleted_replies = cur.rowcount
 
@@ -74,11 +88,19 @@ def main() -> None:
             bot_error = NULL,
             updated_at = NOW()
         FROM brands b
+        LEFT JOIN categories cat ON cat.id = b.category_id
         WHERE c.brand_id = b.id
-          AND b.slug NOT IN %s
+          AND (
+            cat.slug IN %s
+            OR b.slug NOT IN %s
+            OR EXISTS (
+              SELECT 1 FROM categories ccat
+              WHERE ccat.id = c.category_id AND ccat.slug IN %s
+            )
+          )
           AND (c.brand_response IS NOT NULL OR c.status = 'answered')
         """,
-        (KEEP_SLUGS,),
+        (STRIP_CATEGORIES, KEEP_SLUGS, STRIP_CATEGORIES),
     )
     updated = cur.rowcount
 

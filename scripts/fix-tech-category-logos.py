@@ -47,6 +47,7 @@ DOMAIN_OVERRIDES = {
 
 GSTATIC_BAD = "t3.gstatic.com/faviconV2"
 SUPERBONUS = "superbonus14.pro/clients/logo"
+UNAVATAR = "unavatar.io"
 
 
 def domain_from_website(website, slug):
@@ -95,9 +96,9 @@ def is_stored_broken(logo):
     if not logo or not logo.strip():
         return True
     u = logo.lower()
-    if SUPERBONUS in u:
+    if SUPERBONUS in u or GSTATIC_BAD in u or UNAVATAR in u:
         return True
-    if GSTATIC_BAD in u:
+    if "ui-avatars.com" in u or "logo.clearbit.com" in u:
         return True
     return fetch(logo) is None
 
@@ -130,7 +131,7 @@ cur.execute(
     SELECT b.id, b.slug, b.name, b.website, b.logo_url, c.slug AS cat
     FROM brands b
     JOIN categories c ON c.id = b.category_id
-    WHERE c.slug IN ('elektronik', 'bilisim-teknoloji', 'beyaz-esya-elektronik')
+    WHERE c.slug IN ('elektronik', 'bilisim-teknoloji', 'beyaz-esya-elektronik', 'telekomunikasyon')
     ORDER BY c.slug, b.slug
     """
 )

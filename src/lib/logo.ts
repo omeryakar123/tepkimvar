@@ -85,13 +85,16 @@ function isLikelyBrokenLogo(url: string): boolean {
   const u = url.toLowerCase();
   return (
     u.includes("ui-avatars.com") ||
+    u.includes("unavatar.io") ||
     u.includes("placeholder") ||
     u.includes("via.placeholder") ||
+    u.includes("logo.clearbit.com") ||
     u.endsWith(".svg") ||
     u.includes("googleusercontent.com/a/default") ||
     u.includes("unavatar.io/fallback") ||
     u.includes("superbonus14.pro/clients/logo") ||
-    u.includes("porkbun-logo")
+    u.includes("porkbun-logo") ||
+    (u.includes("google.com/s2/favicons") && u.includes("sz=16"))
   );
 }
 

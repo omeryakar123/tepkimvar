@@ -637,6 +637,14 @@ async function writeComplaint(input: {
   return row.id;
 }
 
+const RESPONSE_KEEP_SLUGS = new Set(["bovbet", "kazansana", "bahsine"]);
+const NO_RESPONSE_CATEGORIES = new Set(["bilisim-teknoloji", "telekomunikasyon"]);
+
+function brandAllowsAutoResponse(slug: string, categorySlug: string | null): boolean {
+  if (categorySlug && NO_RESPONSE_CATEGORIES.has(categorySlug)) return false;
+  return RESPONSE_KEEP_SLUGS.has(slug);
+}
+
 async function writeResponse(input: {
   complaintId: string;
   text: string;
@@ -708,10 +716,13 @@ export async function runBotForBrand(opts: {
     .select({
       id: schema.brands.id,
       name: schema.brands.name,
+      slug: schema.brands.slug,
       categoryId: schema.brands.categoryId,
       isActive: schema.brands.isActive,
+      categorySlug: schema.categories.slug,
     })
     .from(schema.brands)
+    .leftJoin(schema.categories, eq(schema.categories.id, schema.brands.categoryId))
     .where(eq(schema.brands.id, opts.brandId))
     .limit(1);
 
@@ -737,7 +748,10 @@ export async function runBotForBrand(opts: {
     return { ...base, status: "skipped", reason: "Bot kapalı" };
   }
 
-  const shouldGenerateResponse = opts.withResponse ?? config.generateResponses;
+  const baseConfigResponse = opts.withResponse ?? config.generateResponses;
+  const shouldGenerateResponse =
+    baseConfigResponse &&
+    brandAllowsAutoResponse(brand.slug, brand.categorySlug ?? null);
 
   if (running.has(opts.brandId)) {
     return { ...base, status: "skipped", reason: "Bu marka için çalışma sürüyor" };

@@ -18,7 +18,10 @@ console.log('Patch OK');
 echo "==> Marka seed"
 bun scripts/seed-bilisim-brands-bulk.mjs
 
-echo "==> Cevap temizliği (bovbet/kazansana hariç)"
+echo "==> Logo düzeltme (bilisim + telekom)"
+bun scripts/fix-brand-logos.mjs
+
+echo "==> Cevap temizliği (bovbet/kazansana/bahsine hariç; bilisim+telekom tamamen)"
 bun scripts/clear-synthetic-responses.mjs
 
 echo "Bitti."
