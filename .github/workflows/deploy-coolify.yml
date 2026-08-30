@@ -1,0 +1,39 @@
+# GitHub'a push olunca Coolify'da otomatik redeploy.
+# Repo → Settings → Secrets → Actions:
+#   COOLIFY_TOKEN   = Coolify → Keys & Tokens (deploy yetkisi)
+#   COOLIFY_URL     = http://131.123.39.95:8000  (opsiyonel)
+#   COOLIFY_APP_UUID = xqqcmqdtdbpqcieqafypp28o  (opsiyonel)
+
+name: Deploy to Coolify
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Coolify deploy
+        env:
+          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+          COOLIFY_URL: ${{ secrets.COOLIFY_URL || 'http://131.123.39.95:8000' }}
+          COOLIFY_APP_UUID: ${{ secrets.COOLIFY_APP_UUID || 'xqqcmqdtdbpqcieqafypp28o' }}
+        run: |
+          if [ -z "$COOLIFY_TOKEN" ]; then
+            echo "::warning::COOLIFY_TOKEN secret yok — Coolify'da manuel Deploy yapın veya secret ekleyin."
+            exit 0
+          fi
+          BASE="${COOLIFY_URL%/}/api/v1"
+          echo "Deploy tetikleniyor: $COOLIFY_APP_UUID"
+          RES=$(curl -sS -w "\n%{http_code}" -X POST "$BASE/deploy" \
+            -H "Authorization: Bearer $COOLIFY_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"uuid\":\"$COOLIFY_APP_UUID\",\"force\":true}")
+          BODY=$(echo "$RES" | head -n -1)
+          CODE=$(echo "$RES" | tail -n 1)
+          echo "$BODY"
+          if [ "$CODE" != "200" ] && [ "$CODE" != "201" ]; then
+            echo "::error::Coolify deploy HTTP $CODE — token süresi dolmuş olabilir; Coolify'dan yeni token üretin."
+            exit 1
+          fi

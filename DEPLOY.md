@@ -68,6 +68,29 @@ Coolify'da runtime değişkenidir (VITE_ değil); kaydettikten sonra **Restart**
    (`bun run src/db/migrate.ts`), sonra sunucuyu başlatır. İlk deploy'da
    33 tablo boş DB'ye kurulur; sonraki deploy'larda sadece yeni migration'lar.
 
+### Değişiklikler sitede görünmüyorsa
+
+Kod GitHub'da güncel olsa bile **Coolify yeniden build etmediyse** eski arayüz
+kalır (farklı JS/CSS dosya hash'leri).
+
+**Hemen (1 dk):** Coolify → **tepkimvar** uygulaması → **Deploy** (Force rebuild).
+
+**Otomatik (önerilen):**
+1. Coolify → Keys & Tokens → `deploy` yetkili token oluştur
+2. GitHub repo → Settings → Secrets → Actions → `COOLIFY_TOKEN` ekle
+3. `main`'e her push'ta `.github/workflows/deploy-coolify.yml` deploy tetikler
+
+**Terminalden:**
+```bash
+COOLIFY_TOKEN='1|...' ./scripts/deploy-now.sh
+```
+
+**Doğrulama:** Deploy bittikten sonra ana sayfa kaynağında yeni asset hash'leri
+görünür (`/assets/index-XXXX.js` değişir). Hard refresh: Cmd+Shift+R.
+
+**Not:** `VITE_*` değişkenleri build'e gömülür; runtime env yeterli değildir —
+mutlaka **rebuild** gerekir.
+
 ## 5. İlk kurulum (deploy sonrası, tek seferlik)
 ```bash
 # Kategoriler/markalar boş gelir. İstersen tohum verisiyle başla:
