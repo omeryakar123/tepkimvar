@@ -7,17 +7,23 @@ type Props = {
   slideClassName?: string;
   className?: string;
   ariaLabel?: string;
+  /** Bölüm padding'ini aşarak kenardan kenara kaydırma (taşmayı önler). */
+  edgeBleed?: boolean;
 };
+
+const DEFAULT_SLIDE =
+  "w-[min(calc(100vw-2rem),320px)] snap-start shrink-0";
 
 /**
  * Mobilde yatay kaydırmalı carousel (scroll-snap).
- * md+ ekranda children olduğu gibi grid'e bırakılır — wrapper dışarıda kontrol edilir.
+ * edgeBleed: ana sayfa gibi px-4'lü konteynerlerde yatay scroll taşmasını önler.
  */
 export function MobileCarousel({
   children,
-  slideClassName = "w-[85vw] max-w-[300px] snap-start shrink-0",
+  slideClassName = DEFAULT_SLIDE,
   className = "",
   ariaLabel = "Kaydırılabilir liste",
+  edgeBleed = true,
 }: Props) {
   const trackRef = useRef<HTMLDivElement>(null);
   const [canPrev, setCanPrev] = useState(false);
@@ -45,9 +51,24 @@ export function MobileCarousel({
   const scrollBy = (dir: -1 | 1) => {
     const el = trackRef.current;
     if (!el) return;
-    const step = el.clientWidth * 0.85;
+    const step = el.clientWidth * 0.88;
     el.scrollBy({ left: dir * step, behavior: "smooth" });
   };
+
+  const track = (
+    <div
+      ref={trackRef}
+      role="region"
+      aria-label={ariaLabel}
+      className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2 scroll-px-4 sm:scroll-px-6 scrollbar-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden touch-pan-x overscroll-x-contain"
+    >
+      {Children.toArray(children).map((child, i) => (
+        <div key={i} className={slideClassName}>
+          {child}
+        </div>
+      ))}
+    </div>
+  );
 
   return (
     <div className={className}>
@@ -71,18 +92,13 @@ export function MobileCarousel({
           <ChevronRight className="size-4" />
         </button>
       </div>
-      <div
-        ref={trackRef}
-        role="region"
-        aria-label={ariaLabel}
-        className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-1 -mx-1 px-1 scrollbar-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-      >
-        {Children.toArray(children).map((child, i) => (
-          <div key={i} className={slideClassName}>
-            {child}
-          </div>
-        ))}
-      </div>
+      {edgeBleed ? (
+        <div className="-mx-4 sm:-mx-6 overflow-hidden">
+          {track}
+        </div>
+      ) : (
+        track
+      )}
     </div>
   );
 }

@@ -156,11 +156,11 @@ function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-paper">
+    <div className="min-h-screen bg-paper overflow-x-hidden">
       {/* Top announcement bar */}
-      <div className="bg-media text-media-foreground/85 text-[12.5px]">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 h-9 flex items-center justify-between">
-          <span>
+      <div className="bg-media text-media-foreground/85 text-[11px] sm:text-[12.5px]">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 min-h-9 py-1.5 sm:py-0 sm:h-9 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1 sm:gap-3">
+          <span className="leading-snug">
             Toplam çözülen şikayet:{" "}
             <b className="text-brand tabular-nums">
               {stats.resolvedComplaints.toLocaleString("tr-TR")}
@@ -168,49 +168,55 @@ function Home() {
           </span>
           <Link
             to="/markalar"
-            className="text-media-foreground/55 hover:text-brand transition-colors text-[12px] sm:text-[12.5px]"
+            className="text-media-foreground/55 hover:text-brand transition-colors text-[11px] sm:text-[12.5px] leading-snug shrink-0"
           >
-            Alışverişten önce marka skorunu sorgula →
+            <span className="sm:hidden">Marka skoru sorgula →</span>
+            <span className="hidden sm:inline">Alışverişten önce marka skorunu sorgula →</span>
           </Link>
         </div>
       </div>
 
       {/* HERO */}
       <section className="relative overflow-hidden md:hero-glow">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-16 lg:py-24 grid lg:grid-cols-[1.05fr_1fr] gap-8 lg:gap-16 items-center">
-          <div className="animate-fade-up">
-            <span className="inline-flex items-center gap-2 rounded-full bg-brand-soft text-brand px-3 h-7 text-[12px] font-semibold ring-1 ring-brand/15">
-              <ShieldCheck className="size-3.5" />
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8 sm:py-16 lg:py-24 grid lg:grid-cols-[1.05fr_1fr] gap-6 sm:gap-8 lg:gap-16 items-center min-w-0">
+          <div className="animate-fade-up min-w-0">
+            <span className="inline-flex items-center gap-2 rounded-full bg-brand-soft text-brand px-2.5 sm:px-3 h-7 text-[11px] sm:text-[12px] font-semibold ring-1 ring-brand/15">
+              <ShieldCheck className="size-3.5 shrink-0" />
               Bağımsız şikayet platformu
             </span>
 
-            <h1 className="mt-5 font-display font-black text-[32px] sm:text-[58px] lg:text-[64px] leading-[1.02] tracking-[-0.03em] text-ink">
+            <h1 className="mt-4 sm:mt-5 font-display font-black text-[28px] min-[400px]:text-[32px] sm:text-[58px] lg:text-[64px] leading-[1.05] sm:leading-[1.02] tracking-[-0.03em] text-ink break-words">
               Sesini duyur,
               <br />
               <span className="text-gradient-brand">çözümü takip et.</span>
             </h1>
 
-            <p className="mt-5 text-[16px] leading-relaxed text-navy max-w-lg">
+            <p className="mt-4 sm:mt-5 text-[15px] sm:text-[16px] leading-relaxed text-navy max-w-lg">
               Markalar hakkındaki gerçek deneyimleri keşfet, şikayetini paylaş,
               firmalardan resmi yanıt al. Her adım şeffaf ve takip edilebilir.
             </p>
 
-            <form onSubmit={doSearch} className="mt-6 sm:mt-8 max-w-xl">
-              <div className="flex items-center bg-card rounded-full shadow-pop ring-1 ring-rule pl-4 sm:pl-5 pr-1.5 h-12 sm:h-14 focus-within:ring-2 focus-within:ring-brand/40 transition">
-                <Search className="size-5 text-navy-mid shrink-0" />
-                <input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Marka, model, ürün ara…"
-                  className="flex-1 bg-transparent border-0 px-2 sm:px-3 text-[14px] sm:text-[15px] text-ink placeholder:text-navy-mid focus:outline-none min-w-0"
-                />
-                <button className="shrink-0 rounded-full bg-brand text-brand-foreground px-5 sm:px-8 h-9 sm:h-11 text-[13px] sm:text-[14px] font-semibold hover:bg-brand-hover transition">
+            <form onSubmit={doSearch} className="mt-5 sm:mt-8 max-w-xl">
+              <div className="flex flex-col min-[420px]:flex-row min-[420px]:items-center gap-2 min-[420px]:gap-0 bg-card rounded-2xl min-[420px]:rounded-full shadow-pop ring-1 ring-rule min-[420px]:pl-4 sm:min-[420px]:pl-5 min-[420px]:pr-1.5 p-2 min-[420px]:p-0 min-[420px]:h-14 focus-within:ring-2 focus-within:ring-brand/40 transition">
+                <div className="flex items-center flex-1 min-w-0 min-[420px]:h-full px-2 min-[420px]:px-0">
+                  <Search className="size-5 text-navy-mid shrink-0" />
+                  <input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Marka, model, ürün ara…"
+                    className="flex-1 bg-transparent border-0 px-2 sm:px-3 text-[14px] sm:text-[15px] text-ink placeholder:text-navy-mid focus:outline-none min-w-0 w-full h-10 min-[420px]:h-auto"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="w-full min-[420px]:w-auto shrink-0 rounded-xl min-[420px]:rounded-full bg-brand text-brand-foreground px-5 sm:px-8 h-10 min-[420px]:h-11 text-[13px] sm:text-[14px] font-semibold hover:bg-brand-hover transition"
+                >
                   Ara
                 </button>
               </div>
             </form>
 
-            <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-[12.5px] text-navy">
+            <div className="mt-4 sm:mt-5 flex flex-wrap gap-x-3 gap-y-1.5 text-[12px] sm:text-[12.5px] text-navy">
               <span className="font-semibold text-navy-mid">Popüler:</span>
               {PRIORITY_BRAND_LINKS.map((b) => (
                 <Link
@@ -225,7 +231,7 @@ function Home() {
             </div>
 
             {/* Gerçek verilerden güven şeridi */}
-            <dl className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4">
+            <dl className="mt-8 sm:mt-10 flex flex-wrap items-center gap-x-6 sm:gap-x-8 gap-y-3">
               {[
                 { v: stats.totalComplaints, l: "şikayet" },
                 { v: stats.totalCompanies, l: "marka" },
@@ -236,7 +242,7 @@ function Home() {
                 },
               ].map((s) => (
                 <div key={s.l}>
-                  <dt className="font-display text-[26px] font-black text-ink tabular-nums leading-none">
+                  <dt className="font-display text-[22px] sm:text-[26px] font-black text-ink tabular-nums leading-none">
                     {s.raw ? `%${s.v}` : s.v.toLocaleString("tr-TR")}
                   </dt>
                   <dd className="mt-1 text-[12px] text-navy-mid">
@@ -261,8 +267,8 @@ function Home() {
       </section>
 
       {/* GÜNDEMDEKİ ŞİKAYETLER */}
-      <section className="bg-surface">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-14">
+      <section className="bg-surface overflow-hidden">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8 sm:py-14 min-w-0">
           <div className="flex items-end justify-between gap-4 mb-5 sm:mb-6">
             <h2 className="font-display font-bold text-[20px] sm:text-[22px] text-ink">
               Gündemdeki Şikayetler
@@ -326,15 +332,15 @@ function Home() {
 
       {/* ÇOK KONUŞULANLAR */}
       <section className="relative bg-surface border-y border-rule overflow-hidden">
-        <div className="absolute -right-16 -top-16 size-64 rounded-full bg-card/10" />
-        <div className="absolute -left-24 bottom-0 size-48 rounded-full bg-brand/30" />
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-16 relative">
+        <div className="absolute -right-16 -top-16 size-64 rounded-full bg-card/10 pointer-events-none" aria-hidden />
+        <div className="absolute -left-24 bottom-0 size-48 rounded-full bg-brand/30 pointer-events-none" aria-hidden />
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8 sm:py-16 relative min-w-0">
           <h2 className="font-display font-bold text-[20px] sm:text-[22px] text-ink mb-5 sm:mb-6">
             Çok Konuşulanlar
           </h2>
 
           <div className="md:hidden">
-            <MobileCarousel slideClassName="w-[88vw] max-w-[340px] snap-start shrink-0" ariaLabel="Çok konuşulan şikayetler">
+            <MobileCarousel ariaLabel="Çok konuşulan şikayetler">
               {talked.map((c) => (
                 <Link
                   key={c.id}
@@ -408,13 +414,13 @@ function Home() {
       </section>
 
       {/* ÇÖZÜM BAŞARISI */}
-      <section className="bg-media text-media-foreground">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-16">
-          <div className="text-center mb-8">
-            <h2 className="font-display font-bold text-[26px]">
+      <section className="bg-media text-media-foreground overflow-hidden">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-16 min-w-0">
+          <div className="text-center mb-6 sm:mb-8">
+            <h2 className="font-display font-bold text-[22px] sm:text-[26px]">
               Çözüm Başarısı
             </h2>
-            <p className="mt-2 text-media-foreground/60 text-[13px]">
+            <p className="mt-2 text-media-foreground/60 text-[12px] sm:text-[13px] px-2">
               Şikayet çözüm oranı en yüksek markaların güncel listesi.
             </p>
           </div>
@@ -424,25 +430,25 @@ function Home() {
                 key={b.slug}
                 to="/firma/$slug"
                 params={{ slug: b.slug }}
-                className={`flex items-center gap-4 px-5 py-4 hover:bg-white/[0.06] transition ${i > 0 ? "border-t border-white/10" : ""}`}
+                className={`flex items-center gap-2.5 sm:gap-4 px-3 sm:px-5 py-3 sm:py-4 hover:bg-white/[0.06] transition ${i > 0 ? "border-t border-white/10" : ""}`}
               >
-                <span className="grid place-items-center size-8 rounded-full bg-white/10 text-media-foreground font-bold text-[13px] tabular-nums">
+                <span className="grid place-items-center size-7 sm:size-8 rounded-full bg-white/10 text-media-foreground font-bold text-[12px] sm:text-[13px] tabular-nums shrink-0">
                   {i + 1}
                 </span>
-                <BrandAvatar name={b.name} slug={b.slug} logoUrl={b.logoUrl} website={b.website} size={40} rounded="rounded-lg" tone="dark" />
+                <BrandAvatar name={b.name} slug={b.slug} logoUrl={b.logoUrl} website={b.website} size={36} rounded="rounded-lg" tone="dark" />
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-[14px] truncate">
+                  <div className="font-semibold text-[13px] sm:text-[14px] truncate">
                     {b.name}
                   </div>
-                  <div className="text-[11.5px] text-media-foreground/55">
+                  <div className="text-[10.5px] sm:text-[11.5px] text-media-foreground/55 truncate">
                     {b.categoryName}
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="text-[13px] font-bold text-brand tabular-nums">
+                <div className="text-right shrink-0">
+                  <div className="text-[12px] sm:text-[13px] font-bold text-brand tabular-nums">
                     %{b.resolutionRate.toFixed(0)}
                   </div>
-                  <div className="text-[10.5px] text-media-foreground/55">çözüm</div>
+                  <div className="text-[9.5px] sm:text-[10.5px] text-media-foreground/55">çözüm</div>
                 </div>
               </Link>
             ))}
@@ -451,13 +457,13 @@ function Home() {
       </section>
 
       {/* ÖDÜLLER — split banner */}
-      <section className="bg-paper border-y border-rule">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-16 grid md:grid-cols-2 gap-8 md:gap-10 items-center">
-          <div>
-            <div className="inline-flex items-center gap-2 text-[12px] font-bold uppercase tracking-wider text-brand mb-3">
-              <Award className="size-4" /> tepkimvar Ödülleri
+      <section className="bg-paper border-y border-rule overflow-hidden">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8 sm:py-16 grid md:grid-cols-2 gap-6 sm:gap-10 items-center min-w-0">
+          <div className="min-w-0">
+            <div className="inline-flex items-center gap-2 text-[11px] sm:text-[12px] font-bold uppercase tracking-wider text-brand mb-3">
+              <Award className="size-4 shrink-0" /> tepkimvar Ödülleri
             </div>
-            <h2 className="font-display font-black text-[26px] sm:text-[32px] text-ink leading-tight tracking-tight">
+            <h2 className="font-display font-black text-[22px] sm:text-[32px] text-ink leading-tight tracking-tight">
               Çözüme değer verenler ödüllendirilir.
             </h2>
             <p className="mt-3 text-[14px] text-navy leading-relaxed max-w-md">
@@ -494,12 +500,12 @@ function Home() {
       </section>
 
       {/* SAYILARLA */}
-      <section>
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-16">
-          <h2 className="text-center font-display font-bold text-[24px] text-ink mb-10">
+      <section className="overflow-hidden">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-16 min-w-0">
+          <h2 className="text-center font-display font-bold text-[20px] sm:text-[24px] text-ink mb-6 sm:mb-10">
             Sayılarla tepkimvar
           </h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
             {[
               // Hepsi gerçek veriden; uydurma sayı yok.
               { k: "Üye Sayısı", v: stats.totalUsers, i: Users },
@@ -511,15 +517,15 @@ function Home() {
               return (
                 <div
                   key={s.k}
-                  className="bg-card rounded-2xl p-6 ring-1 ring-rule"
+                  className="bg-card rounded-2xl p-4 sm:p-6 ring-1 ring-rule min-w-0"
                 >
-                  <span className="grid place-items-center size-10 rounded-xl bg-brand-soft text-brand mb-4">
-                    <Icon className="size-5" />
+                  <span className="grid place-items-center size-9 sm:size-10 rounded-xl bg-brand-soft text-brand mb-3 sm:mb-4">
+                    <Icon className="size-4 sm:size-5" />
                   </span>
-                  <div className="font-display font-black text-[26px] text-ink tabular-nums">
+                  <div className="font-display font-black text-[20px] sm:text-[26px] text-ink tabular-nums break-all">
                     {s.v.toLocaleString("tr-TR")}
                   </div>
-                  <div className="text-[12px] text-navy-mid mt-1">{s.k}</div>
+                  <div className="text-[11px] sm:text-[12px] text-navy-mid mt-1 leading-snug">{s.k}</div>
                 </div>
               );
             })}
@@ -528,36 +534,36 @@ function Home() {
       </section>
 
       {/* TREND 100 */}
-      <section className="bg-surface">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-16">
-          <div className="text-center mb-6 sm:mb-8">
-            <h2 className="font-display font-black text-[24px] sm:text-[28px] text-ink inline-flex items-center gap-2">
+      <section className="bg-surface overflow-hidden">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8 sm:py-16 min-w-0">
+          <div className="text-center mb-5 sm:mb-8">
+            <h2 className="font-display font-black text-[22px] sm:text-[28px] text-ink inline-flex items-center gap-2">
               Trend<span className="text-brand">100</span>
             </h2>
-            <p className="mt-1 text-[13px] text-navy-mid">Son 7 günün en çok konuşulan markaları.</p>
+            <p className="mt-1 text-[12px] sm:text-[13px] text-navy-mid px-2">Son 7 günün en çok konuşulan markaları.</p>
           </div>
 
-          {/* Mobil: swiper — tam liste yerine kaydırmalı */}
+          {/* Mobil: swiper */}
           <div className="md:hidden">
-            <MobileCarousel slideClassName="w-[78vw] max-w-[320px] snap-start shrink-0" ariaLabel="Trend 100 markalar">
+            <MobileCarousel ariaLabel="Trend 100 markalar">
               {trend100.map((b, i) => (
                 <Link
                   key={b.slug}
                   to="/firma/$slug"
                   params={{ slug: b.slug }}
-                  className="block h-full bg-card rounded-2xl ring-1 ring-rule p-4 hover:shadow-pop transition"
+                  className="block h-full bg-card rounded-2xl ring-1 ring-rule p-3.5 sm:p-4 hover:shadow-pop transition"
                 >
-                  <div className="flex items-center gap-3">
-                    <span className="w-7 text-[13px] text-navy-mid font-bold tabular-nums shrink-0">{i + 1}.</span>
-                    <BrandAvatar name={b.name} slug={b.slug} logoUrl={b.logoUrl} website={b.website} size={40} rounded="rounded-lg" />
+                  <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                    <span className="w-6 sm:w-7 text-[12px] sm:text-[13px] text-navy-mid font-bold tabular-nums shrink-0">{i + 1}.</span>
+                    <BrandAvatar name={b.name} slug={b.slug} logoUrl={b.logoUrl} website={b.website} size={36} rounded="rounded-lg" />
                     <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-[14px] text-ink leading-snug break-words">{b.name}</div>
-                      <div className="text-[11px] text-navy-mid mt-0.5">{b.categoryName}</div>
+                      <div className="font-semibold text-[13px] sm:text-[14px] text-ink leading-snug line-clamp-2">{b.name}</div>
+                      <div className="text-[10.5px] sm:text-[11px] text-navy-mid mt-0.5 truncate">{b.categoryName}</div>
                     </div>
                     <div className="shrink-0 text-right">
-                      <TrendingUp className="inline size-4 text-brand mb-0.5" />
-                      <div className="text-[13px] font-bold text-ink tabular-nums inline-flex items-center gap-1">
-                        <Star className="size-3.5 fill-amber-400 text-amber-400" />
+                      <TrendingUp className="inline size-3.5 sm:size-4 text-brand mb-0.5" />
+                      <div className="text-[12px] sm:text-[13px] font-bold text-ink tabular-nums inline-flex items-center gap-0.5">
+                        <Star className="size-3 fill-amber-400 text-amber-400" />
                         {formatRating(b.rating, b.ratingCount)}
                       </div>
                     </div>
@@ -623,28 +629,28 @@ function Home() {
         />
 
         {/* Pro CTA */}
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 pt-12 sm:pt-16 pb-8 sm:pb-10">
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 pt-10 sm:pt-16 pb-6 sm:pb-10 min-w-0">
           <div className="max-w-3xl mx-auto text-center">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/20 text-brand px-3 h-7 text-[11px] font-bold uppercase tracking-wider ring-1 ring-brand/35 mb-5">
-              <ShieldCheck className="size-3.5" />
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/20 text-brand px-3 h-7 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider ring-1 ring-brand/35 mb-4 sm:mb-5">
+              <ShieldCheck className="size-3.5 shrink-0" />
               tepkimvar Pro
             </span>
-            <h2 className="font-display font-bold text-[22px] sm:text-[28px] leading-snug">
+            <h2 className="font-display font-bold text-[20px] sm:text-[28px] leading-snug px-1">
               tepkimvar Pro ile müşteri tabanınızı büyütün
             </h2>
-            <p className="mt-3 text-[13px] sm:text-[14px] site-cta-muted max-w-md mx-auto leading-relaxed">
+            <p className="mt-3 text-[13px] sm:text-[14px] site-cta-muted max-w-md mx-auto leading-relaxed px-1">
               Çözüm sunan markalar arasına katılın; Pro üyelik avantajlarından yararlanın.
             </p>
-            <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
+            <div className="mt-5 sm:mt-6 flex flex-col sm:flex-row gap-2.5 sm:gap-3 justify-center px-1">
               <a
                 href={siteContactMailto("Pro üyelik")}
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-brand text-brand-foreground px-6 h-11 text-[13px] font-semibold hover:bg-brand-hover transition shadow-soft"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-brand text-brand-foreground px-5 sm:px-6 h-11 text-[13px] font-semibold hover:bg-brand-hover transition shadow-soft w-full sm:w-auto"
               >
                 Pro üyelik için iletişim
               </a>
               <Link
                 to="/register/marka-basvuru"
-                className="inline-flex items-center justify-center gap-2 rounded-full ring-1 ring-brand/45 px-6 h-11 text-[13px] font-semibold hover:bg-brand/15 transition"
+                className="inline-flex items-center justify-center gap-2 rounded-full ring-1 ring-brand/45 px-5 sm:px-6 h-11 text-[13px] font-semibold hover:bg-brand/15 transition w-full sm:w-auto"
               >
                 Marka başvurusu yap
               </Link>
@@ -652,75 +658,75 @@ function Home() {
           </div>
         </div>
 
-        {/* KEŞFET & PAYLAŞ — iki panel aynı koyu gradyan */}
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 pb-14 sm:pb-16">
+        {/* KEŞFET & PAYLAŞ */}
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 pb-10 sm:pb-16 min-w-0">
           <motion.div
             initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 24 }}
             whileInView={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.2 }}
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="grid md:grid-cols-2 gap-4 sm:gap-5"
+            className="grid md:grid-cols-2 gap-3 sm:gap-5"
           >
             {/* Keşfet */}
-            <div className="site-cta-panel flex flex-col rounded-[22px] ring-1 ring-brand/30 p-6 sm:p-8 lg:p-9">
-              <div className="flex flex-wrap items-center gap-2 mb-5">
-                <span className="font-display font-black text-[18px] tracking-tight">
+            <div className="site-cta-panel flex flex-col rounded-[18px] sm:rounded-[22px] ring-1 ring-brand/30 p-5 sm:p-8 lg:p-9 min-w-0">
+              <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-1.5 sm:gap-2 mb-4 sm:mb-5">
+                <span className="font-display font-black text-[17px] sm:text-[18px] tracking-tight">
                   tepkimvar<span className="text-brand">.</span>
                 </span>
-                <span className="h-4 w-px site-cta-divider hidden sm:block" aria-hidden />
-                <span className="text-[12px] font-medium site-cta-muted">
+                <span className="hidden sm:block h-4 w-px site-cta-divider" aria-hidden />
+                <span className="text-[11px] sm:text-[12px] font-medium site-cta-muted leading-snug">
                   Web sitemizi keşfedin:{" "}
                   <span className="text-brand font-semibold">tepkimvar.com</span>
                 </span>
               </div>
 
-              <h2 className="font-display font-black text-[26px] sm:text-[32px] lg:text-[36px] leading-[1.06] tracking-[-0.03em]">
+              <h2 className="font-display font-black text-[22px] sm:text-[32px] lg:text-[36px] leading-[1.08] sm:leading-[1.06] tracking-[-0.03em]">
                 Sesini duyur,
                 <br />
                 <span className="text-gradient-brand">çözümü takip et!</span>
               </h2>
 
-              <p className="mt-4 text-[14px] leading-relaxed site-cta-muted max-w-md">
+              <p className="mt-3 sm:mt-4 text-[13px] sm:text-[14px] leading-relaxed site-cta-muted max-w-md">
                 Alışverişten önce marka skorunu sorgula; çözüm oranı, yanıt hızı ve
                 gerçek kullanıcı deneyimlerini gör.
               </p>
 
               <Link
                 to="/markalar"
-                className="mt-auto pt-7 inline-flex w-fit items-center gap-2 rounded-full bg-brand text-brand-foreground px-6 h-11 text-[13px] font-semibold shadow-soft hover:bg-brand-hover transition"
+                className="mt-5 sm:mt-auto sm:pt-7 inline-flex w-full sm:w-fit items-center justify-center gap-2 rounded-full bg-brand text-brand-foreground px-5 sm:px-6 h-11 text-[13px] font-semibold shadow-soft hover:bg-brand-hover transition"
               >
                 Tereddüt yok, sorgula
                 <ArrowRight className="size-4" />
               </Link>
             </div>
 
-            {/* Paylaş — sol panelle birebir aynı site-cta-panel */}
-            <div className="site-cta-panel flex flex-col rounded-[22px] ring-1 ring-brand/30 p-6 sm:p-8 lg:p-9">
-              <div className="flex flex-wrap items-center gap-2 mb-5">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/25 text-brand px-3 h-7 text-[11px] font-bold uppercase tracking-wider ring-1 ring-brand/35">
-                  <MessageCircle className="size-3.5" />
+            {/* Paylaş */}
+            <div className="site-cta-panel flex flex-col rounded-[18px] sm:rounded-[22px] ring-1 ring-brand/30 p-5 sm:p-8 lg:p-9 min-w-0">
+              <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-1.5 sm:gap-2 mb-4 sm:mb-5">
+                <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-brand/25 text-brand px-2.5 sm:px-3 h-7 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider ring-1 ring-brand/35">
+                  <MessageCircle className="size-3.5 shrink-0" />
                   Topluluk
                 </span>
-                <span className="h-4 w-px site-cta-divider hidden sm:block" aria-hidden />
-                <span className="text-[12px] font-medium site-cta-muted">
+                <span className="hidden sm:block h-4 w-px site-cta-divider" aria-hidden />
+                <span className="text-[11px] sm:text-[12px] font-medium site-cta-muted">
                   Deneyimini paylaş
                 </span>
               </div>
 
-              <h2 className="font-display font-black text-[26px] sm:text-[32px] lg:text-[36px] leading-[1.06] tracking-[-0.03em]">
+              <h2 className="font-display font-black text-[22px] sm:text-[32px] lg:text-[36px] leading-[1.08] sm:leading-[1.06] tracking-[-0.03em]">
                 Deneyimini
                 <br />
                 <span className="text-gradient-brand">paylaş!</span>
               </h2>
 
-              <p className="mt-4 text-[14px] leading-relaxed site-cta-muted max-w-md">
+              <p className="mt-3 sm:mt-4 text-[13px] sm:text-[14px] leading-relaxed site-cta-muted max-w-md">
                 Kullandığın siteler hakkında gerçek deneyimini anlat. Yorumunu bırak,
                 başkalarının doğru karar vermesine yardımcı ol.
               </p>
 
               <Link
                 to="/sikayet-yaz"
-                className="mt-auto pt-7 inline-flex w-fit items-center gap-2 rounded-full bg-brand text-brand-foreground px-6 h-11 text-[13px] font-semibold shadow-soft hover:bg-brand-hover transition"
+                className="mt-5 sm:mt-auto sm:pt-7 inline-flex w-full sm:w-fit items-center justify-center gap-2 rounded-full bg-brand text-brand-foreground px-5 sm:px-6 h-11 text-[13px] font-semibold shadow-soft hover:bg-brand-hover transition"
               >
                 Şikayetini yaz
                 <ArrowRight className="size-4" />

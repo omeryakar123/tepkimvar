@@ -13,7 +13,7 @@ export function LiveFeed({ items, loading, compact, updatedAt }: Props) {
   const list = items.slice(0, compact ? 3 : 4);
 
   return (
-    <div className="card-surface shadow-lift p-4 sm:p-5">
+    <div className="card-surface shadow-lift p-3.5 sm:p-5 min-w-0 overflow-hidden">
       <div className="flex items-center justify-between px-1 pb-3 sm:pb-4 border-b border-rule">
         <div className="flex items-center gap-2">
           <span className="relative flex size-2">
