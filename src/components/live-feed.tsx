@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Check } from "lucide-react";
 import type { Complaint } from "@/lib/mock-data";
+import { ComplaintSupportButton } from "@/components/complaint-support-button";
 
 type Props = {
   items: Complaint[];
@@ -89,6 +90,14 @@ export function LiveFeed({ items, loading, compact, updatedAt, className = "" }:
                 </span>
               )}
             </Link>
+            <div className={`${compact ? "mt-1.5 pl-9" : "mt-2 pl-10 sm:pl-11"}`}>
+              <ComplaintSupportButton
+                complaintId={c.id}
+                initialVotes={c.votes}
+                initialSupported={c.supported}
+                size="sm"
+              />
+            </div>
           </li>
         ))}
         {loading &&

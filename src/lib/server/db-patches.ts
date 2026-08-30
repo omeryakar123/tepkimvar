@@ -18,6 +18,13 @@ const PATCHES = [
   )`,
   `CREATE INDEX IF NOT EXISTS page_views_created_at_idx ON page_views (created_at DESC)`,
   `CREATE INDEX IF NOT EXISTS page_views_path_idx ON page_views (path)`,
+  `CREATE TABLE IF NOT EXISTS complaint_supports (
+    complaint_id uuid NOT NULL REFERENCES complaints(id) ON DELETE CASCADE,
+    user_id uuid NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY (complaint_id, user_id)
+  )`,
+  `CREATE INDEX IF NOT EXISTS complaints_votes_idx ON complaints (votes DESC)`,
 ];
 
 export async function applyDbPatches(sql: postgres.Sql): Promise<string[]> {

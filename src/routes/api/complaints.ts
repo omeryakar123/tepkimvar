@@ -1,12 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { and, desc, eq, ilike, inArray, notInArray, or, sql, type SQL } from "drizzle-orm";
+import { and, eq, ilike, inArray, notInArray, or, sql, type SQL } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { toDbComplaint, type BrandNested, type DbComplaintShape } from "@/lib/db-shapes";
-import { HttpError, errorResponse, rateLimit, requireUser } from "@/lib/server/guard";
+import { HttpError, errorResponse, optionalUser, rateLimit, requireUser } from "@/lib/server/guard";
 import { recordStatusChange } from "@/lib/server/history";
 import { refreshBrandAggregates } from "@/lib/server/brand-stats";
 import { ensureDbPatches } from "@/lib/server/ensure-db-patches";
 import { moderateAndScore } from "@/lib/server/moderation";
+import { complaintRankOrder, complaintTrendingOrder } from "@/lib/server/complaint-sort";
+import { supportedComplaintIds } from "@/lib/server/complaint-support";
 
 // Public: şikayet listesi. RLS gitti; moderasyon filtresi BURADA zorlanıyor.
 const HIDDEN_STATUSES = ["pending", "rejected", "spam"] as const;
@@ -72,8 +74,8 @@ export const Route = createFileRoute("/api/complaints")({
 
         const ordered =
           sortBy === "trending"
-            ? base.orderBy(desc(schema.complaints.createdAt), desc(schema.complaints.views))
-            : base.orderBy(desc(schema.complaints.createdAt));
+            ? base.orderBy(...complaintTrendingOrder())
+            : base.orderBy(...complaintRankOrder());
 
         let total = 0;
         let rows: { c: typeof schema.complaints.$inferSelect; b: typeof schema.brands.$inferSelect }[];
@@ -148,6 +150,14 @@ export const Route = createFileRoute("/api/complaints")({
           const countMap = new Map(counts.map((c) => [c.complaintId, Number(c.n)]));
           for (const it of items) {
             (it as DbComplaintShape & { comment_count?: number }).comment_count = countMap.get(it.id) ?? 0;
+          }
+
+          const viewer = await optionalUser(request);
+          if (viewer) {
+            const supported = await supportedComplaintIds(viewer.id, cids);
+            for (const it of items) {
+              (it as DbComplaintShape & { user_supported?: boolean }).user_supported = supported.has(it.id);
+            }
           }
         }
 

@@ -6,6 +6,7 @@ import { displayComplaintViews } from "@/lib/display-views";
 import { formatCompactCount, formatRating, formatResponseTime, statusClasses, statusLabel } from "@/lib/mock-data";
 import { proxyImage } from "@/lib/img";
 import { brandLogoUrl, brandLogoCandidates } from "@/lib/logo";
+import { ComplaintSupportButton } from "@/components/complaint-support-button";
 import { toast } from "sonner";
 
 const avatarPalette = [
@@ -151,6 +152,15 @@ export function BrandProfileComplaintCard({
       ) : (
         <p className="mt-4 text-[12px] text-navy-mid italic">Henüz firma yanıtı yok.</p>
       )}
+
+      <div className="mt-4">
+        <ComplaintSupportButton
+          complaintId={complaint.id}
+          initialVotes={complaint.votes}
+          initialSupported={complaint.supported}
+          size="sm"
+        />
+      </div>
 
       <div className="flex items-center justify-between pt-4 mt-4 border-t border-rule text-[12px] text-navy-mid">
         <div className="flex items-center gap-4">
@@ -321,33 +331,44 @@ export function CompanyCard({ company }: { company: Company }) {
 export function ComplaintCard({ complaint, variant = "default" }: { complaint: Complaint; variant?: "default" | "compact" }) {
   if (variant === "compact") {
     return (
-      <Link
-        to="/sikayet/$id"
-        params={{ id: complaint.id }}
-        className="group flex items-start gap-3 py-3 border-b border-rule last:border-0"
-      >
-        <div className={`size-9 shrink-0 rounded-full grid place-items-center font-bold text-[11px] ${avatarFor(complaint.userInitials)}`}>
-          {complaint.userInitials}
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 text-[11px] text-navy-mid mb-0.5">
-            <span className="font-semibold text-brand">{complaint.companyName}</span>
-            <span>·</span>
-            <span>{complaint.createdAgo}</span>
+      <article className="py-3 border-b border-rule last:border-0">
+        <Link
+          to="/sikayet/$id"
+          params={{ id: complaint.id }}
+          className="group flex items-start gap-3"
+        >
+          <div className={`size-9 shrink-0 rounded-full grid place-items-center font-bold text-[11px] ${avatarFor(complaint.userInitials)}`}>
+            {complaint.userInitials}
           </div>
-          <p className="text-[13px] font-medium text-ink line-clamp-2 leading-snug group-hover:text-brand transition-colors">
-            {complaint.title}
-          </p>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 text-[11px] text-navy-mid mb-0.5">
+              <span className="font-semibold text-brand">{complaint.companyName}</span>
+              <span>·</span>
+              <span>{complaint.createdAgo}</span>
+            </div>
+            <p className="text-[13px] font-medium text-ink line-clamp-2 leading-snug group-hover:text-brand transition-colors">
+              {complaint.title}
+            </p>
+          </div>
+        </Link>
+        <div className="mt-2 pl-12">
+          <ComplaintSupportButton
+            complaintId={complaint.id}
+            initialVotes={complaint.votes}
+            initialSupported={complaint.supported}
+            size="sm"
+          />
         </div>
-      </Link>
+      </article>
     );
   }
   return (
-    <Link
-      to="/sikayet/$id"
-      params={{ id: complaint.id }}
-      className="group flex flex-col rounded-2xl bg-paper border border-rule hover:border-brand/40 hover:shadow-pop transition-all p-5"
-    >
+    <article className="flex flex-col rounded-2xl bg-paper border border-rule hover:border-brand/40 hover:shadow-pop transition-all">
+      <Link
+        to="/sikayet/$id"
+        params={{ id: complaint.id }}
+        className="group flex flex-col flex-1 p-5 pb-3"
+      >
       <div className="flex items-center gap-3 mb-4">
         <div className={`size-10 shrink-0 rounded-full grid place-items-center font-bold text-[12px] ${avatarFor(complaint.userInitials)}`}>
           {complaint.userInitials}
@@ -388,6 +409,14 @@ export function ComplaintCard({ complaint, variant = "default" }: { complaint: C
         </div>
         <span className="inline-flex items-center gap-1.5"><Clock className="size-3.5" /> {complaint.createdAgo}</span>
       </div>
-    </Link>
+      </Link>
+      <div className="px-5 pb-5 pt-2">
+        <ComplaintSupportButton
+          complaintId={complaint.id}
+          initialVotes={complaint.votes}
+          initialSupported={complaint.supported}
+        />
+      </div>
+    </article>
   );
 }

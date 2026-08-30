@@ -2,6 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { and, eq, inArray, notInArray, or, sql, type SQL } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { toDbComplaint, type BrandNested } from "@/lib/db-shapes";
+import { optionalUser } from "@/lib/server/guard";
+import { supportedComplaintIds } from "@/lib/server/complaint-support";
 
 // Public: tek şikayet. $id uuid, public_id veya short_id olabilir.
 const HIDDEN_STATUSES = ["pending", "rejected", "spam"] as const;
@@ -10,7 +12,7 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 export const Route = createFileRoute("/api/complaints/$id")({
   server: {
     handlers: {
-      GET: async ({ params }) => {
+      GET: async ({ params, request }) => {
         const id = params.id;
         const idMatch: SQL = UUID_RE.test(id)
           ? eq(schema.complaints.id, id)
@@ -67,6 +69,12 @@ export const Route = createFileRoute("/api/complaints/$id")({
             .where(inArray(schema.profiles.id, [dc.user_id]))
             .limit(1);
           dc.profiles = pr ?? null;
+        }
+
+        const viewer = await optionalUser(request);
+        if (viewer) {
+          const supported = await supportedComplaintIds(viewer.id, [dc.id]);
+          (dc as typeof dc & { user_supported?: boolean }).user_supported = supported.has(dc.id);
         }
 
         return Response.json(dc);

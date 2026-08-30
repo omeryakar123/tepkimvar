@@ -6,6 +6,7 @@ import { ComplaintCard } from "@/components/cards";
 import { ComplaintTimeline } from "@/components/complaint-timeline";
 import { ResolutionTunnel } from "@/components/resolution-tunnel";
 import { ComplaintRating } from "@/components/complaint-rating";
+import { ComplaintSupportButton } from "@/components/complaint-support-button";
 import { statusClasses, statusLabel, type Complaint } from "@/lib/mock-data";
 import { fetchComplaintById, fetchComplaintsList, fetchComments, fetchComplaintResolution, type DbComment, type ResolutionRow } from "@/lib/data";
 import { useAuth } from "@/hooks/use-auth";
@@ -111,6 +112,7 @@ function ComplaintPage() {
     const onComplaint = () => { load(); };
     es.addEventListener("comment", onComment);
     es.addEventListener("vote", onComment);
+    es.addEventListener("complaint-support", onComplaint);
     es.addEventListener("complaint", onComplaint);
     return () => es.close();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -234,8 +236,17 @@ function ComplaintPage() {
 
           <div className="prose prose-sm max-w-none text-navy leading-relaxed whitespace-pre-line">{complaint.body}</div>
 
-          <div className="mt-6 pt-6 border-t border-rule flex items-center gap-3 text-sm">
-            <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg ring-1 ring-rule hover:bg-surface"><ArrowUp className="size-4" /> {complaint.votes}</button>
+          <div className="mt-6 pt-6 border-t border-rule flex flex-wrap items-center gap-3 text-sm">
+            {complaint && (
+              <ComplaintSupportButton
+                complaintId={complaint.id}
+                initialVotes={complaint.votes}
+                initialSupported={complaint.supported}
+                onChange={(votes, supported) =>
+                  setComplaint((prev) => (prev ? { ...prev, votes, supported } : prev))
+                }
+              />
+            )}
             <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg ring-1 ring-rule hover:bg-surface text-navy"><MessageSquare className="size-4" /> {comments.length} yorum</button>
             <button onClick={() => { navigator.clipboard.writeText(window.location.href); toast.success("Bağlantı kopyalandı"); }} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg ring-1 ring-rule hover:bg-surface text-navy"><Share2 className="size-4" /> Paylaş</button>
             <div className="ml-auto"><ReportButton targetType="complaint" targetId={id} /></div>

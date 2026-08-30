@@ -28,6 +28,7 @@ import { publicPlatformStats } from "@/lib/public-stats";
 import { SITE_CONTACT_EMAIL, siteContactMailto } from "@/lib/contact";
 import { BrandAvatar } from "@/components/cards";
 import { LiveFeed } from "@/components/live-feed";
+import { ComplaintSupportButton } from "@/components/complaint-support-button";
 import { MobileCarousel } from "@/components/mobile-carousel";
 
 /** Canlı akış yenileme aralığı (30 dk). */
@@ -302,25 +303,37 @@ function Home() {
           <div className="md:hidden">
             <MobileCarousel ariaLabel="Gündemdeki şikayetler">
               {agenda.map((c) => (
-                <Link
+                <article
                   key={c.id}
-                  to="/sikayet/$id"
-                  params={{ id: c.id }}
-                  className="block h-full bg-card rounded-2xl p-4 ring-1 ring-rule/50"
+                  className="h-full bg-card rounded-2xl p-4 ring-1 ring-rule/50 flex flex-col"
                 >
-                  <div className="flex gap-3">
-                    <div className="size-9 rounded-full bg-accent-purple text-paper grid place-items-center text-[12px] font-bold shrink-0">
-                      {c.userInitials}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="text-[12px] text-navy-mid">
-                        <b className="text-ink">{c.userName}</b>
-                        <span className="text-brand"> · {c.companyName}</span>
+                  <Link
+                    to="/sikayet/$id"
+                    params={{ id: c.id }}
+                    className="block flex-1"
+                  >
+                    <div className="flex gap-3">
+                      <div className="size-9 rounded-full bg-accent-purple text-paper grid place-items-center text-[12px] font-bold shrink-0">
+                        {c.userInitials}
                       </div>
-                      <p className="mt-1.5 text-[13px] text-navy line-clamp-3 leading-relaxed">{c.title}</p>
+                      <div className="min-w-0">
+                        <div className="text-[12px] text-navy-mid">
+                          <b className="text-ink">{c.userName}</b>
+                          <span className="text-brand"> · {c.companyName}</span>
+                        </div>
+                        <p className="mt-1.5 text-[13px] text-navy line-clamp-3 leading-relaxed">{c.title}</p>
+                      </div>
                     </div>
+                  </Link>
+                  <div className="mt-3">
+                    <ComplaintSupportButton
+                      complaintId={c.id}
+                      initialVotes={c.votes}
+                      initialSupported={c.supported}
+                      size="sm"
+                    />
                   </div>
-                </Link>
+                </article>
               ))}
             </MobileCarousel>
           </div>
@@ -328,23 +341,35 @@ function Home() {
           {/* Masaüstü: grid */}
           <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 gap-4">
             {agenda.map((c) => (
-              <Link
+              <article
                 key={c.id}
-                to="/sikayet/$id"
-                params={{ id: c.id }}
-                className="bg-card rounded-2xl p-5 hover:shadow-pop transition ring-1 ring-rule/50 flex gap-3"
+                className="bg-card rounded-2xl p-5 ring-1 ring-rule/50 flex flex-col"
               >
-                <div className="size-9 rounded-full bg-accent-purple text-paper grid place-items-center text-[12px] font-bold shrink-0">
-                  {c.userInitials}
-                </div>
-                <div className="min-w-0">
-                  <div className="text-[12px] text-navy-mid">
-                    <b className="text-ink">{c.userName}</b> ·{" "}
-                    <span className="text-brand">{c.companyName}</span>
+                <Link
+                  to="/sikayet/$id"
+                  params={{ id: c.id }}
+                  className="flex gap-3 flex-1 hover:opacity-95 transition"
+                >
+                  <div className="size-9 rounded-full bg-accent-purple text-paper grid place-items-center text-[12px] font-bold shrink-0">
+                    {c.userInitials}
                   </div>
-                  <p className="mt-1.5 text-[13px] text-navy line-clamp-3 leading-relaxed">{c.title}</p>
+                  <div className="min-w-0">
+                    <div className="text-[12px] text-navy-mid">
+                      <b className="text-ink">{c.userName}</b> ·{" "}
+                      <span className="text-brand">{c.companyName}</span>
+                    </div>
+                    <p className="mt-1.5 text-[13px] text-navy line-clamp-3 leading-relaxed">{c.title}</p>
+                  </div>
+                </Link>
+                <div className="mt-4">
+                  <ComplaintSupportButton
+                    complaintId={c.id}
+                    initialVotes={c.votes}
+                    initialSupported={c.supported}
+                    size="sm"
+                  />
                 </div>
-              </Link>
+              </article>
             ))}
           </div>
         </div>

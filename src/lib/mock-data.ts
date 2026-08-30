@@ -54,6 +54,8 @@ export interface Complaint {
   views: number;
   comments: number;
   votes: number;
+  /** Oturum açmış kullanıcı bu şikayeti destekledi mi. */
+  supported?: boolean;
   /** Şikayet sahibinin sonuca verdiği 1-5 yıldız (yoksa tanımsız). */
   rating?: number | null;
   sentiment?: "angry" | "sad" | "neutral" | "positive";

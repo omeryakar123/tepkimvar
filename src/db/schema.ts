@@ -692,6 +692,25 @@ export const commentVotes = pgTable(
   }),
 );
 
+/** Üye destekleri — kullanıcı başına bir şikayet (complaints.votes sayacını besler). */
+export const complaintSupports = pgTable(
+  "complaint_supports",
+  {
+    complaintId: uuid("complaint_id")
+      .notNull()
+      .references(() => complaints.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.complaintId, t.userId] }),
+  }),
+);
+
 /* -------------------------------------------------------------------------- */
 /*                        Conversations & messages                           */
 /* -------------------------------------------------------------------------- */

@@ -35,6 +35,7 @@ async function getJson<T>(url: string): Promise<T> {
   const isBrowser = typeof window !== "undefined";
   const res = await fetch(resolveUrl(url), {
     cache: isBrowser ? "no-store" : "default",
+    credentials: isBrowser ? "include" : undefined,
     headers: isBrowser ? { "Cache-Control": "no-cache" } : undefined,
   });
   if (!res.ok) throw new Error(`${url} -> ${res.status}`);
@@ -181,6 +182,7 @@ export type DbComplaint = {
   brands?: { name: string; slug: string; logo_url: string | null; verified: boolean } | null;
   profiles?: { full_name: string | null; username: string | null; avatar_url: string | null } | null;
   comment_count?: number;
+  user_supported?: boolean;
   preview_comments?: { id: string; body: string; created_at: string; profiles: { full_name: string | null; username: string | null } | null }[];
 };
 
@@ -205,6 +207,7 @@ export function dbComplaintToUi(c: DbComplaint): Complaint {
     views: c.views ?? 0,
     comments: c.comment_count ?? 0,
     votes: c.votes ?? 0,
+    supported: c.user_supported ?? false,
     rating: c.rating ?? null,
     sentiment: (c.sentiment_score as Complaint["sentiment"]) ?? undefined,
     isHighPriority: !!c.is_high_priority,
@@ -328,7 +331,10 @@ export async function fetchBrandBySlug(slug: string) {
 
 export async function fetchComplaintById(id: string) {
   await ensureCategoryCache();
-  const res = await fetch(resolveUrl(`/api/complaints/${encodeURIComponent(id)}`));
+  const isBrowser = typeof window !== "undefined";
+  const res = await fetch(resolveUrl(`/api/complaints/${encodeURIComponent(id)}`), {
+    credentials: isBrowser ? "include" : undefined,
+  });
   if (!res.ok) return null;
   const row = (await res.json()) as DbComplaint;
   return dbComplaintToUi(row);

@@ -1,8 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { and, desc, eq, inArray, notInArray, or } from "drizzle-orm";
+import { and, eq, inArray, notInArray, or } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { toDbComplaint, type BrandNested, type DbComplaintShape } from "@/lib/db-shapes";
-import { errorResponse } from "@/lib/server/guard";
+import { errorResponse, optionalUser } from "@/lib/server/guard";
+import { complaintRankOrder } from "@/lib/server/complaint-sort";
+import { supportedComplaintIds } from "@/lib/server/complaint-support";
 
 const HIDDEN_STATUSES = ["pending", "rejected", "spam"] as const;
 
@@ -27,10 +29,10 @@ export const Route = createFileRoute("/api/home-agenda")({
                 ),
               ),
             )
-            .orderBy(desc(schema.complaints.createdAt))
+            .orderBy(...complaintRankOrder())
             .limit(limit);
 
-          const items = await enrichComplaints(rows);
+          const items = await enrichComplaints(rows, request);
           return Response.json({ items });
         } catch (e) {
           return errorResponse(e);
@@ -42,6 +44,7 @@ export const Route = createFileRoute("/api/home-agenda")({
 
 async function enrichComplaints(
   rows: { c: typeof schema.complaints.$inferSelect; b: typeof schema.brands.$inferSelect }[],
+  request?: Request,
 ): Promise<DbComplaintShape[]> {
   const items: DbComplaintShape[] = rows.map((r) => {
     const brand: BrandNested = {
@@ -76,6 +79,19 @@ async function enrichComplaints(
         it.profiles = pr
           ? { full_name: pr.full_name, username: pr.username, avatar_url: pr.avatar_url }
           : null;
+      }
+    }
+  }
+
+  if (request && items.length > 0) {
+    const viewer = await optionalUser(request);
+    if (viewer) {
+      const supported = await supportedComplaintIds(
+        viewer.id,
+        items.map((i) => i.id),
+      );
+      for (const it of items) {
+        (it as DbComplaintShape & { user_supported?: boolean }).user_supported = supported.has(it.id);
       }
     }
   }
