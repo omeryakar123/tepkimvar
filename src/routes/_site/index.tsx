@@ -651,11 +651,11 @@ function Home() {
         {/* Pro CTA */}
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 pt-10 sm:pt-16 pb-6 sm:pb-10 min-w-0">
           <div className="max-w-3xl mx-auto text-center">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/20 text-brand px-3 h-7 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider ring-1 ring-brand/35 mb-4 sm:mb-5">
+            <span className="site-cta-badge mb-4 sm:mb-5 mx-auto">
               <ShieldCheck className="size-3.5 shrink-0" />
               tepkimvar Pro
             </span>
-            <h2 className="font-display font-bold text-[20px] sm:text-[28px] leading-snug px-1">
+            <h2 className="font-display font-bold text-[20px] sm:text-[28px] leading-snug px-1 text-white">
               tepkimvar Pro ile müşteri tabanınızı büyütün
             </h2>
             <p className="mt-3 text-[13px] sm:text-[14px] site-cta-muted max-w-md mx-auto leading-relaxed px-1">
@@ -664,13 +664,13 @@ function Home() {
             <div className="mt-5 sm:mt-6 flex flex-col sm:flex-row gap-2.5 sm:gap-3 justify-center px-1">
               <a
                 href={siteContactMailto("Pro üyelik")}
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-brand text-brand-foreground px-5 sm:px-6 h-11 text-[13px] font-semibold hover:bg-brand-hover transition shadow-soft w-full sm:w-auto"
+                className="site-cta-btn w-full sm:w-auto"
               >
                 Pro üyelik için iletişim
               </a>
               <Link
                 to="/register/marka-basvuru"
-                className="inline-flex items-center justify-center gap-2 rounded-full ring-1 ring-brand/45 px-5 sm:px-6 h-11 text-[13px] font-semibold hover:bg-brand/15 transition w-full sm:w-auto"
+                className="site-cta-btn-ghost w-full sm:w-auto"
               >
                 Marka başvurusu yap
               </Link>
@@ -685,71 +685,73 @@ function Home() {
             whileInView={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.2 }}
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="grid md:grid-cols-2 gap-3 sm:gap-5"
+            className="grid md:grid-cols-2 gap-4 sm:gap-5 md:items-stretch"
           >
             {/* Keşfet */}
-            <div className="site-cta-panel flex flex-col rounded-[18px] sm:rounded-[22px] ring-1 ring-brand/30 p-5 sm:p-8 lg:p-9 min-w-0">
-              <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-1.5 sm:gap-2 mb-4 sm:mb-5">
-                <span className="font-display font-black text-[17px] sm:text-[18px] tracking-tight">
-                  tepkimvar<span className="text-brand">.</span>
+            <div className="site-cta-panel flex flex-col h-full rounded-[20px] sm:rounded-[24px] p-5 sm:p-8 lg:p-9 min-w-0">
+              <div className="site-cta-panel-shine" aria-hidden />
+              <div className="relative flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 sm:gap-2.5 mb-5 sm:mb-6">
+                <span className="font-display font-black text-[18px] sm:text-[19px] tracking-tight text-white">
+                  tepkimvar<span className="site-cta-accent">.</span>
                 </span>
-                <span className="hidden sm:block h-4 w-px site-cta-divider" aria-hidden />
+                <span className="hidden sm:block h-4 w-px site-cta-divider shrink-0" aria-hidden />
                 <span className="text-[11px] sm:text-[12px] font-medium site-cta-muted leading-snug">
                   Web sitemizi keşfedin:{" "}
-                  <span className="text-brand font-semibold">tepkimvar.com</span>
+                  <span className="site-cta-accent font-semibold">tepkimvar.com</span>
                 </span>
               </div>
 
-              <h2 className="font-display font-black text-[22px] sm:text-[32px] lg:text-[36px] leading-[1.08] sm:leading-[1.06] tracking-[-0.03em]">
+              <h2 className="relative font-display font-black text-[24px] sm:text-[34px] lg:text-[38px] leading-[1.06] tracking-[-0.03em] text-white">
                 Sesini duyur,
                 <br />
-                <span className="text-gradient-brand">çözümü takip et!</span>
+                <span className="site-cta-gradient-text">çözümü takip et!</span>
               </h2>
 
-              <p className="mt-3 sm:mt-4 text-[13px] sm:text-[14px] leading-relaxed site-cta-muted max-w-md">
+              <p className="relative mt-3 sm:mt-4 text-[13px] sm:text-[14px] leading-relaxed site-cta-muted max-w-md">
                 Alışverişten önce marka skorunu sorgula; çözüm oranı, yanıt hızı ve
                 gerçek kullanıcı deneyimlerini gör.
               </p>
 
               <Link
                 to="/markalar"
-                className="mt-5 sm:mt-auto sm:pt-7 inline-flex w-full sm:w-fit items-center justify-center gap-2 rounded-full bg-brand text-brand-foreground px-5 sm:px-6 h-11 text-[13px] font-semibold shadow-soft hover:bg-brand-hover transition"
+                className="relative mt-6 sm:mt-auto sm:pt-8 site-cta-btn w-full sm:w-fit"
               >
                 Tereddüt yok, sorgula
-                <ArrowRight className="size-4" />
+                <ArrowRight className="size-4 shrink-0" />
               </Link>
             </div>
 
             {/* Paylaş */}
-            <div className="site-cta-panel flex flex-col rounded-[18px] sm:rounded-[22px] ring-1 ring-brand/30 p-5 sm:p-8 lg:p-9 min-w-0">
-              <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-1.5 sm:gap-2 mb-4 sm:mb-5">
-                <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-brand/25 text-brand px-2.5 sm:px-3 h-7 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider ring-1 ring-brand/35">
+            <div className="site-cta-panel flex flex-col h-full rounded-[20px] sm:rounded-[24px] p-5 sm:p-8 lg:p-9 min-w-0">
+              <div className="site-cta-panel-shine" aria-hidden />
+              <div className="relative flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 sm:gap-2.5 mb-5 sm:mb-6">
+                <span className="site-cta-badge w-fit">
                   <MessageCircle className="size-3.5 shrink-0" />
                   Topluluk
                 </span>
-                <span className="hidden sm:block h-4 w-px site-cta-divider" aria-hidden />
+                <span className="hidden sm:block h-4 w-px site-cta-divider shrink-0" aria-hidden />
                 <span className="text-[11px] sm:text-[12px] font-medium site-cta-muted">
                   Deneyimini paylaş
                 </span>
               </div>
 
-              <h2 className="font-display font-black text-[22px] sm:text-[32px] lg:text-[36px] leading-[1.08] sm:leading-[1.06] tracking-[-0.03em]">
+              <h2 className="relative font-display font-black text-[24px] sm:text-[34px] lg:text-[38px] leading-[1.06] tracking-[-0.03em] text-white">
                 Deneyimini
                 <br />
-                <span className="text-gradient-brand">paylaş!</span>
+                <span className="site-cta-gradient-text">paylaş!</span>
               </h2>
 
-              <p className="mt-3 sm:mt-4 text-[13px] sm:text-[14px] leading-relaxed site-cta-muted max-w-md">
+              <p className="relative mt-3 sm:mt-4 text-[13px] sm:text-[14px] leading-relaxed site-cta-muted max-w-md">
                 Kullandığın siteler hakkında gerçek deneyimini anlat. Yorumunu bırak,
                 başkalarının doğru karar vermesine yardımcı ol.
               </p>
 
               <Link
                 to="/sikayet-yaz"
-                className="mt-5 sm:mt-auto sm:pt-7 inline-flex w-full sm:w-fit items-center justify-center gap-2 rounded-full bg-brand text-brand-foreground px-5 sm:px-6 h-11 text-[13px] font-semibold shadow-soft hover:bg-brand-hover transition"
+                className="relative mt-6 sm:mt-auto sm:pt-8 site-cta-btn w-full sm:w-fit"
               >
                 Şikayetini yaz
-                <ArrowRight className="size-4" />
+                <ArrowRight className="size-4 shrink-0" />
               </Link>
             </div>
           </motion.div>

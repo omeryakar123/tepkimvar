@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Search, X, Building2, MessageSquare, FileText, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { brandLogoUrl } from "@/lib/logo";
+import { BrandAvatar } from "@/components/cards";
 import { Modal } from "@/components/ui/modal";
 
 type BrandHit = { id: string; slug: string; name: string; logo_url: string | null; website?: string | null };
@@ -88,16 +88,7 @@ function GlobalSearchModal({ open, onClose }: { open: boolean; onClose: () => vo
             <Section icon={Building2} title="Markalar">
               {brands.map((b) => (
                 <button key={b.id} onClick={() => go(`/firma/${b.slug}`)} className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-brand-soft/40 text-left">
-                  <div className="size-8 rounded-lg bg-surface grid place-items-center overflow-hidden">
-                    {(() => {
-                      const src = brandLogoUrl({ logoUrl: b.logo_url, website: b.website, slug: b.slug, size: 64 });
-                      return src ? (
-                        <img src={src} alt="" className="size-full object-cover" />
-                      ) : (
-                        <span className="text-[11px] font-bold text-navy-mid">{b.name.slice(0, 2).toUpperCase()}</span>
-                      );
-                    })()}
-                  </div>
+                  <BrandAvatar name={b.name} slug={b.slug} logoUrl={b.logo_url} website={b.website} size={32} rounded="rounded-lg" />
                   <span className="text-[14px] text-ink font-medium">{b.name}</span>
                   <span className="ml-auto text-[11px] text-navy-mid">/{b.slug}</span>
                 </button>

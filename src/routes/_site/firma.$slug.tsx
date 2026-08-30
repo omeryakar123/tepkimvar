@@ -12,7 +12,7 @@ import {
   Star,
   MessageSquare,
 } from "lucide-react";
-import { BrandProfileComplaintCard } from "@/components/cards";
+import { BrandProfileComplaintCard, BrandLogoImage } from "@/components/cards";
 import {
   formatRating,
   formatResponseTime,
@@ -25,7 +25,6 @@ import {
   BRAND_PROFILE_COMPLAINTS_LIMIT,
   type DbBrand,
 } from "@/lib/data";
-import { brandLogoUrl } from "@/lib/logo";
 import { displayResolutionRate, displayResponseMinutes } from "@/lib/display-brand-metrics";
 import { proxyImage } from "@/lib/img";
 import { Pagination } from "@/components/pagination";
@@ -300,26 +299,14 @@ function CompanyPage() {
         <div className="bg-card rounded-2xl ring-1 ring-rule p-5 sm:p-6 mt-6 relative">
           <div className="flex flex-col sm:flex-row sm:items-end gap-5">
             <div className="relative shrink-0">
-              <div className="size-24 sm:size-28 rounded-2xl bg-card ring-4 ring-white outline outline-1 -outline-offset-1 outline-black/5 shadow-sm flex items-center justify-center text-xl font-semibold text-navy-mid overflow-hidden">
-                {(() => {
-                  const src =
-                    proxyImage(raw.logo_url) ||
-                    brandLogoUrl({
-                      logoUrl: raw.logo_url,
-                      website: raw.website,
-                      slug: raw.slug,
-                      size: 256,
-                    });
-                  return src ? (
-                    <img
-                      src={src}
-                      alt={company.name}
-                      className="size-full object-contain bg-card"
-                    />
-                  ) : (
-                    <>{company.name.slice(0, 2).toUpperCase()}</>
-                  );
-                })()}
+              <div className="size-24 sm:size-28 rounded-2xl bg-card ring-4 ring-white outline outline-1 -outline-offset-1 outline-black/5 shadow-sm flex items-center justify-center overflow-hidden">
+                <BrandLogoImage
+                  name={company.name}
+                  slug={raw.slug}
+                  logoUrl={raw.logo_url}
+                  website={raw.website}
+                  size={112}
+                />
               </div>
               {isAdmin && (
                 <>

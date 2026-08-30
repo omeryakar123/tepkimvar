@@ -29,10 +29,10 @@ async function authorize(request: Request): Promise<void> {
   throw new HttpError(401, "Yetkisiz");
 }
 
-function runScript(name: string): Promise<{ stdout: string; stderr: string; code: number }> {
+function runScript(name: string, args: string[] = []): Promise<{ stdout: string; stderr: string; code: number }> {
   return new Promise((resolve) => {
     const script = join(process.cwd(), "scripts", name);
-    const child = spawn("bun", [script], {
+    const child = spawn("bun", [script, ...args], {
       env: process.env,
       cwd: process.cwd(),
     });
@@ -59,7 +59,7 @@ export const Route = createFileRoute("/api/cron/maintenance")({
           await sql.end();
 
           const seed = await runScript("seed-bilisim-brands-bulk.mjs");
-          const logos = await runScript("fix-brand-logos.mjs");
+          const logos = await runScript("fix-brand-logos.mjs", ["--all", "--force"]);
           const clear = await runScript("clear-synthetic-responses.mjs");
 
           const ok = seed.code === 0 && logos.code === 0 && clear.code === 0;

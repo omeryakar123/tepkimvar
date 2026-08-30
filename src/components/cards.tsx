@@ -4,7 +4,8 @@ import { BadgeCheck, Eye, MessageSquare, ChevronRight, Clock, Star, Send, Buildi
 import type { Company, Complaint } from "@/lib/mock-data";
 import { displayComplaintViews } from "@/lib/display-views";
 import { formatCompactCount, formatRating, formatResponseTime, statusClasses, statusLabel } from "@/lib/mock-data";
-import { brandLogoUrl } from "@/lib/logo";
+import { proxyImage } from "@/lib/img";
+import { brandLogoUrl, brandLogoCandidates } from "@/lib/logo";
 import { toast } from "sonner";
 
 const avatarPalette = [
@@ -164,6 +165,43 @@ export function BrandProfileComplaintCard({
   );
 }
 
+export function BrandLogoImage({
+  name,
+  slug,
+  logoUrl,
+  website,
+  size = 112,
+  className = "size-full object-contain bg-card",
+}: {
+  name: string;
+  slug: string;
+  logoUrl?: string | null;
+  website?: string | null;
+  size?: number;
+  className?: string;
+}) {
+  const [candidateIdx, setCandidateIdx] = useState(0);
+  const px = Math.max(256, size * 2);
+  const candidates = brandLogoCandidates({ logoUrl, website, slug, size: px });
+  const src = candidates[candidateIdx] ?? null;
+
+  if (!src) {
+    return <span className="text-xl font-semibold text-navy-mid">{name.slice(0, 2).toUpperCase()}</span>;
+  }
+
+  return (
+    <img
+      src={src.startsWith("/") ? (proxyImage(src) ?? src) : src}
+      alt={name}
+      width={px}
+      height={px}
+      decoding="async"
+      className={className}
+      onError={() => setCandidateIdx((i) => i + 1)}
+    />
+  );
+}
+
 export function BrandAvatar({
   name,
   slug,
@@ -181,15 +219,27 @@ export function BrandAvatar({
   rounded?: string;
   tone?: "light" | "dark";
 }) {
-  const [imgFailed, setImgFailed] = useState(false);
-  const src = imgFailed
-    ? null
-    : brandLogoUrl({ logoUrl, website, slug, size: size * 2 });
+  const [candidateIdx, setCandidateIdx] = useState(0);
+  const candidates = brandLogoCandidates({
+    logoUrl,
+    website,
+    slug,
+    size: Math.max(256, size * 4),
+  });
+  const src = candidates[candidateIdx] ?? null;
   const initials = name.slice(0, 2).toUpperCase();
   const shell =
     tone === "dark"
       ? "ring-white/15 bg-white/[0.92]"
       : "ring-rule/80 bg-white shadow-[inset_0_0_0_1px_oklch(0.94_0.004_250)]";
+  const px = Math.max(256, size * 4);
+
+  const resolveSrc = (url: string) => {
+    if (url.startsWith("/")) return proxyImage(url) ?? url;
+    if (url.startsWith("http")) return proxyImage(url) ?? url;
+    return url;
+  };
+
   return (
     <div
       className={`relative shrink-0 ${rounded} overflow-hidden ring-1 ${shell} grid place-items-center`}
@@ -197,11 +247,14 @@ export function BrandAvatar({
     >
       {src ? (
         <img
-          src={src}
+          src={resolveSrc(src)}
           alt={name}
+          width={px}
+          height={px}
           loading="lazy"
-          className="w-[82%] h-[82%] object-contain"
-          onError={() => setImgFailed(true)}
+          decoding="async"
+          className="w-[82%] h-[82%] object-contain [image-rendering:auto]"
+          onError={() => setCandidateIdx((i) => i + 1)}
         />
       ) : (
         <span
