@@ -9,7 +9,6 @@ const SLUG_DOMAIN_OVERRIDES: Record<string, string> = {
   "betwoon-casino": "betwoon.com",
   casibom: "casibom.com",
   jojobet: "jojobet.com",
-  matbet: "matbet.com",
   mavibet: "mavibet.com",
   holiganbet: "holiganbet.com",
   meritking: "mrking.com",
@@ -64,6 +63,11 @@ const SLUG_DOMAIN_OVERRIDES: Record<string, string> = {
   migros: "migros.com.tr",
   thy: "turkishairlines.com",
   arcelik: "arcelik.com.tr",
+};
+
+/** Site olmayan veya favicon dışında kaynak gereken markalar — yerel yüksek çözünürlük */
+export const SLUG_LOGO_OVERRIDES: Record<string, string> = {
+  matbet: "/brand-logos/matbet.png",
 };
 
 /** superbonus14.pro/sponsorlar listesindeki markalar — yüksek çözünürlüklü PNG */
@@ -163,8 +167,17 @@ export function brandLogoCandidates(opts: BrandLogoOpts): string[] {
 
   const raw = opts.logoUrl?.trim() ?? "";
 
-  // Bahis/casino — superbonus PNG her zaman en önce (MinIO'daki düşük favicon'ların önüne geçer)
-  if (slugKey && (SUPERBONUS_SPONSOR_SLUGS.has(slugKey) || isGamblingBrand(slugKey, dom))) {
+  // Yerel / sabit logo (site yok veya düşük kaliteli favicon)
+  if (slugKey && SLUG_LOGO_OVERRIDES[slugKey]) {
+    push(SLUG_LOGO_OVERRIDES[slugKey]);
+  }
+
+  // Bahis/casino — superbonus PNG (matbet gibi override'lı slug'lar hariç öncelikli)
+  if (
+    slugKey &&
+    !SLUG_LOGO_OVERRIDES[slugKey] &&
+    (SUPERBONUS_SPONSOR_SLUGS.has(slugKey) || isGamblingBrand(slugKey, dom))
+  ) {
     push(superbonusLogoUrl(slugKey));
   }
 

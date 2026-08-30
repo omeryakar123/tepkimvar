@@ -36,12 +36,18 @@ const DOMAIN_OVERRIDES = {
   "lord-palace-casino": "lordpalacecasino.com",
   istanbulbahis: "istanbulbahis.com",
   jojobet: "jojobet.com",
-  matbet: "matbet.com",
   mavibet: "mavibet.com",
   holiganbet: "holiganbet.com",
 };
 
+const LOGO_OVERRIDES = {
+  matbet: "/brand-logos/matbet.png",
+};
+
+const NO_WEBSITE = new Set(["matbet"]);
+
 function logoUrl(name, slug) {
+  if (LOGO_OVERRIDES[slug]) return LOGO_OVERRIDES[slug];
   const dom = DOMAIN_OVERRIDES[slug] ?? `${slug.replace(/-/g, "")}.com`;
   const fb = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&size=128&background=1B263B&color=fff&bold=true&length=2`;
   return `https://unavatar.io/${dom}?fallback=${encodeURIComponent(fb)}`;
@@ -75,7 +81,7 @@ for (const name of names) {
     continue;
   }
   const dom = DOMAIN_OVERRIDES[slug] ?? `${slug.replace(/-/g, "")}.com`;
-  const website = dom.startsWith("http") ? dom : `https://${dom}`;
+  const website = NO_WEBSITE.has(slug) ? null : dom.startsWith("http") ? dom : `https://${dom}`;
   const total = rnd(20, 180);
   const resolvedPct = rnd(8, 35);
   const resolved = Math.round((total * resolvedPct) / 100);

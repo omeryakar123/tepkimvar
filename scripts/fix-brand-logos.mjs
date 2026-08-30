@@ -9,6 +9,17 @@
  *   bun scripts/fix-brand-logos.mjs --all --force
  */
 import postgres from "postgres";
+import { readFileSync } from "node:fs";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __dir = dirname(fileURLToPath(import.meta.url));
+const ROOT = join(__dir, "..");
+
+/** Site olmayan markalar — public/brand-logos/ altında barındırılır */
+const STATIC_LOGOS = {
+  matbet: "/brand-logos/matbet.png",
+};
 
 const FAVICON_PROXY = ["google.com/s2/favicons", "gstatic.com/favicon", "duckduckgo.com/ip3"];
 const BAD = [
@@ -23,7 +34,7 @@ const GAMBLING_RE = /bet|bahis|casino|slot|poker|rulet|kumar|gambling/i;
 
 const DOMAIN_OVERRIDES = {
   jojobet: "jojobet.com",
-  matbet: "matbet.com",
+  matbet: null,
   mavibet: "mavibet.com",
   holiganbet: "holiganbet.com",
   casibom: "casibom.com",
@@ -152,6 +163,16 @@ async function trySiteIcons(domain) {
 }
 
 async function bestLogo(slug, name, website) {
+  if (STATIC_LOGOS[slug]) {
+    const localPath = join(ROOT, "public", STATIC_LOGOS[slug].replace(/^\//, ""));
+    try {
+      const buf = readFileSync(localPath);
+      return { url: STATIC_LOGOS[slug], buf, type: "image/png", size: buf.length, src: "static" };
+    } catch {
+      return { url: STATIC_LOGOS[slug], buf: null, type: "image/png", size: 0, src: "static" };
+    }
+  }
+
   const dom = domainFor(slug, website);
 
   if (SUPERBONUS.has(slug) || isGambling(slug, name)) {
@@ -224,4 +245,16 @@ for (const row of toFix) {
 }
 
 console.log(`Güncellenen logo: ${updated}`);
+
+for (const [slug] of Object.entries(STATIC_LOGOS)) {
+  const hit = await bestLogo(slug, slug, null);
+  const logoUrl = hit ? await persistLogo(slug, hit) : STATIC_LOGOS[slug];
+  const rows = await sql`
+    UPDATE brands SET logo_url = ${logoUrl}, website = NULL, updated_at = now()
+    WHERE slug = ${slug}
+    RETURNING slug
+  `;
+  if (rows.length) console.log(`  Sabit logo: ${slug} → ${logoUrl}`);
+}
+
 await sql.end();
