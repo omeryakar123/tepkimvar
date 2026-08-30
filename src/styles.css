@@ -183,6 +183,7 @@
     -moz-osx-font-smoothing: grayscale;
     scroll-behavior: smooth;
     color-scheme: light;
+    overflow-x: hidden;
   }
 
   html.dark {

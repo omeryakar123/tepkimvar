@@ -178,90 +178,110 @@ function Home() {
 
       {/* HERO */}
       <section className="relative overflow-hidden md:hero-glow">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8 sm:py-16 lg:py-24 grid lg:grid-cols-[1.05fr_1fr] gap-6 sm:gap-8 lg:gap-16 items-center min-w-0">
-          <div className="animate-fade-up min-w-0">
-            <span className="inline-flex items-center gap-2 rounded-full bg-brand-soft text-brand px-2.5 sm:px-3 h-7 text-[11px] sm:text-[12px] font-semibold ring-1 ring-brand/15">
-              <ShieldCheck className="size-3.5 shrink-0" />
-              Bağımsız şikayet platformu
+        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 py-6 sm:py-16 lg:py-24 box-border">
+          <div className="grid lg:grid-cols-[1.05fr_1fr] gap-6 sm:gap-8 lg:gap-16 items-start lg:items-center min-w-0 w-full">
+          <div className="animate-fade-up min-w-0 w-full max-w-full">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-soft text-brand px-2.5 h-6 sm:h-7 text-[10px] sm:text-[12px] font-semibold ring-1 ring-brand/15 max-w-full">
+              <ShieldCheck className="size-3 shrink-0" />
+              <span className="truncate">Bağımsız şikayet platformu</span>
             </span>
 
-            <h1 className="mt-4 sm:mt-5 font-display font-black text-[28px] min-[400px]:text-[32px] sm:text-[58px] lg:text-[64px] leading-[1.05] sm:leading-[1.02] tracking-[-0.03em] text-ink break-words">
+            <h1 className="mt-3 sm:mt-5 font-display font-black text-[1.65rem] leading-[1.08] sm:text-[58px] lg:text-[64px] sm:leading-[1.02] tracking-[-0.03em] text-ink">
               Sesini duyur,
               <br />
               <span className="text-gradient-brand">çözümü takip et.</span>
             </h1>
 
-            <p className="mt-4 sm:mt-5 text-[15px] sm:text-[16px] leading-relaxed text-navy max-w-lg">
+            <p className="mt-3 sm:mt-5 text-[14px] sm:text-[16px] leading-relaxed text-navy max-w-lg">
               Markalar hakkındaki gerçek deneyimleri keşfet, şikayetini paylaş,
-              firmalardan resmi yanıt al. Her adım şeffaf ve takip edilebilir.
+              firmalardan resmi yanıt al.
             </p>
 
-            <form onSubmit={doSearch} className="mt-5 sm:mt-8 max-w-xl">
-              <div className="flex flex-col min-[420px]:flex-row min-[420px]:items-center gap-2 min-[420px]:gap-0 bg-card rounded-2xl min-[420px]:rounded-full shadow-pop ring-1 ring-rule min-[420px]:pl-4 sm:min-[420px]:pl-5 min-[420px]:pr-1.5 p-2 min-[420px]:p-0 min-[420px]:h-14 focus-within:ring-2 focus-within:ring-brand/40 transition">
-                <div className="flex items-center flex-1 min-w-0 min-[420px]:h-full px-2 min-[420px]:px-0">
-                  <Search className="size-5 text-navy-mid shrink-0" />
+            {/* Arama — mobil: dikey, tablet+: pill */}
+            <form onSubmit={doSearch} className="mt-4 sm:mt-8 w-full max-w-full sm:max-w-xl box-border">
+              <div className="sm:hidden w-full space-y-2">
+                <div className="flex items-center gap-2 h-11 px-3 w-full rounded-xl bg-card ring-1 ring-rule box-border">
+                  <Search className="size-4 text-navy-mid shrink-0" />
                   <input
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Marka, model, ürün ara…"
-                    className="flex-1 bg-transparent border-0 px-2 sm:px-3 text-[14px] sm:text-[15px] text-ink placeholder:text-navy-mid focus:outline-none min-w-0 w-full h-10 min-[420px]:h-auto"
+                    placeholder="Marka veya ürün ara…"
+                    className="flex-1 min-w-0 w-0 bg-transparent border-0 text-[14px] text-ink placeholder:text-navy-mid focus:outline-none"
                   />
                 </div>
                 <button
                   type="submit"
-                  className="w-full min-[420px]:w-auto shrink-0 rounded-xl min-[420px]:rounded-full bg-brand text-brand-foreground px-5 sm:px-8 h-10 min-[420px]:h-11 text-[13px] sm:text-[14px] font-semibold hover:bg-brand-hover transition"
+                  className="w-full h-10 rounded-xl bg-brand text-brand-foreground text-[13px] font-semibold hover:bg-brand-hover transition"
+                >
+                  Ara
+                </button>
+              </div>
+              <div className="hidden sm:flex items-center w-full max-w-xl h-14 bg-card rounded-full shadow-pop ring-1 ring-rule pl-5 pr-1.5 focus-within:ring-2 focus-within:ring-brand/40 transition box-border">
+                <Search className="size-5 text-navy-mid shrink-0" />
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Marka, model, ürün ara…"
+                  className="flex-1 min-w-0 bg-transparent border-0 px-3 text-[15px] text-ink placeholder:text-navy-mid focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  className="shrink-0 rounded-full bg-brand text-brand-foreground px-8 h-11 text-[14px] font-semibold hover:bg-brand-hover transition"
                 >
                   Ara
                 </button>
               </div>
             </form>
 
-            <div className="mt-4 sm:mt-5 flex flex-wrap gap-x-3 gap-y-1.5 text-[12px] sm:text-[12.5px] text-navy">
-              <span className="font-semibold text-navy-mid">Popüler:</span>
-              {PRIORITY_BRAND_LINKS.map((b) => (
-                <Link
-                  key={b.slug}
-                  to="/firma/$slug"
-                  params={{ slug: b.slug }}
-                  className="hover:text-brand transition-colors"
-                >
-                  {b.name}
-                </Link>
-              ))}
+            {/* Popüler markalar — mobilde yatay kaydırma */}
+            <div className="mt-3 sm:mt-5 -mx-4 px-4 sm:mx-0 sm:px-0 overflow-x-auto scrollbar-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <div className="flex sm:flex-wrap items-center gap-x-3 gap-y-1 w-max sm:w-auto text-[11px] sm:text-[12.5px] text-navy pb-0.5 sm:pb-0">
+                <span className="font-semibold text-navy-mid shrink-0">Popüler:</span>
+                {PRIORITY_BRAND_LINKS.slice(0, 6).map((b) => (
+                  <Link
+                    key={b.slug}
+                    to="/firma/$slug"
+                    params={{ slug: b.slug }}
+                    className="hover:text-brand transition-colors whitespace-nowrap shrink-0"
+                  >
+                    {b.name}
+                  </Link>
+                ))}
+              </div>
             </div>
 
-            {/* Gerçek verilerden güven şeridi */}
-            <dl className="mt-8 sm:mt-10 flex flex-wrap items-center gap-x-6 sm:gap-x-8 gap-y-3">
+            <dl className="mt-6 sm:mt-10 grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:gap-x-8 sm:gap-y-3">
               {[
                 { v: stats.totalComplaints, l: "şikayet" },
                 { v: stats.totalCompanies, l: "marka" },
                 {
                   v: Math.round(stats.resolutionRate),
-                  l: "% çözüm oranı",
+                  l: "çözüm oranı",
                   raw: true,
                 },
               ].map((s) => (
-                <div key={s.l}>
-                  <dt className="font-display text-[22px] sm:text-[26px] font-black text-ink tabular-nums leading-none">
+                <div key={s.l} className="min-w-0 text-center sm:text-left">
+                  <dt className="font-display text-[18px] sm:text-[26px] font-black text-ink tabular-nums leading-none">
                     {s.raw ? `%${s.v}` : s.v.toLocaleString("tr-TR")}
                   </dt>
-                  <dd className="mt-1 text-[12px] text-navy-mid">
-                    {s.raw ? "çözüm oranı" : s.l}
+                  <dd className="mt-0.5 sm:mt-1 text-[10px] sm:text-[12px] text-navy-mid leading-tight">
+                    {s.l}
                   </dd>
                 </div>
               ))}
             </dl>
 
-            {/* Mobil canlı akış — masaüstünde sağ kolonda */}
-            <div className="mt-8 lg:hidden">
+            {/* Mobil canlı akış */}
+            <div className="mt-5 sm:mt-8 lg:hidden w-full max-w-full box-border">
               <LiveFeed items={featured} loading={feedLoading} compact updatedAt={lastFeedAt} />
             </div>
           </div>
 
           {/* Canlı akış — masaüstü */}
-          <div className="relative hidden lg:block">
-            <div className="absolute -inset-6 rounded-[32px] bg-brand/5 blur-2xl" aria-hidden />
+          <div className="relative hidden lg:block min-w-0">
+            <div className="absolute -inset-6 rounded-[32px] bg-brand/5 blur-2xl pointer-events-none" aria-hidden />
             <LiveFeed items={featured} loading={feedLoading} updatedAt={lastFeedAt} />
+          </div>
           </div>
         </div>
       </section>
