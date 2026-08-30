@@ -3,7 +3,6 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { PenLine, User, Menu, X, LogOut, LayoutDashboard, UserCircle2, Building2 } from "lucide-react";
 import { useAuth, highestRoleRedirect } from "@/hooks/use-auth";
 import { GlobalSearchTrigger } from "@/components/global-search";
-import { PRIORITY_BRAND_LINKS } from "@/lib/featured-brands";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { NotificationBell } from "@/components/notification-bell";
 
@@ -186,12 +185,6 @@ export function SiteFooter() {
       ["Marka Başvurusu", "/register/marka-basvuru"],
       ["Marka Yönetim", "/brand"],
     ] },
-    { t: "Çok Aranan", l: PRIORITY_BRAND_LINKS.map((b) => [
-      b.name,
-      "/firma/$slug" as const,
-      undefined,
-      { slug: b.slug },
-    ]) },
     { t: "Trend 100", l: [
       ["Genel", "/trend-100"],
       ["Bankacılık", "/trend-100", { kategori: "bankacilik" }],
@@ -229,7 +222,7 @@ export function SiteFooter() {
             ))}
           </div>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {columns.map((g) => (
             <div key={g.t}>
               <h4 className="text-paper dark:text-ink font-semibold text-[13px] mb-3">{g.t}</h4>
