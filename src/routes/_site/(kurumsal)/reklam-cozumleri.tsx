@@ -114,8 +114,8 @@ function AdsPage() {
         </div>
       </section>
 
-      {/* CTA — site gradyanları (bg-ink / beyaz yok) */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-media via-[oklch(0.17_0.018_262)] to-[oklch(0.13_0.022_285)] text-media-foreground">
+      {/* CTA — site-cta-shell: tema bağımsız koyu gradyan */}
+      <section className="relative overflow-hidden site-cta-shell">
         <div
           className="pointer-events-none absolute -right-24 -top-24 size-80 rounded-full bg-brand/14 blur-3xl"
           aria-hidden
@@ -132,7 +132,7 @@ function AdsPage() {
           <h2 className="font-display font-bold text-[20px] sm:text-[26px] leading-snug">
             tepkimvar Pro ile müşteri tabanınızı büyütün
           </h2>
-          <p className="mt-3 text-[13px] sm:text-[14px] text-media-foreground/75 max-w-md mx-auto leading-relaxed">
+          <p className="mt-3 text-[13px] sm:text-[14px] site-cta-muted max-w-md mx-auto leading-relaxed">
             Çözüm sunan markalar arasına katılın; Pro üyelik avantajlarından yararlanın.
           </p>
           <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
@@ -144,7 +144,7 @@ function AdsPage() {
             </a>
             <Link
               to="/register/marka-basvuru"
-              className="inline-flex items-center justify-center gap-2 rounded-full ring-1 ring-brand/40 text-media-foreground px-6 h-11 text-[13px] font-semibold hover:bg-brand/10 transition"
+              className="inline-flex items-center justify-center gap-2 rounded-full ring-1 ring-brand/45 px-6 h-11 text-[13px] font-semibold hover:bg-brand/15 transition"
             >
               Marka başvurusu yap
             </Link>
