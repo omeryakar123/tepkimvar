@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BadgeCheck, Eye, MessageSquare, ChevronRight, Clock, Star, Send, Building2 } from "lucide-react";
 import type { Company, Complaint } from "@/lib/mock-data";
 import { displayComplaintViews } from "@/lib/display-views";
@@ -195,6 +195,10 @@ export function BrandLogoImage({
   const candidates = brandLogoCandidates({ logoUrl, website, slug, size: px });
   const src = candidates[candidateIdx] ?? null;
 
+  useEffect(() => {
+    setCandidateIdx(0);
+  }, [slug, logoUrl, website]);
+
   if (!src) {
     return <span className="text-xl font-semibold text-navy-mid">{name.slice(0, 2).toUpperCase()}</span>;
   }
@@ -231,15 +235,23 @@ export function BrandRankLogo({
   const initials = name.slice(0, 2).toUpperCase();
   const isWideAsset = Boolean(slug && slug in SLUG_LOGO_OVERRIDES);
 
+  useEffect(() => {
+    setCandidateIdx(0);
+  }, [slug, logoUrl, website]);
+
   const resolveSrc = (url: string) => {
     if (url.startsWith("/")) return proxyImage(url) ?? url;
     if (url.startsWith("http")) return proxyImage(url) ?? url;
     return url;
   };
 
+  const shell = isWideAsset
+    ? "ring-white/15 bg-black/80"
+    : "ring-white/20 bg-white";
+
   return (
     <div
-      className={`relative shrink-0 h-11 w-[4.75rem] sm:h-12 sm:w-20 rounded-xl overflow-hidden ring-1 ring-white/20 bg-white/[0.08] grid place-items-center ${className}`}
+      className={`relative shrink-0 h-11 w-[4.75rem] sm:h-12 sm:w-[4.5rem] rounded-xl overflow-hidden ring-1 grid place-items-center ${shell} ${className}`}
     >
       {src ? (
         <img
@@ -251,8 +263,8 @@ export function BrandRankLogo({
           decoding="async"
           className={
             isWideAsset
-              ? "w-full h-full object-cover"
-              : "max-w-[88%] max-h-[88%] w-auto h-auto object-contain"
+              ? "w-full h-full object-contain"
+              : "max-w-[84%] max-h-[84%] w-auto h-auto object-contain"
           }
           onError={() => setCandidateIdx((i) => i + 1)}
         />
@@ -297,6 +309,10 @@ export function BrandAvatar({
       : "ring-rule/80 bg-white shadow-[inset_0_0_0_1px_oklch(0.94_0.004_250)]";
   const px = Math.max(256, size * 4);
 
+  useEffect(() => {
+    setCandidateIdx(0);
+  }, [slug, logoUrl, website]);
+
   const resolveSrc = (url: string) => {
     if (url.startsWith("/")) return proxyImage(url) ?? url;
     if (url.startsWith("http")) return proxyImage(url) ?? url;
@@ -316,7 +332,7 @@ export function BrandAvatar({
           height={px}
           loading="lazy"
           decoding="async"
-          className="w-[82%] h-[82%] object-contain [image-rendering:auto]"
+          className="max-w-[86%] max-h-[86%] w-auto h-auto object-contain"
           onError={() => setCandidateIdx((i) => i + 1)}
         />
       ) : (

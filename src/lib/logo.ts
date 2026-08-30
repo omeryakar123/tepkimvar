@@ -94,7 +94,7 @@ function normalizeDomain(input?: string | null): string | null {
   return s;
 }
 
-/** Düşük kaliteli / kırık kaynaklar */
+/** Düşük kaliteli / kırık / artık çalışmayan kaynaklar */
 function isLikelyBrokenLogo(url: string): boolean {
   const u = url.toLowerCase();
   return (
@@ -105,7 +105,8 @@ function isLikelyBrokenLogo(url: string): boolean {
     u.includes("logo.clearbit.com") ||
     u.endsWith(".svg") ||
     u.includes("googleusercontent.com/a/default") ||
-    u.includes("porkbun-logo")
+    u.includes("porkbun-logo") ||
+    u.includes("superbonus14.pro")
   );
 }
 
@@ -125,6 +126,18 @@ function isDirectImageUrl(url: string): boolean {
   return /\.(png|jpe?g|webp|gif|avif|ico)$/.test(path);
 }
 
+/** Eski UUID tabanlı yüklemeler sık 404 — önce domain yedeklerini dene */
+function isUuidUploadLogo(url: string): boolean {
+  return /^\/api\/files\/brand-logos\/[0-9a-f-]{36}\//i.test(url);
+}
+
+/** Eski migrate script'in yazdığı düşük çözünürlüklü MinIO favicon'ları */
+function isLowResStoredLogo(url: string): boolean {
+  if (!url.startsWith("/api/files/brand-logos/seed/")) return false;
+  const u = url.toLowerCase();
+  return !u.includes("-hq.png") && !u.includes("-superbonus.png") && !u.includes("-v2.png");
+}
+
 function gstaticFavicon(domain: string, size = 256): string {
   const sz = Math.min(256, Math.max(64, size));
   const page = encodeURIComponent(`https://${domain}`);
@@ -134,6 +147,10 @@ function gstaticFavicon(domain: string, size = 256): string {
 function s2Favicon(domain: string, size = 256): string {
   const sz = Math.min(256, Math.max(64, size));
   return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=${sz}`;
+}
+
+function duckduckgoIcon(domain: string): string {
+  return `https://icons.duckduckgo.com/ip3/${domain}.ico`;
 }
 
 function resolveDomain(opts: { slug?: string | null; website?: string | null }): string | null {
@@ -173,7 +190,29 @@ export function brandLogoCandidates(opts: BrandLogoOpts): string[] {
     push(SLUG_LOGO_OVERRIDES[slugKey]);
   }
 
-  // Bahis/casino — superbonus PNG (matbet gibi override'lı slug'lar hariç öncelikli)
+  // MinIO yüksek çözünürlük veya doğrudan PNG/JPEG (düşük seed / UUID yüklemelerini atla)
+  if (raw.startsWith("/") && !isLowResStoredLogo(raw) && !isLikelyBrokenLogo(raw) && !isUuidUploadLogo(raw)) {
+    push(raw);
+  } else if (
+    raw.startsWith("http") &&
+    isDirectImageUrl(raw) &&
+    !isLikelyBrokenLogo(raw) &&
+    !isFaviconProxy(raw)
+  ) {
+    push(proxyImage(raw) ?? raw);
+  }
+
+  // Domain tabanlı yedekler — superbonus kapalı olduğu için gstatic/site öncelikli
+  if (dom) {
+    push(gstaticFavicon(dom, fetchSize));
+    push(duckduckgoIcon(dom));
+    push(s2Favicon(dom, fetchSize));
+    if (LOGO_DEV_KEY) {
+      push(`https://img.logo.dev/${dom}?token=${LOGO_DEV_KEY}&size=${fetchSize}&format=png&fallback=monogram`);
+    }
+  }
+
+  // superbonus14.pro çoğu markada 404 — en son yedek
   if (
     slugKey &&
     !SLUG_LOGO_OVERRIDES[slugKey] &&
@@ -182,19 +221,9 @@ export function brandLogoCandidates(opts: BrandLogoOpts): string[] {
     push(superbonusLogoUrl(slugKey));
   }
 
-  // MinIO / kendi sunucumuz — yedek olarak kalır, erken çıkış yok
-  if (raw.startsWith("/")) {
+  // UUID tabanlı eski yüklemeler (404 olabilir) — tüm yedeklerden sonra
+  if (raw.startsWith("/") && isUuidUploadLogo(raw) && !isLikelyBrokenLogo(raw)) {
     push(raw);
-  } else if (raw.startsWith("http") && isDirectImageUrl(raw) && !isLikelyBrokenLogo(raw) && !isFaviconProxy(raw)) {
-    push(proxyImage(raw) ?? raw);
-  }
-
-  if (dom) {
-    push(gstaticFavicon(dom, fetchSize));
-    push(s2Favicon(dom, fetchSize));
-    if (LOGO_DEV_KEY) {
-      push(`https://img.logo.dev/${dom}?token=${LOGO_DEV_KEY}&size=${fetchSize}&format=png&fallback=monogram`);
-    }
   }
 
   return out;
