@@ -626,60 +626,77 @@ function Home() {
         </div>
       </section>
 
-      {/* TEREDDÜT YOK — md ve üzerinde bölümün tamamını kaplayan görsel banner.
-          Başlık/açıklama/buton görselin İÇİNDE yazılı; telefonda o yazılar
-          okunamayacak kadar küçüldüğü için küçük ekranda metin sürümü gösterilir
-          (metin DOM'da kaldığı için arama motorları her iki durumda da görür). */}
+      {/* KEŞFET & PAYLAŞ — gradyan banner */}
       <section>
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-16">
-          <div className="md:hidden">
-            <div className="inline-flex items-center gap-2 text-[12px] font-bold uppercase tracking-wider text-brand mb-2">
-              <ShieldCheck className="size-4" /> Alışverişten Önce
-            </div>
-            <h2 className="font-display font-black text-[30px] text-ink leading-tight">
-              Markanın skorunu sorgula.
-            </h2>
-            <p className="mt-3 text-[13.5px] text-navy leading-relaxed max-w-md">
-              Satın alma kararından önce markanın çözüm oranını, yanıt hızını ve
-              gerçek kullanıcı deneyimlerini görün.
-            </p>
-            <Link
-              to="/markalar"
-              className="mt-5 inline-flex items-center gap-2 rounded-full bg-brand text-brand-foreground px-5 h-11 text-[13px] font-semibold"
-            >
-              Tereddüt Yok, Sorgula <ArrowRight className="size-4" />
-            </Link>
-          </div>
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-12 sm:py-16">
           <motion.div
             initial={
-              reduceMotion ? { opacity: 0 } : { opacity: 0, y: 32, scale: 0.97 }
+              reduceMotion ? { opacity: 0 } : { opacity: 0, y: 28, scale: 0.98 }
             }
             whileInView={
               reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }
             }
-            viewport={{ once: true, amount: 0.3 }}
+            viewport={{ once: true, amount: 0.25 }}
             transition={{ type: "spring", damping: 22, stiffness: 110 }}
-            className="relative hidden md:block"
+            className="relative overflow-hidden rounded-3xl ring-1 ring-rule shadow-lift"
           >
-            {/* Arka ışıma */}
             <div
-              className="absolute inset-x-16 inset-y-6 rounded-full bg-brand/10 blur-3xl"
+              className="absolute inset-0 bg-gradient-to-br from-ink via-[#152535] to-brand"
               aria-hidden
             />
-            <Link
-              to="/markalar"
-              aria-label="Markanın skorunu sorgula — marka listesini aç"
-              className="group relative block overflow-hidden rounded-3xl ring-1 ring-rule shadow-lift focus-visible:ring-2 focus-visible:ring-brand"
-            >
-              <img
-                src="/tepkim-hero.png"
-                alt="Sesini duyur, çözümü takip et — tepkimvar.com ile markalar hakkında gerçek deneyimini paylaş"
-                width={1024}
-                height={504}
-                className="block w-full h-auto transition-transform duration-500 group-hover:scale-[1.02]"
-                loading="lazy"
-              />
-            </Link>
+            <div
+              className="absolute inset-0 opacity-60 bg-[radial-gradient(ellipse_80%_60%_at_0%_0%,oklch(0.72_0.14_195/0.35),transparent_55%),radial-gradient(ellipse_70%_50%_at_100%_100%,oklch(0.55_0.18_290/0.25),transparent_50%)]"
+              aria-hidden
+            />
+            <div
+              className="absolute -top-24 -right-24 size-64 rounded-full bg-brand/20 blur-3xl"
+              aria-hidden
+            />
+
+            <div className="relative grid lg:grid-cols-2 gap-10 lg:gap-12 p-8 sm:p-10 lg:p-14">
+              <div className="flex flex-col">
+                <div className="font-display font-black text-[22px] sm:text-[26px] tracking-tight text-paper leading-none">
+                  tepkimvar<span className="text-brand">.</span>
+                </div>
+                <p className="mt-3 text-[13px] sm:text-[14px] text-paper/65">
+                  Web Sitemizi Keşfedin:{" "}
+                  <span className="font-semibold text-brand">tepkimvar.com</span>
+                </p>
+
+                <h2 className="mt-8 font-display font-black text-[28px] sm:text-[34px] lg:text-[38px] leading-[1.08] tracking-[-0.02em] text-paper">
+                  Sesini Duyur,
+                  <br />
+                  <span className="bg-gradient-to-r from-brand to-[oklch(0.72_0.16_290)] bg-clip-text text-transparent">
+                    Çözümü Takip Et!
+                  </span>
+                </h2>
+
+                <Link
+                  to="/markalar"
+                  className="mt-8 inline-flex w-fit items-center gap-2 rounded-full bg-brand text-brand-foreground px-6 h-11 text-[13px] sm:text-[14px] font-semibold shadow-soft hover:brightness-110 transition"
+                >
+                  Tereddüt Yok, Sorgula
+                  <ArrowRight className="size-4" />
+                </Link>
+              </div>
+
+              <div className="flex flex-col justify-center border-t border-paper/10 pt-8 lg:border-t-0 lg:border-l lg:pl-12 lg:pt-0">
+                <h3 className="font-display font-bold text-[22px] sm:text-[26px] text-paper leading-snug">
+                  Deneyimini Paylaş!
+                </h3>
+                <p className="mt-4 text-[14px] sm:text-[15px] text-paper/80 leading-relaxed">
+                  Kullandığın siteler hakkında gerçek deneyimini anlat. Yorumunu bırak,
+                  başkalarının doğru karar vermesine yardımcı ol!
+                </p>
+                <Link
+                  to="/sikayet-yaz"
+                  className="mt-6 inline-flex w-fit items-center gap-2 rounded-full ring-1 ring-paper/25 text-paper px-6 h-11 text-[13px] font-semibold hover:bg-paper/10 transition"
+                >
+                  Şikayetini Yaz
+                  <ArrowRight className="size-4" />
+                </Link>
+              </div>
+            </div>
           </motion.div>
         </div>
       </section>
