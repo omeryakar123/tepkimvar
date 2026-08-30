@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { PenLine, User, Menu, X, LogOut, LayoutDashboard, UserCircle2, Building2 } from "lucide-react";
 import { useAuth, highestRoleRedirect } from "@/hooks/use-auth";
+import { GlobalSearchTrigger } from "@/components/global-search";
 import { PRIORITY_BRAND_LINKS } from "@/lib/featured-brands";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { NotificationBell } from "@/components/notification-bell";

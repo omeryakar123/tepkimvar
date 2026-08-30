@@ -5,10 +5,10 @@ import { toDbBrand } from "@/lib/db-shapes";
 import { PRIORITY_BRAND_SLUGS } from "@/lib/featured-brands";
 
 function brandPriorityOrder() {
-  const whens = PRIORITY_BRAND_SLUGS.map(
-    (slug, i) => sql`WHEN ${slug} THEN ${i}`,
-  );
-  return sql`CASE ${schema.brands.slug} ${sql.join(whens, sql` `)} ELSE ${PRIORITY_BRAND_SLUGS.length} END`;
+  const cases = PRIORITY_BRAND_SLUGS.map(
+    (slug, i) => `WHEN '${slug.replace(/'/g, "''")}' THEN ${i}`,
+  ).join(" ");
+  return sql.raw(`CASE "brands"."slug" ${cases} ELSE ${PRIORITY_BRAND_SLUGS.length} END`);
 }
 
 // Public: firma listesi.

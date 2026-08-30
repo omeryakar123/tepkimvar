@@ -24,6 +24,7 @@ import {
   fetchPlatformStats,
 } from "@/lib/data";
 import { PRIORITY_BRAND_LINKS } from "@/lib/featured-brands";
+import { publicPlatformStats } from "@/lib/public-stats";
 import { SITE_CONTACT_EMAIL } from "@/lib/contact";
 import { BrandAvatar } from "@/components/cards";
 import { LiveFeed } from "@/components/live-feed";
