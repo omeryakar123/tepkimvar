@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Megaphone } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
@@ -26,6 +26,11 @@ export function ComplaintSupportButton({
   const [votes, setVotes] = useState(initialVotes);
   const [supported, setSupported] = useState(initialSupported);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setVotes(initialVotes);
+    setSupported(initialSupported);
+  }, [complaintId, initialVotes, initialSupported]);
 
   async function toggle(e: React.MouseEvent) {
     e.preventDefault();

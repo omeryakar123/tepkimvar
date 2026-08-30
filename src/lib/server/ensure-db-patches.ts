@@ -17,6 +17,11 @@ export async function ensureDbPatches(): Promise<void> {
     const pg = postgres(url, { max: 1 });
     try {
       await applyDbPatches(pg);
+      await pg`
+        UPDATE complaints c SET votes = COALESCE((
+          SELECT count(*)::int FROM complaint_supports s WHERE s.complaint_id = c.id
+        ), 0)
+      `.catch(() => {});
       done = true;
     } finally {
       await pg.end({ timeout: 5 });

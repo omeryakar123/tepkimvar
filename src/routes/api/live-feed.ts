@@ -3,7 +3,7 @@ import { and, eq, inArray, notInArray, or } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { toDbComplaint, type BrandNested, type DbComplaintShape } from "@/lib/db-shapes";
 import { errorResponse, optionalUser } from "@/lib/server/guard";
-import { complaintRankOrder } from "@/lib/server/complaint-sort";
+import { complaintRecentOrder } from "@/lib/server/complaint-sort";
 import { supportedComplaintIds } from "@/lib/server/complaint-support";
 
 const HIDDEN_STATUSES = ["pending", "rejected", "spam"] as const;
@@ -29,7 +29,7 @@ export const Route = createFileRoute("/api/live-feed")({
                 ),
               ),
             )
-            .orderBy(...complaintRankOrder())
+            .orderBy(...complaintRecentOrder())
             .limit(limit);
 
           const items = await enrichComplaints(rows, request);

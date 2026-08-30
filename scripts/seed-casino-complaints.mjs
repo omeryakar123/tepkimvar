@@ -92,7 +92,7 @@ for (const b of brands) {
        is_anonymous, anon_name, public_id, brand_response, brand_response_at, brand_response_by,
        created_at, updated_at)
       VALUES (${uid}, ${b.id}, ${b.category_id}, ${t[0]}, ${t[1]}, ${status}, ${pick(CITIES)},
-              ${rating}, ${rnd(40, 1500)}, ${rnd(0, 60)},
+              ${rating}, ${rnd(40, 1500)}, ${0},
               ${anon}, ${anon ? "Anonim Kullanıcı" : null}, ${pubId()},
               ${hasResp ? pick(ANSWERS) : null}, ${respAt}, ${hasResp ? pick(uids) : null},
               ${created}, ${respAt ?? created})

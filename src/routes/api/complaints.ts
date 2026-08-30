@@ -7,7 +7,7 @@ import { recordStatusChange } from "@/lib/server/history";
 import { refreshBrandAggregates } from "@/lib/server/brand-stats";
 import { ensureDbPatches } from "@/lib/server/ensure-db-patches";
 import { moderateAndScore } from "@/lib/server/moderation";
-import { complaintRankOrder, complaintTrendingOrder } from "@/lib/server/complaint-sort";
+import { complaintRankOrder, complaintRecentOrder, complaintTrendingOrder } from "@/lib/server/complaint-sort";
 import { supportedComplaintIds } from "@/lib/server/complaint-support";
 
 // Public: şikayet listesi. RLS gitti; moderasyon filtresi BURADA zorlanıyor.
@@ -75,7 +75,9 @@ export const Route = createFileRoute("/api/complaints")({
         const ordered =
           sortBy === "trending"
             ? base.orderBy(...complaintTrendingOrder())
-            : base.orderBy(...complaintRankOrder());
+            : sortBy === "supported"
+              ? base.orderBy(...complaintRankOrder())
+              : base.orderBy(...complaintRecentOrder());
 
         let total = 0;
         let rows: { c: typeof schema.complaints.$inferSelect; b: typeof schema.brands.$inferSelect }[];
