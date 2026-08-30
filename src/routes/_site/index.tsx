@@ -26,7 +26,7 @@ import {
 import { PRIORITY_BRAND_LINKS } from "@/lib/featured-brands";
 import { publicPlatformStats } from "@/lib/public-stats";
 import { SITE_CONTACT_EMAIL, siteContactMailto } from "@/lib/contact";
-import { BrandAvatar } from "@/components/cards";
+import { BrandAvatar, BrandRankLogo } from "@/components/cards";
 import { LiveFeed } from "@/components/live-feed";
 import { ComplaintSupportButton } from "@/components/complaint-support-button";
 import { MobileCarousel } from "@/components/mobile-carousel";
@@ -475,12 +475,17 @@ function Home() {
                 key={b.slug}
                 to="/firma/$slug"
                 params={{ slug: b.slug }}
-                className={`flex items-center gap-2.5 sm:gap-4 px-3 sm:px-5 py-3 sm:py-4 hover:bg-white/[0.06] transition ${i > 0 ? "border-t border-white/10" : ""}`}
+                className={`flex items-center gap-3 sm:gap-4 px-3 sm:px-5 py-3.5 sm:py-4 hover:bg-white/[0.06] transition ${i > 0 ? "border-t border-white/10" : ""}`}
               >
-                <span className="grid place-items-center size-7 sm:size-8 rounded-full bg-white/10 text-media-foreground font-bold text-[12px] sm:text-[13px] tabular-nums shrink-0">
+                <span className="grid place-items-center size-8 sm:size-9 rounded-full bg-white/10 text-media-foreground font-bold text-[12px] sm:text-[13px] tabular-nums shrink-0">
                   {i + 1}
                 </span>
-                <BrandAvatar name={b.name} slug={b.slug} logoUrl={b.logoUrl} website={b.website} size={36} rounded="rounded-lg" tone="dark" />
+                <BrandRankLogo
+                  name={b.name}
+                  slug={b.slug}
+                  logoUrl={b.logoUrl}
+                  website={b.website}
+                />
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold text-[13px] sm:text-[14px] truncate">
                     {b.name}

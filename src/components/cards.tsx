@@ -5,7 +5,7 @@ import type { Company, Complaint } from "@/lib/mock-data";
 import { displayComplaintViews } from "@/lib/display-views";
 import { formatCompactCount, formatRating, formatResponseTime, statusClasses, statusLabel } from "@/lib/mock-data";
 import { proxyImage } from "@/lib/img";
-import { brandLogoUrl, brandLogoCandidates } from "@/lib/logo";
+import { brandLogoUrl, brandLogoCandidates, SLUG_LOGO_OVERRIDES } from "@/lib/logo";
 import { ComplaintSupportButton } from "@/components/complaint-support-button";
 import { toast } from "sonner";
 
@@ -209,6 +209,59 @@ export function BrandLogoImage({
       className={className}
       onError={() => setCandidateIdx((i) => i + 1)}
     />
+  );
+}
+
+export function BrandRankLogo({
+  name,
+  slug,
+  logoUrl,
+  website,
+  className = "",
+}: {
+  name: string;
+  slug: string;
+  logoUrl?: string | null;
+  website?: string | null;
+  className?: string;
+}) {
+  const [candidateIdx, setCandidateIdx] = useState(0);
+  const candidates = brandLogoCandidates({ logoUrl, website, slug, size: 256 });
+  const src = candidates[candidateIdx] ?? null;
+  const initials = name.slice(0, 2).toUpperCase();
+  const isWideAsset = Boolean(slug && slug in SLUG_LOGO_OVERRIDES);
+
+  const resolveSrc = (url: string) => {
+    if (url.startsWith("/")) return proxyImage(url) ?? url;
+    if (url.startsWith("http")) return proxyImage(url) ?? url;
+    return url;
+  };
+
+  return (
+    <div
+      className={`relative shrink-0 h-11 w-[4.75rem] sm:h-12 sm:w-20 rounded-xl overflow-hidden ring-1 ring-white/20 bg-white/[0.08] grid place-items-center ${className}`}
+    >
+      {src ? (
+        <img
+          src={resolveSrc(src)}
+          alt={name}
+          width={256}
+          height={256}
+          loading="lazy"
+          decoding="async"
+          className={
+            isWideAsset
+              ? "w-full h-full object-cover"
+              : "max-w-[88%] max-h-[88%] w-auto h-auto object-contain"
+          }
+          onError={() => setCandidateIdx((i) => i + 1)}
+        />
+      ) : (
+        <span className={`font-bold text-[11px] sm:text-[12px] ${avatarFor(slug)} w-full h-full grid place-items-center`}>
+          {initials}
+        </span>
+      )}
+    </div>
   );
 }
 
