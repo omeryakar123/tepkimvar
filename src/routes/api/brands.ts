@@ -1,7 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { and, desc, eq, ilike, sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, sql, type SQL } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { toDbBrand } from "@/lib/db-shapes";
+import { PRIORITY_BRAND_SLUGS } from "@/lib/featured-brands";
+
+function brandPriorityOrder() {
+  const whens = PRIORITY_BRAND_SLUGS.map(
+    (slug, i) => sql`WHEN ${slug} THEN ${i}`,
+  );
+  return sql`CASE ${schema.brands.slug} ${sql.join(whens, sql` `)} ELSE ${PRIORITY_BRAND_SLUGS.length} END`;
+}
 
 // Public: firma listesi.
 export const Route = createFileRoute("/api/brands")({
@@ -37,7 +45,7 @@ export const Route = createFileRoute("/api/brands")({
         if (p.get("premium") === "1") conditions.push(eq(schema.brands.premium, true));
 
         const where = and(...conditions);
-        const orderBy =
+        const secondaryOrder =
           sortBy === "rating"
             ? desc(schema.brands.rating)
             : sortBy === "resolution"
@@ -50,7 +58,7 @@ export const Route = createFileRoute("/api/brands")({
           .select()
           .from(schema.brands)
           .where(where)
-          .orderBy(orderBy)
+          .orderBy(...(search ? [secondaryOrder] : [asc(brandPriorityOrder()), secondaryOrder]))
           .$dynamic();
 
         let rows: (typeof schema.brands.$inferSelect)[];

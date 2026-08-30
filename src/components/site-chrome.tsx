@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { PenLine, User, Menu, X, LogOut, LayoutDashboard, UserCircle2, Building2 } from "lucide-react";
 import { useAuth, highestRoleRedirect } from "@/hooks/use-auth";
-import { GlobalSearchTrigger } from "@/components/global-search";
+import { PRIORITY_BRAND_LINKS } from "@/lib/featured-brands";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { NotificationBell } from "@/components/notification-bell";
 
@@ -185,14 +185,12 @@ export function SiteFooter() {
       ["Marka Başvurusu", "/register/marka-basvuru"],
       ["Marka Yönetim", "/brand"],
     ] },
-    { t: "Çok Aranan", l: [
-      ["Turkcell", "/firma/$slug", undefined, { slug: "turkcell" }],
-      ["Trendyol", "/firma/$slug", undefined, { slug: "trendyol" }],
-      ["Vodafone", "/firma/$slug", undefined, { slug: "vodafone" }],
-      ["Papara", "/firma/$slug", undefined, { slug: "papara" }],
-      ["Hepsiburada", "/firma/$slug", undefined, { slug: "hepsiburada" }],
-      ["Migros", "/firma/$slug", undefined, { slug: "migros" }],
-    ] },
+    { t: "Çok Aranan", l: PRIORITY_BRAND_LINKS.map((b) => [
+      b.name,
+      "/firma/$slug" as const,
+      undefined,
+      { slug: b.slug },
+    ]) },
     { t: "Trend 100", l: [
       ["Genel", "/trend-100"],
       ["Bankacılık", "/trend-100", { kategori: "bankacilik" }],

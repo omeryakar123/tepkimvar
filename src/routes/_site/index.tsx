@@ -23,7 +23,7 @@ import {
   fetchLiveFeed,
   fetchPlatformStats,
 } from "@/lib/data";
-import { publicPlatformStats } from "@/lib/public-stats";
+import { PRIORITY_BRAND_LINKS } from "@/lib/featured-brands";
 import { SITE_CONTACT_EMAIL } from "@/lib/contact";
 import { BrandAvatar } from "@/components/cards";
 import { LiveFeed } from "@/components/live-feed";
@@ -211,17 +211,16 @@ function Home() {
 
             <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-[12.5px] text-navy">
               <span className="font-semibold text-navy-mid">Popüler:</span>
-              {["Trendyol", "Turkcell", "Papara", "Getir", "Migros"].map(
-                (t) => (
-                  <a
-                    key={t}
-                    href={`/arama?q=${encodeURIComponent(t)}`}
-                    className="hover:text-brand transition-colors"
-                  >
-                    {t}
-                  </a>
-                ),
-              )}
+              {PRIORITY_BRAND_LINKS.map((b) => (
+                <Link
+                  key={b.slug}
+                  to="/firma/$slug"
+                  params={{ slug: b.slug }}
+                  className="hover:text-brand transition-colors"
+                >
+                  {b.name}
+                </Link>
+              ))}
             </div>
 
             {/* Gerçek verilerden güven şeridi */}
