@@ -251,7 +251,7 @@ export function BrandRankLogo({
 
   return (
     <div
-      className={`relative shrink-0 h-11 w-[4.75rem] sm:h-12 sm:w-[4.5rem] rounded-xl overflow-hidden ring-1 grid place-items-center ${shell} ${className}`}
+      className={`relative shrink-0 size-11 sm:size-12 rounded-full overflow-hidden ring-1 grid place-items-center ${shell} ${className}`}
     >
       {src ? (
         <img
@@ -261,11 +261,7 @@ export function BrandRankLogo({
           height={256}
           loading="lazy"
           decoding="async"
-          className={
-            isWideAsset
-              ? "w-full h-full object-contain"
-              : "max-w-[84%] max-h-[84%] w-auto h-auto object-contain"
-          }
+          className="max-w-[84%] max-h-[84%] w-auto h-auto object-contain"
           onError={() => setCandidateIdx((i) => i + 1)}
         />
       ) : (

@@ -605,7 +605,7 @@ function Home() {
                 >
                   <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
                     <span className="w-6 sm:w-7 text-[12px] sm:text-[13px] text-navy-mid font-bold tabular-nums shrink-0">{i + 1}.</span>
-                    <BrandAvatar name={b.name} slug={b.slug} logoUrl={b.logoUrl} website={b.website} size={36} rounded="rounded-lg" />
+                    <BrandAvatar name={b.name} slug={b.slug} logoUrl={b.logoUrl} website={b.website} size={36} rounded="rounded-full" />
                     <div className="flex-1 min-w-0">
                       <div className="font-semibold text-[13px] sm:text-[14px] text-ink leading-snug line-clamp-2">{b.name}</div>
                       <div className="text-[10.5px] sm:text-[11px] text-navy-mid mt-0.5 truncate">{b.categoryName}</div>
@@ -640,7 +640,7 @@ function Home() {
               >
                 <span className="text-[13px] text-navy-mid tabular-nums">{i + 1}.</span>
                 <div className="flex items-center gap-3 min-w-0">
-                  <BrandAvatar name={b.name} slug={b.slug} logoUrl={b.logoUrl} website={b.website} size={32} rounded="rounded-md" />
+                  <BrandAvatar name={b.name} slug={b.slug} logoUrl={b.logoUrl} website={b.website} size={32} rounded="rounded-full" />
                   <div className="min-w-0">
                     <div className="font-semibold text-[14px] text-ink truncate">{b.name}</div>
                     <div className="text-[11px] text-navy-mid truncate">{b.categoryName}</div>
