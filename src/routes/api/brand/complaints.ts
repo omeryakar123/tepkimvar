@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { and, desc, eq, sql, type SQL } from "drizzle-orm";
+import { and, desc, eq, notInArray, sql, type SQL } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { recordStatusChange } from "@/lib/server/history";
 import { notifyComplaintOwner } from "@/lib/server/notify";
@@ -90,7 +90,11 @@ export const Route = createFileRoute("/api/brand/complaints")({
             Math.max(1, Number(p.get("pageSize")) || DEFAULT_PAGE_SIZE),
           );
 
-          const conditions: SQL[] = [eq(schema.complaints.brandId, brandId)];
+          // Moderasyon onayı almadan firmaya gösterilmez.
+          const conditions: SQL[] = [
+            eq(schema.complaints.brandId, brandId),
+            notInArray(schema.complaints.status, ["pending", "rejected", "spam"]),
+          ];
           const statusParam = p.get("status");
           if (statusParam) {
             if (!ALL_STATUSES.includes(statusParam as Status))

@@ -14,6 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { SITE_URL } from "@/lib/seo";
 import { themeInitScript } from "@/lib/theme";
 import { AuthProvider } from "../hooks/use-auth";
+import { PageViewTracker } from "@/components/page-view-tracker";
 
 function NotFoundComponent() {
   return (
@@ -175,6 +176,7 @@ function ThemedToaster() {
 function RootComponent() {
   return (
     <AuthProvider>
+      <PageViewTracker />
       <Outlet />
       <ThemedToaster />
     </AuthProvider>

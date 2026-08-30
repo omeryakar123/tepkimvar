@@ -679,25 +679,25 @@ function Home() {
                 </Link>
               </div>
 
-              {/* Paylaş */}
-              <div className="flex flex-col rounded-2xl bg-gradient-to-br from-ink to-navy-deep text-paper p-6 sm:p-8 lg:p-9 ring-1 ring-ink/10">
-                <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-brand/20 text-brand px-3 h-7 text-[11px] font-bold uppercase tracking-wider">
+              {/* Paylaş — Keşfet kartı ile aynı stil */}
+              <div className="flex flex-col rounded-2xl bg-card/90 backdrop-blur-sm ring-1 ring-rule p-6 sm:p-8 lg:p-9">
+                <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-brand-soft text-brand px-3 h-7 text-[11px] font-bold uppercase tracking-wider">
                   <MessageCircle className="size-3.5" />
                   Topluluk
                 </span>
 
-                <h3 className="mt-5 font-display font-black text-[24px] sm:text-[28px] leading-[1.1] tracking-[-0.02em]">
+                <h3 className="mt-5 font-display font-black text-[24px] sm:text-[28px] leading-[1.1] tracking-[-0.02em] text-ink">
                   Deneyimini paylaş!
                 </h3>
 
-                <p className="mt-4 text-[14px] leading-relaxed text-paper/75">
+                <p className="mt-4 text-[14px] leading-relaxed text-navy max-w-md">
                   Kullandığın siteler hakkında gerçek deneyimini anlat. Yorumunu bırak,
                   başkalarının doğru karar vermesine yardımcı ol.
                 </p>
 
                 <Link
                   to="/sikayet-yaz"
-                  className="mt-7 inline-flex w-fit items-center gap-2 rounded-full bg-paper text-ink px-6 h-11 text-[13px] font-semibold hover:brightness-105 transition"
+                  className="mt-7 inline-flex w-fit items-center gap-2 rounded-full bg-brand text-brand-foreground px-6 h-11 text-[13px] font-semibold shadow-soft hover:bg-brand-hover transition"
                 >
                   Şikayetini yaz
                   <ArrowRight className="size-4" />

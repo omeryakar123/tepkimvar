@@ -14,6 +14,7 @@
 import { and, desc, eq, gte, isNotNull, sql } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { refreshBrandAggregates } from "@/lib/server/brand-stats";
+import { ensureDbPatches } from "@/lib/server/ensure-db-patches";
 import { moderateAndScore } from "@/lib/server/moderation";
 import { AiError, aiProviderLabel, chatCompleteJson, isAiConfigured } from "@/lib/server/ai/client";
 import {
@@ -59,7 +60,7 @@ export type BotConfig = {
 /** Kayıt yoksa bot KAPALI kabul edilir — mevcut markalar etkilenmez. */
 export const DEFAULT_BOT_CONFIG: Omit<BotConfig, "brandId" | "lastRunAt"> = {
   enabled: false,
-  generateResponses: true,
+  generateResponses: false,
   dailyTarget: 3,
   minRating: 1,
   maxRating: 5,
@@ -100,7 +101,7 @@ function rowToConfig(row: typeof schema.brandBotConfigs.$inferSelect): BotConfig
   return {
     brandId: row.brandId,
     enabled: row.enabled,
-    generateResponses: row.generateResponses ?? true,
+    generateResponses: row.generateResponses ?? false,
     dailyTarget: clamp(row.dailyTarget, 0, MAX_PER_RUN),
     minRating: clamp(row.minRating, 1, 5),
     maxRating: clamp(row.maxRating, 1, 5),
@@ -122,6 +123,7 @@ function rowToConfig(row: typeof schema.brandBotConfigs.$inferSelect): BotConfig
 }
 
 export async function getBotConfig(brandId: string): Promise<BotConfig> {
+  await ensureDbPatches();
   const [row] = await db
     .select()
     .from(schema.brandBotConfigs)
@@ -150,6 +152,7 @@ export type BotConfigPatch = Partial<{
  * yazılmaz; her biri whitelist/clamp'ten geçer.
  */
 export async function saveBotConfig(brandId: string, patch: BotConfigPatch): Promise<BotConfig> {
+  await ensureDbPatches();
   const current = await getBotConfig(brandId);
 
   const minRating = clamp(Math.round(patch.minRating ?? current.minRating), 1, 5);

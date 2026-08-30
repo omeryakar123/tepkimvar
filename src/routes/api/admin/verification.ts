@@ -4,6 +4,7 @@ import { db, schema } from "@/db";
 import { audit } from "@/lib/server/audit";
 import { provisionBrandPortalAccess, resolveBrandForApproval } from "@/lib/server/brand-application";
 import { HttpError, errorResponse, requireStaff } from "@/lib/server/guard";
+import { ensureDbPatches } from "@/lib/server/ensure-db-patches";
 
 /**
  * Firma doğrulama / marka başvuru talepleri.
@@ -15,6 +16,7 @@ export const Route = createFileRoute("/api/admin/verification")({
       GET: async ({ request }) => {
         try {
           await requireStaff(request);
+          await ensureDbPatches();
           const brandId = new URL(request.url).searchParams.get("brandId");
 
           if (brandId) {
@@ -50,7 +52,6 @@ export const Route = createFileRoute("/api/admin/verification")({
             email: r.v.email,
             website: r.v.website,
             message: r.v.message,
-            telegram: r.v.telegram,
             address: r.v.address,
             photo_url: r.v.photoUrl,
             request_type: r.v.requestType,

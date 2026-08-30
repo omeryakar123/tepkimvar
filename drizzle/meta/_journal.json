@@ -15,6 +15,20 @@
       "when": 1787000000000,
       "tag": "0001_complaint_bot",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1787100000000,
+      "tag": "0002_brand_application",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1787200000000,
+      "tag": "0003_bot_generate_responses",
+      "breakpoints": true
     }
   ]
 }

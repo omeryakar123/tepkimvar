@@ -1,32 +1,24 @@
 #!/usr/bin/env bash
-# Prod'da (Coolify app container veya SSH) DATABASE_URL zaten env'de olmalı.
+# Prod container içinde: DATABASE_URL zaten env'de.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-echo "==> Migration: generate_responses kolonu"
-python3 - <<'PY'
-import os, psycopg2
-url = os.environ.get("DATABASE_URL")
-if not url:
-    raise SystemExit("DATABASE_URL tanımlı değil")
-conn = psycopg2.connect(url)
-cur = conn.cursor()
-cur.execute(
-    "ALTER TABLE brand_bot_configs ADD COLUMN IF NOT EXISTS generate_responses boolean DEFAULT true NOT NULL"
-)
-conn.commit()
-cur.close()
-conn.close()
-print("OK")
-PY
+echo "==> DB patch (migrate.ts deploy'da da koşar)"
+bun -e "
+import postgres from 'postgres';
+import { applyDbPatches } from './src/lib/server/db-patches.ts';
+const url = process.env.DATABASE_URL;
+if (!url) throw new Error('DATABASE_URL yok');
+const sql = postgres(url, { max: 1 });
+await applyDbPatches(sql);
+await sql.end();
+console.log('Patch OK');
+"
 
-echo "==> Markaları bilisim-teknoloji kategorisine ekle"
-python3 scripts/seed-bilisim-brands-bulk.py
+echo "==> Marka seed"
+bun scripts/seed-bilisim-brands-bulk.mjs
 
-echo "==> Bot cevaplarını temizle (bovbet/kazansana/bahsine hariç)"
-python3 scripts/clear-synthetic-responses.py
-
-echo "==> Logoları düzelt"
-python3 scripts/fix-tech-category-logos.py
+echo "==> Cevap temizliği (bovbet/kazansana hariç)"
+bun scripts/clear-synthetic-responses.mjs
 
 echo "Bitti."

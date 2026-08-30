@@ -17,6 +17,7 @@ import {
   sqlTodayStart,
   type BotConfigPatch,
 } from "@/lib/server/complaint-bot";
+import { ensureDbPatches } from "@/lib/server/ensure-db-patches";
 
 /**
  * Marka bazlı Complaint Bot ayarları.
@@ -57,6 +58,7 @@ export const Route = createFileRoute("/api/admin/bot/config")({
       GET: async ({ request }) => {
         try {
           await requireStaff(request);
+          await ensureDbPatches();
           const brandId = new URL(request.url).searchParams.get("brandId");
 
           if (brandId) {

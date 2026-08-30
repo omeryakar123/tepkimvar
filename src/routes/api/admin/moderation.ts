@@ -2,7 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { and, desc, eq, inArray, type SQL } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { audit } from "@/lib/server/audit";
+import { refreshBrandAggregates } from "@/lib/server/brand-stats";
+import { recordStatusChange } from "@/lib/server/history";
 import { HttpError, errorResponse, requireStaff } from "@/lib/server/guard";
+import { ensureDbPatches } from "@/lib/server/ensure-db-patches";
 
 const KINDS = [
   "escalation",
@@ -25,6 +28,7 @@ export const Route = createFileRoute("/api/admin/moderation")({
       GET: async ({ request }) => {
         try {
           await requireStaff(request);
+          await ensureDbPatches();
           const p = new URL(request.url).searchParams;
           const kind = p.get("kind") ?? "all";
           const state = p.get("state") ?? "open";
@@ -68,16 +72,70 @@ export const Route = createFileRoute("/api/admin/moderation")({
       PATCH: async ({ request }) => {
         try {
           const user = await requireStaff(request);
-          const b = (await request.json()) as { id?: string; state?: string };
+          const b = (await request.json()) as {
+            id?: string;
+            state?: string;
+            /** Şikayet onayı: resolved=onayla, dismissed=reddet */
+            complaintAction?: "approve" | "reject";
+          };
           if (!b.id) throw new HttpError(400, "Kayıt belirtilmeli");
-          if (!STATES.includes(b.state as State)) throw new HttpError(400, "Geçersiz durum");
 
-          const done = b.state === "resolved" || b.state === "dismissed";
+          const [item] = await db
+            .select()
+            .from(schema.moderationQueue)
+            .where(eq(schema.moderationQueue.id, b.id))
+            .limit(1);
+          if (!item) throw new HttpError(404, "Kayıt bulunamadı");
+
+          let state = b.state as State | undefined;
+          if (b.complaintAction && item.targetType === "complaint" && item.targetId) {
+            state = b.complaintAction === "approve" ? "resolved" : "dismissed";
+          }
+          if (!state || !STATES.includes(state)) throw new HttpError(400, "Geçersiz durum");
+
+          const done = state === "resolved" || state === "dismissed";
+
+          if (item.targetType === "complaint" && item.targetId && done) {
+            const [c] = await db
+              .select({
+                id: schema.complaints.id,
+                brandId: schema.complaints.brandId,
+                status: schema.complaints.status,
+              })
+              .from(schema.complaints)
+              .where(eq(schema.complaints.id, item.targetId))
+              .limit(1);
+
+            if (c) {
+              const nextStatus = state === "resolved" ? "approved" : "rejected";
+              await db
+                .update(schema.complaints)
+                .set({
+                  status: nextStatus,
+                  isPublic: state === "resolved",
+                  updatedAt: new Date(),
+                })
+                .where(eq(schema.complaints.id, c.id));
+
+              await recordStatusChange({
+                complaintId: c.id,
+                fromStatus: c.status,
+                toStatus: nextStatus,
+                changedBy: user.id,
+                actorRole: "staff",
+                note:
+                  state === "resolved"
+                    ? "Moderasyon onayı — yayına alındı"
+                    : "Moderasyon reddi",
+              });
+              await refreshBrandAggregates(c.brandId);
+            }
+          }
+
           const [updated] = await db
             .update(schema.moderationQueue)
             .set({
-              state: b.state as State,
-              // resolvedBy istemciden ALINMAZ — oturumdan.
+              state,
               resolvedBy: done ? user.id : null,
               resolvedAt: done ? new Date() : null,
               updatedAt: new Date(),
@@ -87,7 +145,7 @@ export const Route = createFileRoute("/api/admin/moderation")({
           if (!updated) throw new HttpError(404, "Kayıt bulunamadı");
 
           await audit(request, user.id, {
-            action: `moderation.${b.state}`,
+            action: `moderation.${state}`,
             entityType: "moderation_queue",
             entityId: updated.id,
           });

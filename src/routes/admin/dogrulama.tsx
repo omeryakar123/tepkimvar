@@ -10,7 +10,7 @@ type Verif = {
   id: string; brand_id: string; submitted_by: string;
   company_name: string; contact_name: string; phone: string; email: string;
   website: string | null; message: string | null; status: string;
-  telegram: string | null; address: string | null; photo_url: string | null;
+  address: string | null; photo_url: string | null;
   request_type: string; reviewer_note: string | null; created_at: string;
   brands?: { name: string; slug: string } | null;
 };
@@ -188,7 +188,6 @@ function VerificationsPage() {
               <Field label="Telefon" value={active.phone} />
               <Field label="E-posta" value={active.email} />
               <Field label="Website" value={active.website ?? "—"} />
-              {active.telegram && <Field label="Telegram" value={`@${active.telegram.replace(/^@/, "")}`} />}
               {active.address && <div className="col-span-2"><Field label="Adres" value={active.address} /></div>}
             </div>
             {active.photo_url && (

@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Loader2, CheckCircle2 } from "lucide-react";
+import { Loader2, CheckCircle2, Star } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { PhoneInput } from "@/components/phone-input";
@@ -8,6 +8,7 @@ import { toE164Tr } from "@/lib/phone";
 import { FileDropzone, type AcceptedFile } from "@/components/file-dropzone";
 import { Combobox } from "@/components/combobox";
 import { seoHead } from "@/lib/seo";
+import { SITE_CONTACT_EMAIL } from "@/lib/contact";
 
 type Brand = { id: string; name: string };
 type Category = { id: string; name: string };
@@ -27,26 +28,26 @@ function WriteComplaintPage() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
-  // Girişsiz kullanıcıyı doğrudan login'e gönder. Client tarafında yapılır ki
-  // SSR çıktısı (SEO) bozulmasın; oturum kontrolü biter bitmez yönlenir.
   useEffect(() => {
     if (!authLoading && !user) {
       toast.info("Şikayet yazmak için giriş yapın");
       navigate({ to: "/login" });
     }
   }, [authLoading, user, navigate]);
+
   const [brands, setBrands] = useState<Brand[]>([]);
   const [cats, setCats] = useState<Category[]>([]);
   const [brandId, setBrandId] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+  const [platformUsername, setPlatformUsername] = useState("");
+  const [rating, setRating] = useState(0);
   const [phone, setPhone] = useState("");
   const [kvkk, setKvkk] = useState(false);
   const [files, setFiles] = useState<AcceptedFile[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
-  const [published, setPublished] = useState(false);
   const [issues, setIssues] = useState<string[]>([]);
   const [mediaPrivacy, setMediaPrivacy] = useState<"public" | "brand_only" | "super_admin_only">("public");
 
@@ -58,7 +59,8 @@ function WriteComplaintPage() {
       ]);
       const bJson = (await bRes.json()) as { items: { id: string; name: string }[] };
       const cJson = (await cRes.json()) as { categories: { id: string; name: string }[] };
-      const bs = (bJson.items ?? []).map((b) => ({ id: b.id, name: b.name }))
+      const bs = (bJson.items ?? [])
+        .map((b) => ({ id: b.id, name: b.name }))
         .sort((x, y) => x.name.localeCompare(y.name, "tr"));
       setBrands(bs);
       const cs = cJson.categories ?? [];
@@ -67,11 +69,16 @@ function WriteComplaintPage() {
     })().catch(() => toast.error("Firma/kategori listesi yüklenemedi"));
   }, []);
 
-
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!user) { navigate({ to: "/login" }); return; }
+    if (!user) {
+      navigate({ to: "/login" });
+      return;
+    }
     if (!brandId) return toast.error("Lütfen bir firma seçin.");
+    if (!platformUsername.trim() || platformUsername.trim().length < 2)
+      return toast.error("Platform kullanıcı adınızı girin.");
+    if (rating < 1) return toast.error("Lütfen 1–5 yıldız puan verin.");
     if (title.trim().length < 6) return toast.error("Başlık en az 6 karakter olmalı.");
     if (body.trim().length < 20) return toast.error("Şikayet detayı en az 20 karakter olmalı.");
     if (!kvkk) return toast.error("KVKK onayı zorunludur.");
@@ -90,7 +97,8 @@ function WriteComplaintPage() {
           brandId,
           categoryId: categoryId || null,
           contactPhone: e164,
-          isAnonymous: false,
+          platformUsername: platformUsername.trim(),
+          rating,
         }),
       });
       const json = (await res.json()) as {
@@ -100,10 +108,8 @@ function WriteComplaintPage() {
         error?: string;
       };
       if (!res.ok || !json.id) throw new Error(json.error ?? "Şikayet oluşturulamadı.");
-      setPublished(json.status === "approved");
       setIssues(json.issues ?? []);
 
-      // Dosyaları MinIO'ya yükle (tür/boyut doğrulaması sunucuda).
       for (let i = 0; i < files.length; i++) {
         const af = files[i];
         const isImg = af.file.type.startsWith("image/");
@@ -141,17 +147,18 @@ function WriteComplaintPage() {
             <CheckCircle2 className="size-10 text-brand animate-pulse" />
           </div>
           <h1 className="mt-6 font-display text-3xl font-black tracking-tight text-ink">
-            {published ? "Şikayetiniz yayınlandı" : "Şikayetiniz incelemeye alındı"}
+            Şikayetiniz incelemeye alındı
           </h1>
           <p className="mt-2 text-navy">
-            {published
-              ? "Otomatik kontrolden geçti ve yayına alındı. Firmaya iletildi."
-              : "Ön kontrolümüz dikkat edilmesi gereken bir nokta buldu; moderasyon ekibi inceledikten sonra yayınlanacak."}
+            Moderasyon ekibimiz onayladıktan sonra yayına alınacak ve firmaya iletilecektir.
+            Sorularınız için {SITE_CONTACT_EMAIL}
           </p>
           {issues.length > 0 && (
             <ul className="mt-4 text-left mx-auto max-w-md space-y-2">
               {issues.map((m) => (
-                <li key={m} className="rounded-lg bg-warning-soft text-warning px-3 py-2 text-[13px]">{m}</li>
+                <li key={m} className="rounded-lg bg-warning-soft text-warning px-3 py-2 text-[13px]">
+                  {m}
+                </li>
               ))}
             </ul>
           )}
@@ -164,12 +171,24 @@ function WriteComplaintPage() {
     <div>
       <main className="mx-auto max-w-3xl px-4 sm:px-6 py-12">
         <div className="eyebrow text-navy-mid">Yeni Şikayet</div>
-        <h1 className="mt-1 font-display text-4xl font-black tracking-tight text-ink">Sesini duyur, çözümü takip et.</h1>
-        <p className="mt-2 text-[14.5px] text-navy max-w-xl">Şikayetin otomatik ön kontrolden geçer; temizse anında yayınlanır, şüpheli içerik moderasyon ekibine iletilir.</p>
+        <h1 className="mt-1 font-display text-4xl font-black tracking-tight text-ink">
+          Sesini duyur, çözümü takip et.
+        </h1>
+        <p className="mt-2 text-[14.5px] text-navy max-w-xl">
+          Şikayetin moderasyon onayından geçer; onay sonrası firmaya iletilir ve yayınlanır.
+        </p>
 
         {!authLoading && !user && (
           <div className="mt-6 rounded-2xl bg-brand-soft text-brand p-4 text-[13.5px]">
-            Şikayet göndermek için <Link to="/login" className="font-semibold underline">giriş yap</Link> veya <Link to="/register" className="font-semibold underline">üye ol</Link>.
+            Şikayet göndermek için{" "}
+            <Link to="/login" className="font-semibold underline">
+              giriş yap
+            </Link>{" "}
+            veya{" "}
+            <Link to="/register" className="font-semibold underline">
+              üye ol
+            </Link>
+            .
           </div>
         )}
 
@@ -203,17 +222,66 @@ function WriteComplaintPage() {
           </div>
 
           <div>
+            <label className="text-[12px] font-medium text-navy-mid">
+              Platform kullanıcı adınız <span className="text-danger">*</span>
+            </label>
+            <input
+              required
+              value={platformUsername}
+              onChange={(e) => setPlatformUsername(e.target.value)}
+              placeholder="Bahis/casino sitesindeki kullanıcı adınız"
+              className="mt-1 w-full h-11 rounded-lg ring-1 ring-rule px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40"
+            />
+          </div>
+
+          <div>
+            <label className="text-[12px] font-medium text-navy-mid">
+              Puanınız <span className="text-danger">*</span>
+            </label>
+            <div className="mt-2 flex gap-1">
+              {[1, 2, 3, 4, 5].map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setRating(n)}
+                  className="p-1 rounded hover:bg-surface transition"
+                  aria-label={`${n} yıldız`}
+                >
+                  <Star
+                    className={`size-8 ${n <= rating ? "fill-amber-400 text-amber-400" : "text-navy-mid/40"}`}
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
             <label className="text-[12px] font-medium text-navy-mid">Başlık</label>
-            <input required value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Kısa ve net bir başlık" className="mt-1 w-full h-11 rounded-lg ring-1 ring-rule px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40" />
+            <input
+              required
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Kısa ve net bir başlık"
+              className="mt-1 w-full h-11 rounded-lg ring-1 ring-rule px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40"
+            />
           </div>
 
           <div>
             <label className="text-[12px] font-medium text-navy-mid">Şikayet Detayı</label>
-            <textarea required rows={9} value={body} onChange={(e) => setBody(e.target.value)} placeholder="Yaşadıklarınızı detaylıca anlatın…" className="mt-1 w-full rounded-lg ring-1 ring-rule p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40" />
+            <textarea
+              required
+              rows={9}
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              placeholder="Yaşadıklarınızı detaylıca anlatın…"
+              className="mt-1 w-full rounded-lg ring-1 ring-rule p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40"
+            />
           </div>
 
           <div>
-            <label className="text-[12px] font-medium text-navy-mid">Telefon (opsiyonel, firma sizinle iletişime geçebilir)</label>
+            <label className="text-[12px] font-medium text-navy-mid">
+              Telefon (opsiyonel, firma sizinle iletişime geçebilir)
+            </label>
             <div className="mt-1">
               <PhoneInput value={phone} onChange={setPhone} />
             </div>
@@ -233,7 +301,14 @@ function WriteComplaintPage() {
                     { v: "brand_only", label: "Sadece firma" },
                     { v: "super_admin_only", label: "Sadece Super Admin" },
                   ].map((o) => (
-                    <button type="button" key={o.v} onClick={() => setMediaPrivacy(o.v as never)} className={`h-9 rounded-lg text-[12px] font-medium ring-1 ${mediaPrivacy === o.v ? "bg-brand text-brand-foreground ring-brand" : "ring-rule hover:bg-surface"}`}>{o.label}</button>
+                    <button
+                      type="button"
+                      key={o.v}
+                      onClick={() => setMediaPrivacy(o.v as never)}
+                      className={`h-9 rounded-lg text-[12px] font-medium ring-1 ${mediaPrivacy === o.v ? "bg-brand text-brand-foreground ring-brand" : "ring-rule hover:bg-surface"}`}
+                    >
+                      {o.label}
+                    </button>
                   ))}
                 </div>
               </div>
@@ -242,12 +317,27 @@ function WriteComplaintPage() {
 
           <div className="space-y-2 pt-2 border-t border-rule">
             <label className="flex items-start gap-3 text-[13px] text-navy cursor-pointer">
-              <input type="checkbox" required checked={kvkk} onChange={(e) => setKvkk(e.target.checked)} className="mt-0.5 size-4 accent-brand" />
-              <span>KVKK kapsamında <Link to="/kvkk" className="text-brand underline">aydınlatma metnini</Link> okudum, kişisel verilerimin işlenmesini onaylıyorum.</span>
+              <input
+                type="checkbox"
+                required
+                checked={kvkk}
+                onChange={(e) => setKvkk(e.target.checked)}
+                className="mt-0.5 size-4 accent-brand"
+              />
+              <span>
+                KVKK kapsamında{" "}
+                <Link to="/kvkk" className="text-brand underline">
+                  aydınlatma metnini
+                </Link>{" "}
+                okudum, kişisel verilerimin işlenmesini onaylıyorum.
+              </span>
             </label>
           </div>
 
-          <button disabled={submitting || !user} className="inline-flex items-center justify-center gap-2 rounded-full bg-brand text-brand-foreground px-6 h-11 text-[14px] font-semibold hover:brightness-105 disabled:opacity-60">
+          <button
+            disabled={submitting || !user}
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-brand text-brand-foreground px-6 h-11 text-[14px] font-semibold hover:brightness-105 disabled:opacity-60"
+          >
             {submitting && <Loader2 className="size-4 animate-spin" />} Şikayeti Gönder
           </button>
         </form>

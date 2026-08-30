@@ -62,6 +62,7 @@ export function toDbComplaint(c: ComplaintRow, brand: BrandNested | null) {
     votes: c.votes,
     is_anonymous: c.isAnonymous,
     anon_name: c.anonName,
+    platform_username: c.platformUsername,
     // PII: real user id is stripped for anonymous complaints by the caller.
     user_id: c.userId as string | null,
     brand_id: c.brandId,

@@ -1,9 +1,10 @@
 import { useState, useRef } from "react";
 import { Link } from "@tanstack/react-router";
-import { Loader2, Mail, Lock, User as UserIcon, Building2, MapPin, Send, Camera, Upload } from "lucide-react";
+import { Loader2, Mail, Lock, User as UserIcon, Building2, MapPin, Camera, Upload } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { PhoneInput } from "@/components/phone-input";
 import { toE164Tr } from "@/lib/phone";
+import { SITE_CONTACT_EMAIL } from "@/lib/contact";
 
 export function BrandApplicationForm() {
   const [email, setEmail] = useState("");
@@ -12,7 +13,6 @@ export function BrandApplicationForm() {
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [brandName, setBrandName] = useState("");
-  const [telegram, setTelegram] = useState("");
   const [address, setAddress] = useState("");
   const [website, setWebsite] = useState("");
   const [photoFile, setPhotoFile] = useState<File | null>(null);
@@ -38,7 +38,6 @@ export function BrandApplicationForm() {
     if (password.length < 6) return setErr("Şifre en az 6 karakter olmalı.");
     if (password !== password2) return setErr("Şifreler eşleşmiyor.");
     if (!brandName.trim()) return setErr("Marka adı zorunludur.");
-    if (!telegram.trim()) return setErr("Telegram kullanıcı adı zorunludur.");
     if (!address.trim() || address.trim().length < 10) return setErr("Güncel adres en az 10 karakter olmalıdır.");
     if (!photoFile) return setErr("Telefon / kimlik fotoğrafı yüklemeniz gerekiyor.");
 
@@ -76,7 +75,6 @@ export function BrandApplicationForm() {
           contactName: fullName.trim(),
           email: email.toLowerCase(),
           phone: e164,
-          telegram: telegram.trim().replace(/^@/, ""),
           address: address.trim(),
           photoUrl,
           website: website.trim() || null,
@@ -110,7 +108,8 @@ export function BrandApplicationForm() {
         <div className="bg-card rounded-2xl ring-1 ring-rule p-7">
           <h1 className="text-xl font-semibold tracking-tight text-ink">Marka Başvuru Formu</h1>
           <p className="text-[13px] text-navy-mid mt-1">
-            Marka yönetim paneli erişimi için başvurun. Onay sonrası giriş bilgileriniz oluşturulacaktır.
+            Marka yönetim paneli erişimi için başvurun. Onay sonrası giriş bilgileriniz e-posta ile
+            iletilecektir. İletişim: {SITE_CONTACT_EMAIL}
           </p>
 
           {err && <div className="mt-4 text-[13px] text-danger bg-danger-soft border border-danger-soft rounded-lg px-3 py-2">{err}</div>}
@@ -128,7 +127,6 @@ export function BrandApplicationForm() {
               <div className="text-[11px] font-bold uppercase tracking-wider text-navy-mid pt-2">Marka Bilgileri</div>
               <Field icon={Building2} type="text" placeholder="Marka adı *" value={brandName} onChange={setBrandName} required />
               <Field icon={Building2} type="text" placeholder="Web sitesi (opsiyonel)" value={website} onChange={setWebsite} />
-              <Field icon={Send} type="text" placeholder="Telegram kullanıcı adı *" value={telegram} onChange={setTelegram} required />
               <div className="relative">
                 <MapPin className="absolute left-3 top-3 size-4 text-navy-mid" />
                 <textarea

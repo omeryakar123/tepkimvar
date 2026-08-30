@@ -34,6 +34,8 @@ COPY --from=builder /app/.output ./.output
 # Migration için: SQL dosyaları + minimal script + bağımlılıksız iki paket.
 COPY --from=builder /app/drizzle ./drizzle
 COPY --from=builder /app/src/db/migrate.ts ./src/db/migrate.ts
+COPY --from=builder /app/src/lib/server/db-patches.ts ./src/lib/server/db-patches.ts
+COPY --from=builder /app/src/lib/server/ensure-db-patches.ts ./src/lib/server/ensure-db-patches.ts
 COPY --from=builder /app/node_modules/drizzle-orm ./node_modules/drizzle-orm
 COPY --from=builder /app/node_modules/postgres ./node_modules/postgres
 # Prod bakım: marka/kategori seed scriptleri (DATABASE_URL ile çalıştırılır).

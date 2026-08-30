@@ -17,7 +17,7 @@ function slugify(name: string): string {
     .slice(0, 120);
 }
 
-/** Marka başvuru formu — kayıt sonrası gönderilir. */
+/** Marka başvuru formu — iletişim yalnızca e-posta üzerinden. */
 export const Route = createFileRoute("/api/brand-application")({
   server: {
     handlers: {
@@ -31,7 +31,6 @@ export const Route = createFileRoute("/api/brand-application")({
             contactName?: string;
             email?: string;
             phone?: string;
-            telegram?: string;
             address?: string;
             photoUrl?: string | null;
             website?: string | null;
@@ -41,13 +40,11 @@ export const Route = createFileRoute("/api/brand-application")({
           const contactName = b.contactName?.trim();
           const email = (b.email ?? user.email).trim().toLowerCase();
           const phone = b.phone?.trim();
-          const telegram = b.telegram?.trim();
           const address = b.address?.trim();
 
           if (!brandName || brandName.length < 2) throw new HttpError(400, "Marka adı zorunludur");
           if (!contactName) throw new HttpError(400, "Yetkili adı zorunludur");
           if (!phone) throw new HttpError(400, "Telefon zorunludur");
-          if (!telegram) throw new HttpError(400, "Telegram kullanıcı adı zorunludur");
           if (!address || address.length < 10) throw new HttpError(400, "Güncel adres zorunludur");
           if (!b.photoUrl?.trim()) throw new HttpError(400, "Telefon / kimlik fotoğrafı zorunludur");
 
@@ -84,7 +81,6 @@ export const Route = createFileRoute("/api/brand-application")({
             email,
             phone,
             website: b.website?.trim() || null,
-            telegram,
             address,
             photoUrl: b.photoUrl.trim(),
             requestType: "brand_application",

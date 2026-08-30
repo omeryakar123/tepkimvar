@@ -5,6 +5,7 @@ import { toDbComplaint, type BrandNested, type DbComplaintShape } from "@/lib/db
 import { HttpError, errorResponse, rateLimit, requireUser } from "@/lib/server/guard";
 import { recordStatusChange } from "@/lib/server/history";
 import { refreshBrandAggregates } from "@/lib/server/brand-stats";
+import { ensureDbPatches } from "@/lib/server/ensure-db-patches";
 import { moderateAndScore } from "@/lib/server/moderation";
 
 // Public: şikayet listesi. RLS gitti; moderasyon filtresi BURADA zorlanıyor.
@@ -158,6 +159,7 @@ export const Route = createFileRoute("/api/complaints")({
       POST: async ({ request }) => {
         try {
           const user = await requireUser(request);
+          await ensureDbPatches();
           // Spam koruması: saatte 5 şikayet.
           rateLimit(`complaint:${user.id}`, 5, 60 * 60_000);
 
@@ -167,14 +169,21 @@ export const Route = createFileRoute("/api/complaints")({
             brandId?: string;
             categoryId?: string | null;
             contactPhone?: string | null;
-            isAnonymous?: boolean;
+            platformUsername?: string;
+            rating?: number;
           };
 
           const title = (b.title ?? "").trim();
           const body = (b.body ?? "").trim();
+          const platformUsername = (b.platformUsername ?? "").trim();
           if (title.length < 6) throw new HttpError(400, "Başlık en az 6 karakter olmalı");
           if (body.length < 20) throw new HttpError(400, "Şikayet detayı en az 20 karakter olmalı");
+          if (!platformUsername || platformUsername.length < 2)
+            throw new HttpError(400, "Platform kullanıcı adı zorunludur");
           if (!b.brandId) throw new HttpError(400, "Firma seçilmeli");
+          const rating =
+            Number(b.rating) >= 1 && Number(b.rating) <= 5 ? Math.round(Number(b.rating)) : null;
+          if (!rating) throw new HttpError(400, "Lütfen 1–5 arası puan verin");
 
           const [brand] = await db
             .select({ id: schema.brands.id })
@@ -183,11 +192,9 @@ export const Route = createFileRoute("/api/complaints")({
             .limit(1);
           if (!brand) throw new HttpError(400, "Geçersiz firma");
 
-          // ── ÖN MODERASYON ──────────────────────────────────────────────
-          // Temiz içerik anında yayınlanır; şüpheli içerik 'pending' kalır ve
-          // moderasyon kuyruğuna düşer. Kural SUNUCUDA çalışır (atlanamaz).
+          // Tüm şikayetler moderasyon onayından geçer; firma paneline yansımaz.
           const mod = moderateAndScore(`${title}\n${body}`);
-          const status = mod.ok ? ("approved" as const) : ("pending" as const);
+          const status = "pending" as const;
 
           const code = `SK-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
           const [created] = await db
@@ -199,11 +206,12 @@ export const Route = createFileRoute("/api/complaints")({
               title: title.slice(0, 200),
               body: body.slice(0, 5000),
               contactPhone: b.contactPhone || null,
+              platformUsername: platformUsername.slice(0, 80),
               isAnonymous: false,
               anonName: null,
-              // Sunucu tarafından sabitlenen alanlar:
+              rating,
               status,
-              isPublic: true,
+              isPublic: false,
               views: 0,
               votes: 0,
               priority: mod.isHighPriority ? 1 : 0,
@@ -220,28 +228,25 @@ export const Route = createFileRoute("/api/complaints")({
             fromStatus: null,
             toStatus: status,
             changedBy: user.id,
-            actorRole: status === "approved" ? "system" : "user",
-            note: mod.ok ? "Otomatik kontrolden geçti, yayınlandı" : "Ön kontrol uyarı verdi, incelemeye alındı",
+            actorRole: "user",
+            note: "Moderasyon onayı bekliyor",
           });
 
-          // Marka sayaçları (toplam/bekleyen/çözüm oranı) şikayet satırlarından
-          // yeniden hesaplanır.
           await refreshBrandAggregates(b.brandId);
 
-          // Şüpheliyse moderatörlerin göreceği kuyruğa ekle.
-          if (!mod.ok) {
-            await db.insert(schema.moderationQueue).values({
-              kind: "sensitive",
-              state: "open",
-              priority: mod.isHighPriority ? 2 : 1,
-              summary: mod.issues[0] ?? "Ön kontrol uyarısı",
-              payload: { issues: mod.issues, sentiment: mod.sentiment },
-              targetType: "complaint",
-              targetId: created.id,
-              relatedTable: "complaints",
-              relatedId: created.id,
-            });
-          }
+          await db.insert(schema.moderationQueue).values({
+            kind: mod.ok ? "other" : "sensitive",
+            state: "open",
+            priority: mod.isHighPriority ? 2 : 1,
+            summary: mod.ok
+              ? `Yeni şikayet: ${title.slice(0, 80)}`
+              : (mod.issues[0] ?? "Ön kontrol uyarısı"),
+            payload: { issues: mod.issues, sentiment: mod.sentiment, platformUsername },
+            targetType: "complaint",
+            targetId: created.id,
+            relatedTable: "complaints",
+            relatedId: created.id,
+          });
 
           return Response.json(
             { id: created.id, status, issues: mod.issues },

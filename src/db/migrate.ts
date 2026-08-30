@@ -8,6 +8,7 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import postgres from "postgres";
+import { applyDbPatches } from "../lib/server/db-patches";
 
 const url = process.env.DATABASE_URL;
 if (!url) {
@@ -18,6 +19,9 @@ if (!url) {
 const sql = postgres(url, { max: 1 });
 try {
   await migrate(drizzle(sql), { migrationsFolder: "./drizzle" });
+  console.log("[migrate] Drizzle tamam.");
+  const patches = await applyDbPatches(sql);
+  for (const p of patches) console.log("[migrate] patch:", p);
   console.log("[migrate] Tamam.");
 } catch (e) {
   console.error("[migrate] Hata:", e);

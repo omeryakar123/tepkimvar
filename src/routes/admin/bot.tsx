@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { apiGet, apiSend, apiSendJson } from "@/lib/admin-api";
 import { Modal } from "@/components/ui/modal";
 import { Pagination } from "@/components/pagination";
+import { Combobox } from "@/components/combobox";
 
 /**
  * Complaint Bot yönetimi.
@@ -268,6 +269,24 @@ function AdminBotPage() {
 
   /* -------------------------------- İşlemler ------------------------------ */
 
+  async function runMaintenance() {
+    if (!confirm("Migration + marka seed + cevap temizliği çalıştırılsın mı?")) return;
+    setBusy(true);
+    const res = await apiSendJson<{ ok: boolean; seed: { out: string }; clear: { out: string } }>(
+      "/api/cron/maintenance",
+      "POST",
+      {},
+    );
+    setBusy(false);
+    if (!res) return;
+    if (res.ok) {
+      toast.success(`Bakım tamam. ${res.seed.out} | ${res.clear.out}`);
+      loadOverview();
+    } else {
+      toast.error("Bakım kısmen başarısız — logları kontrol edin");
+    }
+  }
+
   async function runNow() {
     setBusy(true);
     const res = await apiSendJson<{ complaintsGenerated: number; brands: number }>(
@@ -364,6 +383,13 @@ function AdminBotPage() {
               </option>
             ))}
           </select>
+          <button
+            onClick={runMaintenance}
+            disabled={busy}
+            className="h-10 rounded-lg ring-1 ring-rule px-4 text-sm font-semibold inline-flex items-center gap-2 hover:bg-surface disabled:opacity-60"
+          >
+            <RefreshCw className="size-4" /> Prod bakımı
+          </button>
           <button
             onClick={runNow}
             disabled={busy}
@@ -477,26 +503,32 @@ function AdminBotPage() {
         </div>
       )}
 
-      {/* Marka bazlı ayarlar */}
-      <div className="bg-card rounded-2xl ring-1 ring-rule">
-        <div className="p-4 border-b border-rule flex items-center gap-3 flex-wrap">
-          <div className="font-display font-bold text-ink">Marka bot ayarları</div>
-          <select
-            value={configBrand}
-            onChange={(e) => setConfigBrand(e.target.value)}
-            className="h-10 rounded-lg ring-1 ring-rule px-3 text-sm ml-auto bg-card"
-          >
-            <option value="">Marka seçin…</option>
-            {brands.map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.name}
-              </option>
-            ))}
-          </select>
+      {/* Marka bazlı ayarlar — tek marka seç, tablo yok */}
+      <div className="bg-card rounded-2xl ring-1 ring-rule p-4 md:p-5">
+        <div className="flex flex-col sm:flex-row sm:items-end gap-4">
+          <div className="flex-1 min-w-0">
+            <div className="font-display font-bold text-ink mb-1">Marka bot ayarları</div>
+            <p className="text-[12px] text-navy-mid mb-2">
+              Marka seçin; ayarları kaydedin. Cevapsız modda yalnızca şikayet + yıldız üretilir.
+            </p>
+            <Combobox
+              options={brands.map((b) => ({ value: b.id, label: b.name }))}
+              value={configBrand}
+              onChange={setConfigBrand}
+              placeholder="Marka ara ve seç…"
+              searchPlaceholder="Marka adı…"
+              emptyText="Marka bulunamadı"
+            />
+          </div>
+          {config && (
+            <div className="text-[12px] text-navy-mid shrink-0">
+              Son çalışma: {fmtDate(config.last_run_at)}
+            </div>
+          )}
         </div>
 
         {config && options ? (
-          <div className="p-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="mt-4 pt-4 border-t border-rule grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             <label className="flex items-center gap-3 md:col-span-2 xl:col-span-3">
               <input
                 type="checkbox"
@@ -666,61 +698,30 @@ function AdminBotPage() {
               >
                 Kaydet
               </button>
-              <span className="text-[12.5px] text-navy-mid">
-                Son çalışma: {fmtDate(config.last_run_at)}
-              </span>
             </div>
           </div>
         ) : (
-          <div className="p-6 text-[13.5px] text-navy-mid">
-            Ayarları görmek/düzenlemek için bir marka seçin.
+          <div className="mt-4 pt-4 border-t border-rule text-[13.5px] text-navy-mid">
+            Ayarları görmek için yukarıdan bir marka seçin.
           </div>
         )}
 
         {bots.length > 0 && (
-          <div className="border-t border-rule overflow-x-auto">
-            <table className="w-full text-[13.5px]">
-              <thead className="bg-surface text-navy-mid text-left text-[11.5px] uppercase tracking-wider">
-                <tr>
-                  <th className="px-4 py-3 font-semibold">Marka</th>
-                  <th className="px-4 py-3 font-semibold">Durum</th>
-                  <th className="px-4 py-3 font-semibold">Bugün / Hedef</th>
-                  <th className="px-4 py-3 font-semibold">Dil</th>
-                  <th className="px-4 py-3 font-semibold">Son çalışma</th>
-                </tr>
-              </thead>
-              <tbody>
-                {bots.map((b) => (
-                  <tr key={b.brand_id} className="border-t border-rule hover:bg-surface/50">
-                    <td className="px-4 py-3">
-                      <button
-                        onClick={() => setConfigBrand(b.brand_id)}
-                        className="font-medium text-ink hover:text-brand"
-                      >
-                        {b.brand_name}
-                      </button>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex items-center gap-1 text-[12px] font-semibold ${
-                          b.enabled ? "text-success" : "text-navy-mid"
-                        }`}
-                      >
-                        <span
-                          className={`size-2 rounded-full ${b.enabled ? "bg-success" : "bg-navy-mid/40"}`}
-                        />
-                        {b.enabled ? "Açık" : "Kapalı"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-navy">
-                      {b.today_count} / {b.daily_target}
-                    </td>
-                    <td className="px-4 py-3 text-navy-mid uppercase">{b.language}</td>
-                    <td className="px-4 py-3 text-navy-mid">{fmtDate(b.last_run_at)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="border-t border-rule px-4 py-3 flex flex-wrap items-center gap-2 text-[12px] text-navy-mid">
+            <span className="font-semibold text-ink">{bots.filter((b) => b.enabled).length}</span>
+            aktif bot ·
+            <span className="font-semibold text-ink">{bots.length}</span>
+            yapılandırılmış marka
+            {bots.filter((b) => b.enabled).slice(0, 6).map((b) => (
+              <button
+                key={b.brand_id}
+                type="button"
+                onClick={() => setConfigBrand(b.brand_id)}
+                className="h-7 px-2.5 rounded-full ring-1 ring-rule bg-surface hover:bg-brand-soft hover:text-brand text-[11px] font-medium truncate max-w-[120px]"
+              >
+                {b.brand_name}
+              </button>
+            ))}
           </div>
         )}
       </div>
