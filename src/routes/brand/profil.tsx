@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { PhoneInput } from "@/components/phone-input";
 import { BrandAvatar } from "@/components/cards";
+import { brandCoverUrl } from "@/lib/brand-cover";
 import { proxyImage } from "@/lib/img";
 import { toE164Tr, fromE164 } from "@/lib/phone";
 
@@ -203,13 +204,11 @@ function BrandProfilePage() {
       {/* Cover + logo */}
       <div className="bg-card rounded-2xl ring-1 ring-rule overflow-hidden">
         <div className="relative h-48 bg-gradient-to-br from-brand-soft to-surface">
-          {brand.cover_url && (
-            <img
-              src={proxyImage(brand.cover_url) ?? brand.cover_url}
-              alt=""
-              className="size-full object-cover"
-            />
-          )}
+          <img
+            src={proxyImage(brandCoverUrl(brand.cover_url)) ?? brandCoverUrl(brand.cover_url)}
+            alt=""
+            className="size-full object-cover"
+          />
           <label className="absolute right-3 top-3 text-[11px] bg-card/95 px-3 py-1.5 rounded-full cursor-pointer hover:bg-card shadow-soft font-semibold">
             Kapak değiştir
             <input

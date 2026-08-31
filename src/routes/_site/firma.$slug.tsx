@@ -26,6 +26,7 @@ import {
   type DbBrand,
 } from "@/lib/data";
 import { displayResolutionRate, displayResponseMinutes } from "@/lib/display-brand-metrics";
+import { brandCoverUrl } from "@/lib/brand-cover";
 import { proxyImage } from "@/lib/img";
 import { Pagination } from "@/components/pagination";
 import { useAuth } from "@/hooks/use-auth";
@@ -74,7 +75,7 @@ export const Route = createFileRoute("/_site/firma/$slug")({
     );
 
     return {
-      ...seoHead({ title, description, path, image: c.logoUrl ?? undefined }),
+      ...seoHead({ title, description, path, image: c.coverUrl ?? c.logoUrl ?? undefined }),
       scripts: [
         jsonLd({
           "@context": "https://schema.org",
@@ -264,13 +265,11 @@ function CompanyPage() {
   return (
     <div>
       <div className="h-40 sm:h-56 bg-gradient-to-br from-brand/80 via-brand to-dark/70 relative overflow-hidden">
-        {raw.cover_url && (
-          <img
-            src={proxyImage(raw.cover_url) ?? raw.cover_url}
-            alt=""
-            className="absolute inset-0 size-full object-cover "
-          />
-        )}
+        <img
+          src={proxyImage(brandCoverUrl(raw.cover_url)) ?? brandCoverUrl(raw.cover_url)}
+          alt=""
+          className="absolute inset-0 size-full object-cover"
+        />
         <div className="absolute inset-0 bg-gradient-to-b from-black/0 via-black/0 to-black/20" />
         {isAdmin && (
           <>
