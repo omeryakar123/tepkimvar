@@ -2,7 +2,13 @@ import { createFileRoute } from "@tanstack/react-router";
 import { inArray } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { toDbBrand } from "@/lib/db-shapes";
-import { fetchBrandTrendFallback, fetchBrandTrendScores } from "@/lib/server/brand-trend";
+import { TALKED_PRIORITY_BRAND_SLUGS } from "@/lib/featured-brands";
+import {
+  fetchBrandTrendFallback,
+  fetchBrandTrendScores,
+  fetchBrandTrendScoresBySlugs,
+  mergePinnedTrendScores,
+} from "@/lib/server/brand-trend";
 
 export const Route = createFileRoute("/api/brands/trend")({
   server: {
@@ -12,7 +18,13 @@ export const Route = createFileRoute("/api/brands/trend")({
         const limit = Number(url.searchParams.get("limit")) || 10;
         const categorySlug = url.searchParams.get("categorySlug") ?? undefined;
 
-        let scores = await fetchBrandTrendScores({ limit, categorySlug });
+        const pinnedSlugs = categorySlug ? [] : [...TALKED_PRIORITY_BRAND_SLUGS];
+        const pinned = await fetchBrandTrendScoresBySlugs(pinnedSlugs);
+        const restLimit = Math.max(limit - pinned.length, 0);
+        let rest = restLimit > 0 ? await fetchBrandTrendScores({ limit: restLimit + pinned.length, categorySlug }) : [];
+        rest = rest.filter((r) => !pinned.some((p) => p.brandId === r.brandId));
+
+        let scores = mergePinnedTrendScores(pinned, rest, limit);
 
         if (scores.length < limit) {
           const fallbackIds = await fetchBrandTrendFallback(limit - scores.length);

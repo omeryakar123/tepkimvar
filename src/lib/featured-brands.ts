@@ -28,6 +28,14 @@ export const PRIORITY_BRAND_SLUGS = [
   "monobahis", "jestbahis", "pokerklas", "meritbet", "sloganbahis", "dodobet", "quatrobahis",
 ] as const;
 
+/** Anasayfa «Çok Konuşulanlar» + Trend 100 — her zaman görünmesi gereken markalar. */
+export const TALKED_PRIORITY_BRAND_SLUGS = [
+  "jojobet",
+  "holiganbet",
+  "matbet",
+  "padisahbet",
+] as const;
+
 export type PriorityBrandSlug = (typeof PRIORITY_BRAND_SLUGS)[number];
 
 const FOOTER_LINK_SLUGS = [

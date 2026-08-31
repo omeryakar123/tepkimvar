@@ -115,6 +115,88 @@ export async function fetchBrandTrendScores(opts: {
   }));
 }
 
+/** Belirli slug'lar için trend metrikleri (HAVING yok — sabitlenmiş markalar için). */
+export async function fetchBrandTrendScoresBySlugs(slugs: string[]): Promise<BrandTrendRow[]> {
+  if (slugs.length === 0) return [];
+
+  const complaintVisible = and(
+    notInArray(schema.complaints.status, [...HIDDEN]),
+    or(eq(schema.complaints.isPublic, true), eq(schema.complaints.isSynthetic, true)),
+  );
+
+  const rows = await db
+    .select({
+      brandId: schema.brands.id,
+      slug: schema.brands.slug,
+      recentComplaints: sql<number>`
+        count(${schema.complaints.id}) filter (
+          where ${schema.complaints.createdAt} >= now() - interval '7 days'
+        )::int`,
+      priorComplaints: sql<number>`
+        count(${schema.complaints.id}) filter (
+          where ${schema.complaints.createdAt} >= now() - interval '14 days'
+            and ${schema.complaints.createdAt} < now() - interval '7 days'
+        )::int`,
+      recentViews: sql<number>`
+        coalesce(sum(${schema.complaints.views}) filter (
+          where ${schema.complaints.createdAt} >= now() - interval '7 days'
+        ), 0)::int`,
+      recentSupports: sql<number>`
+        coalesce(sum(${schema.complaints.votes}) filter (
+          where ${schema.complaints.createdAt} >= now() - interval '7 days'
+        ), 0)::int`,
+      trendScore: sql<number>`
+        (
+          count(${schema.complaints.id}) filter (
+            where ${schema.complaints.createdAt} >= now() - interval '7 days'
+          ) * 4
+          + coalesce(sum(${schema.complaints.votes}) filter (
+            where ${schema.complaints.createdAt} >= now() - interval '7 days'
+          ), 0) * 2
+          + coalesce(sum(${schema.complaints.views}) filter (
+            where ${schema.complaints.createdAt} >= now() - interval '7 days'
+          ), 0) / 80
+        )::float`,
+    })
+    .from(schema.brands)
+    .leftJoin(
+      schema.complaints,
+      and(eq(schema.complaints.brandId, schema.brands.id), complaintVisible),
+    )
+    .where(and(eq(schema.brands.isActive, true), inArray(schema.brands.slug, slugs)))
+    .groupBy(schema.brands.id, schema.brands.slug);
+
+  const bySlug = new Map(rows.map((r) => [r.slug, r]));
+  return slugs
+    .map((slug) => bySlug.get(slug))
+    .filter(Boolean)
+    .map((r) => ({
+      brandId: r!.brandId,
+      recentComplaints: Number(r!.recentComplaints) || 0,
+      priorComplaints: Number(r!.priorComplaints) || 0,
+      recentViews: Number(r!.recentViews) || 0,
+      recentSupports: Number(r!.recentSupports) || 0,
+      trendScore: Math.max(1, Math.round(Number(r!.trendScore) || 0)),
+    }));
+}
+
+/** Sabit markaları listenin başına al, tekrarları çıkar. */
+export function mergePinnedTrendScores(
+  pinned: BrandTrendRow[],
+  rest: BrandTrendRow[],
+  limit: number,
+): BrandTrendRow[] {
+  const seen = new Set<string>();
+  const out: BrandTrendRow[] = [];
+  for (const row of [...pinned, ...rest]) {
+    if (seen.has(row.brandId)) continue;
+    seen.add(row.brandId);
+    out.push(row);
+    if (out.length >= limit) break;
+  }
+  return out;
+}
+
 /** Son 7 günde aktivite yoksa: toplam şikayet sayısına göre yedek. */
 export async function fetchBrandTrendFallback(limit: number): Promise<string[]> {
   const rows = await db
