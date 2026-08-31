@@ -25,7 +25,7 @@ import {
   fetchPlatformStats,
 } from "@/lib/data";
 import type { TrendBrand } from "@/lib/trend-brand";
-import { TrendBrandMetrics, TrendBrandRow, TrendBrandRowInner } from "@/components/trend-brand-row";
+import { TrendBrandMetrics, TrendBrandMobileCard, TrendBrandRowInner } from "@/components/trend-brand-row";
 import { PRIORITY_BRAND_LINKS } from "@/lib/featured-brands";
 import { publicPlatformStats } from "@/lib/public-stats";
 import { SITE_CONTACT_EMAIL, siteContactMailto } from "@/lib/contact";
@@ -598,18 +598,11 @@ function Home() {
             </p>
           </div>
 
-          {/* Mobil: swiper */}
-          <div className="md:hidden">
-            <MobileCarousel ariaLabel="Trend 100 markalar">
-              {trend100.map((b, i) => (
-                <div
-                  key={b.slug}
-                  className="h-full bg-card rounded-2xl ring-1 ring-rule p-3.5 sm:p-4 hover:shadow-pop transition"
-                >
-                  <TrendBrandRow brand={b} rank={i + 1} />
-                </div>
-              ))}
-            </MobileCarousel>
+          {/* Mobil: dikey liste — metinler üst üste binmez */}
+          <div className="md:hidden space-y-2.5">
+            {trend100.slice(0, 6).map((b, i) => (
+              <TrendBrandMobileCard key={b.slug} brand={b} rank={i + 1} />
+            ))}
           </div>
 
           {/* Masaüstü: tablo */}

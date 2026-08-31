@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Trophy, TrendingUp } from "lucide-react";
 import { fetchBrandsTrend, fetchCategoriesWithCount } from "@/lib/data";
 import type { TrendBrand } from "@/lib/trend-brand";
-import { TrendBrandMetrics, TrendBrandRowInner } from "@/components/trend-brand-row";
+import { TrendBrandMetrics, TrendBrandMobileCard, TrendBrandRowInner } from "@/components/trend-brand-row";
 import { seoHead } from "@/lib/seo";
 
 type Search = { kategori?: string };
@@ -102,10 +102,16 @@ function Trend100Page() {
               const podium = rank <= 3;
               return (
                 <li key={b.slug}>
+                  {/* Mobil: kart düzeni */}
+                  <div className={`md:hidden p-3 ${podium ? "bg-brand-soft/15" : ""}`}>
+                    <TrendBrandMobileCard brand={b} rank={rank} />
+                  </div>
+
+                  {/* Masaüstü: satır düzeni */}
                   <Link
                     to="/firma/$slug"
                     params={{ slug: b.slug }}
-                    className={`flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-4 hover:bg-brand-soft/40 transition group ${podium ? "bg-brand-soft/15" : ""}`}
+                    className={`hidden md:flex items-center gap-4 px-6 py-4 hover:bg-brand-soft/40 transition group ${podium ? "bg-brand-soft/15" : ""}`}
                   >
                     <div
                       className={`shrink-0 grid place-items-center size-10 rounded-xl font-black text-sm tabular-nums ${
@@ -120,10 +126,10 @@ function Trend100Page() {
                     >
                       {podium ? <Trophy className="size-4" /> : rank}
                     </div>
-                    <div className="flex-1 min-w-0 flex items-center gap-3">
-                      <TrendBrandRowInner brand={b} rank={rank} hideRank showMetrics />
+                    <div className="flex-1 min-w-0">
+                      <TrendBrandRowInner brand={b} rank={rank} hideRank showMetrics={false} />
                     </div>
-                    <div className="hidden md:block shrink-0 w-44">
+                    <div className="shrink-0 w-44">
                       <TrendBrandMetrics brand={b} compact />
                     </div>
                   </Link>
