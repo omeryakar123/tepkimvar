@@ -10,18 +10,12 @@ import postgres from "postgres";
 import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { fetchTelegramLogo } from "./lib/telegram-logo.mjs";
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dir, "..");
 
-const STATIC_BRANDS = {
-  matbet: {
-    name: "Matbet",
-    logo: "/brand-logos/matbet.png",
-    website: "https://matbet.com",
-    category: "bilisim-teknoloji",
-  },
-};
+const STATIC_BRANDS = {};
 
 const FAVICON_PROXY = ["google.com/s2/favicons", "gstatic.com/favicon", "duckduckgo.com/ip3"];
 const BAD = [
@@ -102,7 +96,7 @@ function isFaviconProxy(url) {
 function isLowResStored(url) {
   if (!(url ?? "").startsWith("/api/files/brand-logos/seed/")) return false;
   const u = url.toLowerCase();
-  return !u.includes("-hq.png") && !u.includes("-superbonus.png") && !u.includes("-v2.png");
+  return !u.includes("-hq.png") && !u.includes("-superbonus.png") && !u.includes("-v2.png") && !u.includes("-tg.png");
 }
 
 function isBad(url) {
@@ -173,6 +167,9 @@ async function trySiteIcons(domain) {
 }
 
 async function bestLogo(slug, name, website) {
+  const tg = await fetchTelegramLogo(slug);
+  if (tg) return tg;
+
   const staticBrand = STATIC_BRANDS[slug];
   if (staticBrand) {
     const localPath = join(ROOT, "public", staticBrand.logo.replace(/^\//, ""));
@@ -206,13 +203,14 @@ async function bestLogo(slug, name, website) {
 }
 
 async function persistLogo(slug, hit) {
-  if (STATIC_BRANDS[slug]) return hit.url;
   if (useS3 && hit.buf && hit.buf.length >= 400) {
     const { PutObjectCommand } = await import("@aws-sdk/client-s3");
-    const key = `brand-logos/seed/${slug}-hq.png`;
+    const suffix = hit.src === "telegram" ? "-tg.png" : "-hq.png";
+    const key = `brand-logos/seed/${slug}${suffix}`;
     await s3.send(new PutObjectCommand({ Bucket: BUCKET, Key: key, Body: hit.buf, ContentType: hit.type }));
     return `/api/files/${key}`;
   }
+  if (STATIC_BRANDS[slug] && hit.src === "static") return hit.url;
   if (hit.url?.startsWith("http")) return hit.url;
   if (hit.url?.startsWith("/")) return hit.url;
   return null;

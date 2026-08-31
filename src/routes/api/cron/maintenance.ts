@@ -59,16 +59,23 @@ export const Route = createFileRoute("/api/cron/maintenance")({
           await sql.end();
 
           const seed = await runScript("seed-bilisim-brands-bulk.mjs");
+          const telegram = await runScript("sync-telegram-logos.mjs", ["--force"]);
           const logos = await runScript("fix-brand-logos.mjs", ["--all", "--force"]);
           const votes = await runScript("sync-complaint-votes.mjs");
           const clear = await runScript("clear-synthetic-responses.mjs");
 
-          const ok = seed.code === 0 && logos.code === 0 && votes.code === 0 && clear.code === 0;
+          const ok =
+            seed.code === 0 &&
+            telegram.code === 0 &&
+            logos.code === 0 &&
+            votes.code === 0 &&
+            clear.code === 0;
           return Response.json(
             {
               ok,
               patches,
               seed: { code: seed.code, out: seed.stdout.trim(), err: seed.stderr.trim() },
+              telegram: { code: telegram.code, out: telegram.stdout.trim(), err: telegram.stderr.trim() },
               logos: { code: logos.code, out: logos.stdout.trim(), err: logos.stderr.trim() },
               votes: { code: votes.code, out: votes.stdout.trim(), err: votes.stderr.trim() },
               clear: { code: clear.code, out: clear.stdout.trim(), err: clear.stderr.trim() },

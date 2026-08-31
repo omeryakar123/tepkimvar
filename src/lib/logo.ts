@@ -67,9 +67,7 @@ const SLUG_DOMAIN_OVERRIDES: Record<string, string> = {
 };
 
 /** Site olmayan veya favicon dışında kaynak gereken markalar — yerel yüksek çözünürlük */
-export const SLUG_LOGO_OVERRIDES: Record<string, string> = {
-  matbet: "/brand-logos/matbet.png",
-};
+export const SLUG_LOGO_OVERRIDES: Record<string, string> = {};
 
 /** superbonus14.pro/sponsorlar listesindeki markalar — yüksek çözünürlüklü PNG */
 export const SUPERBONUS_SPONSOR_SLUGS = new Set([
@@ -135,7 +133,7 @@ function isUuidUploadLogo(url: string): boolean {
 function isLowResStoredLogo(url: string): boolean {
   if (!url.startsWith("/api/files/brand-logos/seed/")) return false;
   const u = url.toLowerCase();
-  return !u.includes("-hq.png") && !u.includes("-superbonus.png") && !u.includes("-v2.png");
+  return !u.includes("-hq.png") && !u.includes("-superbonus.png") && !u.includes("-v2.png") && !u.includes("-tg.png");
 }
 
 function gstaticFavicon(domain: string, size = 256): string {
