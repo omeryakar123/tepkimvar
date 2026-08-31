@@ -7,6 +7,7 @@ import {
   requireBrandAccess,
   requireUser,
 } from "@/lib/server/guard";
+import { COMPLAINT_COUNTED, COMPLAINT_RESOLVED } from "@/lib/server/brand-stats";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -30,18 +31,21 @@ export const Route = createFileRoute("/api/brand/stats")({
 
           const [row] = await db
             .select({
-              total: sql<number>`count(*)`,
+              total: sql<number>`count(*) FILTER (WHERE ${COMPLAINT_COUNTED})`,
               today: sql<number>`count(*) filter (where ${schema.complaints.createdAt} >= date_trunc('day', now() at time zone 'Europe/Istanbul') at time zone 'Europe/Istanbul')`,
               pending: sql<number>`count(*) filter (where ${schema.complaints.status} = 'pending')`,
               review: sql<number>`count(*) filter (where ${schema.complaints.status} = 'in_review')`,
               answered: sql<number>`count(*) filter (where ${schema.complaints.status} = 'answered')`,
               resolved: sql<number>`count(*) filter (where ${schema.complaints.status} = 'resolved')`,
+              resolvedTotal: sql<number>`count(*) FILTER (WHERE ${COMPLAINT_RESOLVED})`,
             })
             .from(schema.complaints)
             .where(eq(schema.complaints.brandId, brandId));
 
           const total = Number(row?.total ?? 0);
-          const resolved = Number(row?.resolved ?? 0);
+          const answered = Number(row?.answered ?? 0);
+          const resolvedOnly = Number(row?.resolved ?? 0);
+          const resolved = Number(row?.resolvedTotal ?? 0) || resolvedOnly + answered;
 
           // Son 7 günün günlük şikayet sayısı (gerçek veri — sahte grafik yerine).
           const weeklyRows = await db
@@ -70,8 +74,9 @@ export const Route = createFileRoute("/api/brand/stats")({
             today: Number(row?.today ?? 0),
             pending: Number(row?.pending ?? 0),
             review: Number(row?.review ?? 0),
-            answered: Number(row?.answered ?? 0),
-            resolved,
+            answered,
+            resolved: resolvedOnly,
+            resolved_total: resolved,
             resolutionRate:
               total > 0 ? Math.round((resolved / total) * 100) : 0,
             weekly,

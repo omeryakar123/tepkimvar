@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Loader2, CheckCircle2, Star } from "lucide-react";
+import { Loader2, Star } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { PhoneInput } from "@/components/phone-input";
@@ -8,7 +8,7 @@ import { toE164Tr } from "@/lib/phone";
 import { FileDropzone, type AcceptedFile } from "@/components/file-dropzone";
 import { Combobox } from "@/components/combobox";
 import { seoHead } from "@/lib/seo";
-import { SITE_CONTACT_EMAIL } from "@/lib/contact";
+import { ComplaintShareModal } from "@/components/complaint-share-modal";
 
 type Brand = { id: string; name: string };
 type Category = { id: string; name: string };
@@ -47,7 +47,9 @@ function WriteComplaintPage() {
   const [kvkk, setKvkk] = useState(false);
   const [files, setFiles] = useState<AcceptedFile[]>([]);
   const [submitting, setSubmitting] = useState(false);
-  const [done, setDone] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [createdId, setCreatedId] = useState<string | null>(null);
+  const [createdTitle, setCreatedTitle] = useState("");
   const [issues, setIssues] = useState<string[]>([]);
   const [mediaPrivacy, setMediaPrivacy] = useState<"public" | "brand_only" | "super_admin_only">("public");
 
@@ -108,6 +110,8 @@ function WriteComplaintPage() {
         error?: string;
       };
       if (!res.ok || !json.id) throw new Error(json.error ?? "Şikayet oluşturulamadı.");
+      setCreatedId(json.id);
+      setCreatedTitle(title.trim());
       setIssues(json.issues ?? []);
 
       for (let i = 0; i < files.length; i++) {
@@ -130,8 +134,7 @@ function WriteComplaintPage() {
         setFiles([...files]);
       }
 
-      setDone(true);
-      setTimeout(() => navigate({ to: "/sikayet/$id", params: { id: json.id! } }), 1400);
+      setShareOpen(true);
     } catch (e2) {
       toast.error(e2 instanceof Error ? e2.message : "Şikayet oluşturulamadı.");
     } finally {
@@ -139,36 +142,30 @@ function WriteComplaintPage() {
     }
   }
 
-  if (done) {
-    return (
-      <div>
-        <main className="mx-auto max-w-xl px-4 py-24 text-center">
-          <div className="mx-auto size-20 rounded-full bg-brand-soft grid place-items-center">
-            <CheckCircle2 className="size-10 text-brand animate-pulse" />
-          </div>
-          <h1 className="mt-6 font-display text-3xl font-black tracking-tight text-ink">
-            Şikayetiniz incelemeye alındı
-          </h1>
-          <p className="mt-2 text-navy">
-            Moderasyon ekibimiz onayladıktan sonra yayına alınacak ve firmaya iletilecektir.
-            Sorularınız için {SITE_CONTACT_EMAIL}
-          </p>
-          {issues.length > 0 && (
-            <ul className="mt-4 text-left mx-auto max-w-md space-y-2">
-              {issues.map((m) => (
-                <li key={m} className="rounded-lg bg-warning-soft text-warning px-3 py-2 text-[13px]">
-                  {m}
-                </li>
-              ))}
-            </ul>
-          )}
-        </main>
-      </div>
-    );
-  }
-
   return (
     <div>
+      {createdId && (
+        <ComplaintShareModal
+          open={shareOpen}
+          complaintId={createdId}
+          title={createdTitle}
+          onClose={() => setShareOpen(false)}
+          onView={() => navigate({ to: "/sikayet/$id", params: { id: createdId } })}
+        />
+      )}
+
+      {issues.length > 0 && shareOpen && (
+        <div className="fixed bottom-4 left-4 right-4 z-[70] mx-auto max-w-md">
+          <ul className="space-y-2">
+            {issues.map((m) => (
+              <li key={m} className="rounded-lg bg-warning-soft text-warning px-3 py-2 text-[13px] shadow-lg ring-1 ring-warning/20">
+                {m}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <main className="mx-auto max-w-3xl px-4 sm:px-6 py-12">
         <div className="eyebrow text-navy-mid">Yeni Şikayet</div>
         <h1 className="mt-1 font-display text-4xl font-black tracking-tight text-ink">

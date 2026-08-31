@@ -5,6 +5,7 @@ import { db, schema } from "@/db";
 import { errorResponse, requireStaff } from "@/lib/server/guard";
 import { ensureDbPatches } from "@/lib/server/ensure-db-patches";
 import { sqlTs, sqlTodayStart } from "@/lib/server/complaint-bot";
+import { COMPLAINT_RESOLVED } from "@/lib/server/brand-stats";
 
 type SourceStats = {
   total: number;
@@ -38,7 +39,7 @@ export const Route = createFileRoute("/api/admin/stats")({
                 today: sql<number>`count(*) FILTER (WHERE ${schema.complaints.createdAt} >= ${sqlTodayStart()})`,
                 pending: sql<number>`count(*) FILTER (WHERE ${schema.complaints.status} = 'pending')`,
                 approved: sql<number>`count(*) FILTER (WHERE ${schema.complaints.status} = 'approved')`,
-                resolved: sql<number>`count(*) FILTER (WHERE ${schema.complaints.status} = 'resolved')`,
+                resolved: sql<number>`count(*) FILTER (WHERE ${COMPLAINT_RESOLVED})`,
                 spam: sql<number>`count(*) FILTER (WHERE ${schema.complaints.status} = 'spam')`,
               })
               .from(schema.complaints)
@@ -87,7 +88,7 @@ export const Route = createFileRoute("/api/admin/stats")({
             db
               .select({ n: c })
               .from(schema.complaints)
-              .where(eq(schema.complaints.status, "resolved"))
+              .where(sql`${COMPLAINT_RESOLVED}`)
               .then(n),
             db.select({ n: c }).from(schema.brands).where(eq(schema.brands.premium, true)).then(n),
             db.select({ n: c }).from(schema.brands).where(eq(schema.brands.verified, true)).then(n),

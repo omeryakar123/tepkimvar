@@ -9,6 +9,7 @@ import {
   fetchBrandTrendScoresBySlugs,
   mergePinnedTrendScores,
 } from "@/lib/server/brand-trend";
+import { applyLiveMetricsToBrand, fetchLiveBrandMetrics } from "@/lib/server/brand-stats";
 
 export const Route = createFileRoute("/api/brands/trend")({
   server: {
@@ -55,13 +56,14 @@ export const Route = createFileRoute("/api/brands/trend")({
         const catById = Object.fromEntries(cats.map((c) => [c.id, c]));
 
         const brandById = Object.fromEntries(brandRows.map((b) => [b.id, b]));
+        const liveMetrics = await fetchLiveBrandMetrics(brandIds);
         const items = scores
           .map((s) => {
             const b = brandById[s.brandId];
             if (!b) return null;
             const cat = b.categoryId ? catById[b.categoryId] : null;
             return {
-              ...toDbBrand(b),
+              ...toDbBrand(applyLiveMetricsToBrand(b, liveMetrics.get(b.id))),
               category_name: cat?.name ?? "Genel",
               category_slug: cat?.slug ?? "diger",
               recent_complaints: s.recentComplaints,

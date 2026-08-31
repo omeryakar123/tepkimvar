@@ -9,7 +9,16 @@ export const Route = createFileRoute("/brand/")({
   component: BrandDashboard,
 });
 
-type Stats = { today: number; pending: number; review: number; answered: number; resolved: number; resolutionRate: number; weekly?: { day: string; count: number }[] };
+type Stats = {
+  today: number;
+  pending: number;
+  review: number;
+  answered: number;
+  resolved: number;
+  resolved_total?: number;
+  resolutionRate: number;
+  weekly?: { day: string; count: number }[];
+};
 
 function BrandDashboard() {
   const { user } = useAuth();
@@ -57,7 +66,7 @@ function BrandDashboard() {
         <Stat icon={MessageSquare} label="Bekleyen" v={s?.pending} tone="warn" />
         <Stat icon={Eye} label="İncelenen" v={s?.review} tone="ink" />
         <Stat icon={Reply} label="Yanıtlanan" v={s?.answered} tone="ink" />
-        <Stat icon={CheckCircle2} label="Çözülen" v={s?.resolved} tone="brand" />
+        <Stat icon={CheckCircle2} label="Çözülen" v={s?.resolved_total ?? (s ? s.resolved + s.answered : undefined)} tone="brand" />
         <Stat icon={TrendingUp} label="Çözüm Oranı" v={s?.resolutionRate} suffix="%" tone="brand" />
       </div>
 

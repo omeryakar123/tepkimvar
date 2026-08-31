@@ -3,6 +3,7 @@ import { and, asc, desc, eq, gt, ilike, sql, type SQL } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { toDbBrand } from "@/lib/db-shapes";
 import { PRIORITY_BRAND_SLUGS } from "@/lib/featured-brands";
+import { applyLiveMetricsToBrand, fetchLiveBrandMetrics } from "@/lib/server/brand-stats";
 
 function brandPriorityOrder() {
   const cases = PRIORITY_BRAND_SLUGS.map(
@@ -81,7 +82,22 @@ export const Route = createFileRoute("/api/brands")({
           total = rows.length;
         }
 
-        return Response.json({ items: rows.map(toDbBrand), total });
+        const liveMetrics = await fetchLiveBrandMetrics(rows.map((r) => r.id));
+
+        let items = rows.map((r) => {
+          const live = liveMetrics.get(r.id);
+          return toDbBrand(applyLiveMetricsToBrand(r, live));
+        });
+
+        if (sortBy === "resolution") {
+          items.sort((a, b) => (b.resolution_rate ?? 0) - (a.resolution_rate ?? 0));
+        } else if (sortBy === "complaints") {
+          items.sort((a, b) => (b.total_complaints ?? 0) - (a.total_complaints ?? 0));
+        } else if (sortBy === "rating") {
+          items.sort((a, b) => Number(b.rating ?? 0) - Number(a.rating ?? 0));
+        }
+
+        return Response.json({ items, total });
       },
     },
   },

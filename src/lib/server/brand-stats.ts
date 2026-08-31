@@ -1,4 +1,4 @@
-import { sql } from "drizzle-orm";
+import { and, inArray, sql } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { isSyntheticPublic } from "@/lib/server/synthetic";
 
@@ -13,15 +13,126 @@ import { isSyntheticPublic } from "@/lib/server/synthetic";
  */
 
 /** Reddedilen/spam kayıtlar gerçek şikayet sayılmaz. */
-const COUNTED = sql`status NOT IN ('rejected', 'spam')`;
+export const COMPLAINT_COUNTED = sql`status NOT IN ('rejected', 'spam')`;
 
 /** Bot/sentetik şikayetler marka sayacına girer; puan ortalamasına yalnızca SYNTHETIC_CONTENT_PUBLIC ile. */
 function ratingSyntheticFilter() {
   return isSyntheticPublic() ? sql`TRUE` : sql`is_synthetic = false`;
 }
 
-/** Süreci hâlâ devam eden, çözülmemiş durumlar. */
-const OPEN = sql`status IN ('pending', 'approved', 'in_review', 'answered', 'user_replied', 'super_admin_review', 'escalated')`;
+/** Yanıtlanmış / kapatılmış — arayüzde «Çözüldü» sayılır. */
+export const COMPLAINT_RESOLVED = sql`status IN ('resolved', 'answered')`;
+
+/** Süreci hâlâ devam eden durumlar (answered/resolved hariç). */
+export const COMPLAINT_OPEN = sql`status IN ('pending', 'approved', 'in_review', 'user_replied', 'super_admin_review', 'escalated')`;
+
+/** Eski isimler — iç kullanım. */
+const COUNTED = COMPLAINT_COUNTED;
+const RESOLVED = COMPLAINT_RESOLVED;
+const OPEN = COMPLAINT_OPEN;
+
+export type LiveBrandMetrics = {
+  totalComplaints: number;
+  complaintsResolved: number;
+  complaintsPending: number;
+  resolutionRate: number;
+  avgResponseMinutes: number;
+  rating: number;
+  ratingCount: number;
+};
+
+/** API yanıtları için şikayet tablosundan anlık sayaç (cache'e güvenilmez). */
+export async function fetchLiveBrandMetrics(
+  brandIds: string[],
+): Promise<Map<string, LiveBrandMetrics>> {
+  const out = new Map<string, LiveBrandMetrics>();
+  if (brandIds.length === 0) return out;
+
+  const empty = (): LiveBrandMetrics => ({
+    totalComplaints: 0,
+    complaintsResolved: 0,
+    complaintsPending: 0,
+    resolutionRate: 0,
+    avgResponseMinutes: 0,
+    rating: 0,
+    ratingCount: 0,
+  });
+
+  for (const id of brandIds) out.set(id, empty());
+
+  const ratingVisible = ratingSyntheticFilter();
+
+  const counterRows = await db
+    .select({
+      brandId: schema.complaints.brandId,
+      total: sql<number>`count(*) FILTER (WHERE ${COMPLAINT_COUNTED})::int`,
+      resolved: sql<number>`count(*) FILTER (WHERE ${COMPLAINT_RESOLVED})::int`,
+      pending: sql<number>`count(*) FILTER (WHERE ${COMPLAINT_OPEN})::int`,
+      avgResponse: sql<number | null>`round(avg(${schema.complaints.firstResponseMinutes}))::int`,
+    })
+    .from(schema.complaints)
+    .where(inArray(schema.complaints.brandId, brandIds))
+    .groupBy(schema.complaints.brandId);
+
+  for (const r of counterRows) {
+    const total = Number(r.total) || 0;
+    const resolved = Number(r.resolved) || 0;
+    out.set(r.brandId, {
+      totalComplaints: total,
+      complaintsResolved: resolved,
+      complaintsPending: Number(r.pending) || 0,
+      resolutionRate: total > 0 ? Math.round((resolved * 100) / total) : 0,
+      avgResponseMinutes: Number(r.avgResponse) || 0,
+      rating: 0,
+      ratingCount: 0,
+    });
+  }
+
+  const scoreRows = await db
+    .select({
+      brandId: schema.complaints.brandId,
+      avg: sql<string | null>`round(avg(${schema.complaints.rating}), 2)`,
+      count: sql<number>`count(*)::int`,
+    })
+    .from(schema.complaints)
+    .where(
+      and(
+        inArray(schema.complaints.brandId, brandIds),
+        sql`${schema.complaints.rating} IS NOT NULL`,
+        sql`${COMPLAINT_COUNTED}`,
+        sql`${ratingVisible}`,
+      ),
+    )
+    .groupBy(schema.complaints.brandId);
+
+  for (const r of scoreRows) {
+    const m = out.get(r.brandId) ?? empty();
+    m.rating = Number(r.avg) || 0;
+    m.ratingCount = Number(r.count) || 0;
+    out.set(r.brandId, m);
+  }
+
+  return out;
+}
+
+/** Canlı metrikleri marka satırına uygula (API yanıtı). */
+export function applyLiveMetricsToBrand(
+  row: typeof schema.brands.$inferSelect,
+  live: LiveBrandMetrics | undefined,
+): typeof schema.brands.$inferSelect {
+  if (!live) return row;
+  return {
+    ...row,
+    totalComplaints: live.totalComplaints,
+    complaintsResolved: live.complaintsResolved,
+    complaintsPending: live.complaintsPending,
+    resolutionRate: live.resolutionRate,
+    avgResponseMinutes: live.avgResponseMinutes,
+    avgFirstResponseMinutes: live.avgResponseMinutes,
+    rating: String(live.rating),
+    ratingCount: live.ratingCount,
+  };
+}
 
 export type BrandAggregates = {
   rating: number;
@@ -68,7 +179,7 @@ export async function recomputeBrandAggregates(
     counter AS (
       SELECT
         (count(*) FILTER (WHERE ${COUNTED}))::int AS total_count,
-        (count(*) FILTER (WHERE status = 'resolved'))::int AS resolved_count,
+        (count(*) FILTER (WHERE ${RESOLVED}))::int AS resolved_count,
         (count(*) FILTER (WHERE ${OPEN}))::int AS open_count,
         round(avg(first_response_minutes))::int AS avg_response
       FROM complaints
@@ -119,9 +230,50 @@ export async function refreshBrandAggregates(brandId: string): Promise<void> {
   }
 }
 
+/** Tüm markaları tek SQL ile tazeler (deploy / bakım). */
+export async function recomputeAllBrandAggregatesBulk(): Promise<number> {
+  const ratingVisible = ratingSyntheticFilter();
+
+  await db.execute(sql`
+    UPDATE brands b SET
+      total_complaints = coalesce(x.total_count, 0),
+      complaints_resolved = coalesce(x.resolved_count, 0),
+      complaints_pending = coalesce(x.open_count, 0),
+      resolution_rate = CASE
+        WHEN coalesce(x.total_count, 0) > 0
+        THEN round(coalesce(x.resolved_count, 0)::numeric * 100 / x.total_count)::int
+        ELSE 0
+      END,
+      avg_response_minutes = coalesce(x.avg_response, 0),
+      avg_first_response_minutes = x.avg_response,
+      rating = coalesce(x.avg_value, 0),
+      rating_count = coalesce(x.vote_count, 0),
+      updated_at = now()
+    FROM (
+      SELECT
+        br.id AS brand_id,
+        count(c.id) FILTER (WHERE ${COMPLAINT_COUNTED})::int AS total_count,
+        count(c.id) FILTER (WHERE ${COMPLAINT_RESOLVED})::int AS resolved_count,
+        count(c.id) FILTER (WHERE ${COMPLAINT_OPEN})::int AS open_count,
+        round(avg(c.first_response_minutes))::int AS avg_response,
+        round(avg(c.rating) FILTER (
+          WHERE c.rating IS NOT NULL AND ${COMPLAINT_COUNTED} AND ${ratingVisible}
+        ), 2) AS avg_value,
+        count(c.id) FILTER (
+          WHERE c.rating IS NOT NULL AND ${COMPLAINT_COUNTED} AND ${ratingVisible}
+        )::int AS vote_count
+      FROM brands br
+      LEFT JOIN complaints c ON c.brand_id = br.id
+      GROUP BY br.id
+    ) x
+    WHERE b.id = x.brand_id
+  `);
+
+  const [{ count }] = await db.select({ count: sql<number>`count(*)::int` }).from(schema.brands);
+  return Number(count);
+}
+
 /** Tüm markaları sırayla tazeler (bakım scriptleri ve seed için). */
 export async function recomputeAllBrandAggregates(): Promise<number> {
-  const brands = await db.select({ id: schema.brands.id }).from(schema.brands);
-  for (const b of brands) await recomputeBrandAggregates(b.id);
-  return brands.length;
+  return recomputeAllBrandAggregatesBulk();
 }
