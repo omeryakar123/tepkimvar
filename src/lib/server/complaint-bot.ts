@@ -26,7 +26,6 @@ import {
   buildResponseMessages,
   fallbackComplaint,
   fallbackResponse,
-  normalizeBotDisplayName,
   pickTurkishDisplayName,
   pickVariationAngle,
   scenarioLabel,
@@ -413,7 +412,7 @@ export async function generateComplaint(input: {
     };
   }
 
-  const raw = await chatCompleteJson<{ title?: string; body?: string; nickname?: string }>({
+  const raw = await chatCompleteJson<{ title?: string; body?: string }>({
     messages: buildComplaintMessages({
       brandName: input.brandName,
       scenario: input.scenario,
@@ -438,7 +437,8 @@ export async function generateComplaint(input: {
   return {
     title,
     body,
-    displayName: normalizeBotDisplayName(raw.nickname, input.avoidDisplayNames),
+    // Yazar adı her zaman sistem tarafından üretilen Türk ismi — AI rumuzları kullanılmaz.
+    displayName: pickTurkishDisplayName(input.avoidDisplayNames),
     source: "ai",
   };
 }

@@ -474,7 +474,7 @@ const COMPLAINT_SYSTEM = [
   "- For Turkish complaints: use realistic transaction amounts between 20.000 TL and 1.000.000 TL. Never 100, 500, 1000 or similarly trivial figures.",
   "- Every complaint MUST be structurally different: vary opening sentence, specific detail (amount OR days OR method OR game), and closing demand.",
   "- Do NOT reuse stock phrases like 'talep ediyorum', 'bilgilendirilmeyi', 'ivedilikle' in the same form across outputs.",
-  "- Return ONLY a JSON object with keys: title, body, nickname.",
+  "- Return ONLY a JSON object with keys: title, body.",
 ].join("\n");
 
 /** Her üretimde modele verilen farklı odak — tekrarı kırar. */
@@ -518,13 +518,13 @@ export function buildComplaintMessages(input: ComplaintPromptInput) {
     "- body: 55-130 words, first person, includes TWO concrete details (amount, duration, method, reference number, or product name).",
     "- For Turkish: amounts must be realistic for online betting/casino (20.000–1.000.000 TL). NEVER use trivial amounts like 100, 500, 1000 or 1500 TL.",
     "- Vary narrative structure every time: different opening, different complaint angle, different closing request.",
-    "- nickname: a short invented display name (no real-looking full names).",
+    "- Do NOT include a signature name or nickname in the body — the display name is assigned separately.",
     "- Use a different narrative structure than a generic 'I did X and Y happened' template.",
     avoidTitles.length ? `- Must NOT resemble these existing titles: ${avoidTitles.map((t) => `"${t}"`).join(", ")}` : "",
     avoidBodies.length ? `- Avoid similar story openings or endings to: ${avoidBodies.map((b) => `"${b}…"`).join("; ")}` : "",
     input.customInstructions ? `\nBrand-specific instructions: ${input.customInstructions}` : "",
     "",
-    'Respond as: {"title": "...", "body": "...", "nickname": "..."}',
+    'Respond as: {"title": "...", "body": "..."}',
   ]
     .filter(Boolean)
     .join("\n");
@@ -673,20 +673,20 @@ const CONTEXT = {
   ],
 } as const;
 
-const NICKNAMES = [
-  "gecikenkullanici", "sabirlimusteri", "kayipbakiye", "denizd", "arda_k", "mgurses",
-  "beklemedeyim", "oyuncu42", "sessizmagdur", "yorgunkullanici", "efe.t", "seda_y",
-  "player_88", "no_reply_user", "kanitlivar", "hesapmagduru",
-  "slotcu_07", "bahisci_tr", "cekim_bekleyen", "destek_yok", "kuponcu99",
-  "mobil_oyuncu", "bonus_avcisi", "kayit_tut", "magdur_2024",
-];
-
 /** Bot şikayetlerinde görünen rastgele Türkçe isimler (gerçek kullanıcı gibi). */
 const TR_FIRST_NAMES = [
   "Ahmet", "Mehmet", "Mustafa", "Ali", "Hakan", "Burak", "Emre", "Can", "Oğuz", "Serkan",
   "Kerem", "Tolga", "Murat", "Cem", "Barış", "Volkan", "Kaan", "Onur", "Yusuf", "Enes",
+  "Halil", "İbrahim", "Osman", "Ramazan", "Süleyman", "Fatih", "Erhan", "Umut", "Berk", "Eren",
   "Ayşe", "Fatma", "Elif", "Zeynep", "Selin", "Deniz", "Merve", "Esra", "Gamze", "Buse",
   "Seda", "Pınar", "Derya", "Gizem", "Cansu", "Tuğba", "Hande", "Melis", "İrem", "Yasemin",
+  "Sevgi", "Nur", "Emine", "Hatice", "Zehra", "Berna", "Ceren", "Damla", "Ebru", "Filiz",
+] as const;
+
+const TR_LAST_NAMES = [
+  "Yılmaz", "Kaya", "Demir", "Çelik", "Şahin", "Yıldız", "Aydın", "Öztürk", "Arslan", "Doğan",
+  "Kılıç", "Aslan", "Çetin", "Koç", "Kurt", "Özkan", "Polat", "Güneş", "Aksoy", "Erdoğan",
+  "Taş", "Tekin", "Bulut", "Karaca", "Korkmaz", "Acar", "Yavuz", "Tunç", "Güler", "Bozkurt",
 ] as const;
 
 const TR_LAST_INITIALS = [
@@ -694,10 +694,16 @@ const TR_LAST_INITIALS = [
 ] as const;
 
 const BOT_NAME_BLOCKLIST = new Set(
-  ["şikayet botu", "sikayet botu", "sikayet-botu", "complaint bot", "bot", "kullanici", "kullanıcı"].map(
+  ["şikayet botu", "sikayet botu", "sikayet-botu", "complaint bot", "bot", "kullanici", "kullanıcı", "anonim"].map(
     (s) => s.toLowerCase(),
   ),
 );
+
+/** Rumuz / İngilizce takma ad değil, gerçek Türk ismi formatı mı? */
+function looksLikeTurkishPersonName(name: string): boolean {
+  if (/[_@0-9]|player|user|oyuncu|magdur|kullan/i.test(name)) return false;
+  return /^[A-ZÇĞİÖŞÜ][a-zçğıöşü]+(\s+[A-ZÇĞİÖŞÜ][a-zçğıöşü]+|\s+[A-ZÇĞİÖŞÜ]\.)?$/.test(name.trim());
+}
 
 /** Sentetik şikayet yazar adı — her seferinde farklı Türk ismi. */
 export function pickTurkishDisplayName(avoid: string[] = []): string {
@@ -705,22 +711,43 @@ export function pickTurkishDisplayName(avoid: string[] = []): string {
     ...avoid.map((a) => a.trim().toLowerCase()).filter(Boolean),
     ...BOT_NAME_BLOCKLIST,
   ]);
-  for (let attempt = 0; attempt < 30; attempt++) {
+  const avoidFirst = new Set(
+    avoid.map((a) => a.trim().split(/\s+/)[0]?.toLowerCase()).filter(Boolean) as string[],
+  );
+
+  for (let attempt = 0; attempt < 60; attempt++) {
     const first = pick(TR_FIRST_NAMES);
-    const withInitial = Math.random() > 0.3;
-    const name = withInitial ? `${first} ${pick(TR_LAST_INITIALS)}.` : first;
+    if (avoidFirst.has(first.toLowerCase()) && attempt < 40) continue;
+
+    const roll = Math.random();
+    let name: string;
+    if (roll < 0.45) {
+      name = `${first} ${pick(TR_LAST_NAMES)}`;
+    } else if (roll < 0.7) {
+      name = `${first} ${pick(TR_LAST_INITIALS)}.`;
+    } else if (roll < 0.85) {
+      name = `${first.charAt(0)}. ${pick(TR_LAST_NAMES)}`;
+    } else {
+      name = first;
+    }
+
     if (!avoidSet.has(name.toLowerCase())) return name;
   }
-  return `${pick(TR_FIRST_NAMES)} ${pick(TR_LAST_INITIALS)}.`;
+  return `${pick(TR_FIRST_NAMES)} ${pick(TR_LAST_NAMES)}`;
 }
 
-/** AI/model çıktısı bot veya rumuz ise güvenli Türk ismine çevir. */
+/** Bot şikayetlerinde yalnızca geçerli Türk ismi kabul edilir; aksi halde yenisi üretilir. */
 export function normalizeBotDisplayName(raw: string | undefined | null, avoid: string[] = []): string {
   const s = (raw ?? "").trim();
   if (!s || BOT_NAME_BLOCKLIST.has(s.toLowerCase()) || /bot|sikayet|şikayet|kullanici/i.test(s)) {
     return pickTurkishDisplayName(avoid);
   }
-  if (s.length < 2 || s.length > 40) return pickTurkishDisplayName(avoid);
+  if (s.length < 2 || s.length > 40 || !looksLikeTurkishPersonName(s)) {
+    return pickTurkishDisplayName(avoid);
+  }
+  if (avoid.some((a) => a.trim().toLowerCase() === s.toLowerCase())) {
+    return pickTurkishDisplayName(avoid);
+  }
   return s;
 }
 
