@@ -407,22 +407,6 @@ function Home() {
                   </div>
                   <h3 className="font-display font-bold text-[16px] text-ink mb-2 line-clamp-2">{c.title}</h3>
                   <p className="text-[13px] text-navy line-clamp-3 leading-relaxed">{c.body}</p>
-                  {c.previewComments && c.previewComments.length > 0 && (
-                    <div className="mt-3 border-t border-rule pt-3">
-                      <p className="text-[10px] font-semibold uppercase tracking-wide text-navy-mid mb-2">
-                        Benzer deneyimler
-                      </p>
-                      <ul className="space-y-2">
-                        {c.previewComments.map((cm) => (
-                          <li key={cm.userName + cm.body.slice(0, 24)} className="text-[12px] text-navy leading-snug">
-                            <span className="font-semibold text-ink">{cm.userName}</span>
-                            <span className="text-navy-mid"> · {cm.createdAgo}</span>
-                            <p className="mt-0.5 line-clamp-2">{cm.body}</p>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
                   <div className="mt-3 text-[12px] font-semibold text-brand truncate">▸ {c.companyName}</div>
                 </Link>
               ))}
@@ -448,22 +432,6 @@ function Home() {
                 </div>
                 <h3 className="font-display font-bold text-[17px] text-ink mb-2 line-clamp-2">{c.title}</h3>
                 <p className="text-[13px] text-navy line-clamp-3 leading-relaxed">{c.body}</p>
-                {c.previewComments && c.previewComments.length > 0 && (
-                  <div className="mt-3 border-t border-rule pt-3">
-                    <p className="text-[10px] font-semibold uppercase tracking-wide text-navy-mid mb-2">
-                      Benzer deneyimler
-                    </p>
-                    <ul className="space-y-2">
-                      {c.previewComments.map((cm) => (
-                        <li key={cm.userName + cm.body.slice(0, 24)} className="text-[12px] text-navy leading-snug">
-                          <span className="font-semibold text-ink">{cm.userName}</span>
-                          <span className="text-navy-mid"> · {cm.createdAgo}</span>
-                          <p className="mt-0.5 line-clamp-2">{cm.body}</p>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
                 <div className="mt-3 text-[12px] font-semibold text-brand">▸ {c.companyName}</div>
               </Link>
             ))}

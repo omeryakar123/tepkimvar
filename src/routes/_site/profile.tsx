@@ -147,17 +147,28 @@ function ProfilePage() {
             url={profile.avatarUrl}
             userId={profile.id}
             onChange={async (newUrl) => {
+              const prev = profile.avatarUrl;
               setProfile({ ...profile, avatarUrl: newUrl });
-              await fetch("/api/profile", {
+              const res = await fetch("/api/profile", {
                 method: "PATCH",
                 credentials: "include",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                  fullName: profile.fullName, username: profile.username,
-                  avatarUrl: newUrl, phone: profile.phone,
-                  city: profile.city, bio: profile.bio,
+                  fullName: profile.fullName,
+                  username: profile.username,
+                  avatarUrl: newUrl,
+                  phone: profile.phone,
+                  city: profile.city,
+                  bio: profile.bio,
                 }),
               });
+              if (!res.ok) {
+                setProfile({ ...profile, avatarUrl: prev });
+                toast.error("Profil fotoğrafı kaydedilemedi");
+                return;
+              }
+              const data = (await res.json()) as { profile?: Profile };
+              if (data.profile) setProfile(data.profile);
             }}
           />
           <div className="flex-1 min-w-0 text-center sm:text-left">

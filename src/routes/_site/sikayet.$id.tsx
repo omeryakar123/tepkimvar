@@ -167,6 +167,7 @@ function ComplaintPage() {
 
   const topLevel = comments.filter((c) => !c.parent_id);
   const childrenOf = (pid: string) => comments.filter((c) => c.parent_id === pid);
+  const realCommentCount = comments.filter((c) => !c.is_preview).length;
 
   return (
     <div>
@@ -262,7 +263,7 @@ function ComplaintPage() {
                 }
               />
             )}
-            <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg ring-1 ring-rule hover:bg-surface text-navy"><MessageSquare className="size-4" /> {comments.length} yorum</button>
+            <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg ring-1 ring-rule hover:bg-surface text-navy"><MessageSquare className="size-4" /> {realCommentCount || comments.length} yorum</button>
             <button onClick={() => { navigator.clipboard.writeText(window.location.href); toast.success("Bağlantı kopyalandı"); }} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg ring-1 ring-rule hover:bg-surface text-navy"><Share2 className="size-4" /> Paylaş</button>
             <div className="ml-auto"><ReportButton targetType="complaint" targetId={id} /></div>
           </div>
@@ -354,7 +355,11 @@ function ComplaintPage() {
             </div>
           </form>
 
-          {topLevel.length === 0 && <div className="bg-card rounded-2xl ring-1 ring-rule p-8 text-center text-sm text-navy-mid">Henüz yorum yok. İlk yorumu siz yapın.</div>}
+          {topLevel.length === 0 && (
+            <div className="bg-card rounded-2xl ring-1 ring-rule p-8 text-center text-sm text-navy-mid">
+              Henüz yorum yok. İlk yorumu siz yapın.
+            </div>
+          )}
 
           <div className="space-y-3">
             {topLevel.map((c) => (
@@ -412,12 +417,14 @@ function CommentNode({ c, replies, onReply, onVote, onPin }: {
             {c.pinned && <span className="inline-flex items-center gap-1 text-brand"><Pin className="size-3" /> Sabit</span>}
           </div>
           <p className="text-sm text-ink whitespace-pre-line">{c.body}</p>
-          <div className="mt-2 flex items-center gap-3 text-[12px] text-navy-mid">
-            <button onClick={() => onVote(c.id, 1)} className="inline-flex items-center gap-1 hover:text-brand"><ArrowUp className="size-3.5" /> {c.upvotes}</button>
-            <button onClick={() => onVote(c.id, -1)} className="inline-flex items-center gap-1 hover:text-danger"><ArrowDown className="size-3.5" /> {c.downvotes}</button>
-            <button onClick={() => onReply(c.id)} className="hover:text-ink">Yanıtla</button>
-            {onPin && <button onClick={() => onPin(c.id, c.pinned)} className="hover:text-brand">{c.pinned ? "Sabiti kaldır" : "Sabitle"}</button>}
-          </div>
+          {!c.is_preview && (
+            <div className="mt-2 flex items-center gap-3 text-[12px] text-navy-mid">
+              <button onClick={() => onVote(c.id, 1)} className="inline-flex items-center gap-1 hover:text-brand"><ArrowUp className="size-3.5" /> {c.upvotes}</button>
+              <button onClick={() => onVote(c.id, -1)} className="inline-flex items-center gap-1 hover:text-danger"><ArrowDown className="size-3.5" /> {c.downvotes}</button>
+              <button onClick={() => onReply(c.id)} className="hover:text-ink">Yanıtla</button>
+              {onPin && <button onClick={() => onPin(c.id, c.pinned)} className="hover:text-brand">{c.pinned ? "Sabiti kaldır" : "Sabitle"}</button>}
+            </div>
+          )}
           {replies.length > 0 && (
             <div className="mt-3 space-y-2 pl-4 border-l-2 border-rule">
               {replies.map((r) => (

@@ -205,12 +205,7 @@ export function BrandLogoImage({
 }
 
 function listLogoCandidates(opts: BrandLogoOpts) {
-  const list = brandLogoCandidates(opts);
-  const stored = opts.logoUrl?.trim();
-  if (stored?.startsWith("/brand-logos/") && !list.includes(stored)) {
-    return [stored, ...list];
-  }
-  return list;
+  return brandLogoCandidates(opts);
 }
 
 function resolveLogoSrc(url: string) {

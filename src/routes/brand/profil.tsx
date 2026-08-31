@@ -162,7 +162,7 @@ function BrandProfilePage() {
       field === "logo_url" ? { logo_url: url } : { cover_url: url },
     );
     if (!updated) return;
-    setBrand({ ...brand, [field]: url });
+    setBrand(updated);
     toast.success("Yüklendi");
   }
 

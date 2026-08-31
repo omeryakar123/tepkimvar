@@ -38,7 +38,16 @@ export function AvatarUpload({
     <div className="flex items-center gap-4">
       <div className="relative" style={{ width: size, height: size }}>
         <div className="size-full rounded-full ring-2 ring-white shadow-soft overflow-hidden bg-brand-soft grid place-items-center">
-          {url ? <img src={proxyImage(url) ?? url} alt="" className="size-full object-cover" /> : <Camera className="size-6 text-brand" />}
+          {url ? (
+            <img
+              key={url}
+              src={proxyImage(url) ?? url}
+              alt=""
+              className="size-full object-cover"
+            />
+          ) : (
+            <Camera className="size-6 text-brand" />
+          )}
         </div>
         <button
           type="button"

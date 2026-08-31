@@ -437,6 +437,7 @@ export type DbComment = {
   upvotes: number;
   downvotes: number;
   created_at: string;
+  is_preview?: boolean;
   profiles?: { full_name: string | null; username: string | null; avatar_url: string | null } | null;
 };
 

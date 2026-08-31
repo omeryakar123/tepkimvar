@@ -35,19 +35,33 @@ export const Route = createFileRoute("/api/profile")({
           bio?: string | null;
           avatarUrl?: string | null;
         };
+
+        const avatarUrl =
+          body.avatarUrl === undefined
+            ? undefined
+            : body.avatarUrl && /^(\/api\/files\/avatars\/|https?:\/\/)/i.test(body.avatarUrl)
+              ? body.avatarUrl
+              : null;
+
+        const patch = {
+          fullName: body.fullName ?? null,
+          username: body.username ?? null,
+          phone: body.phone ?? null,
+          city: body.city ?? null,
+          bio: body.bio ?? null,
+          ...(avatarUrl !== undefined ? { avatarUrl } : {}),
+          updatedAt: new Date(),
+        };
+
         const [updated] = await db
-          .update(schema.profiles)
-          .set({
-            fullName: body.fullName ?? null,
-            username: body.username ?? null,
-            phone: body.phone ?? null,
-            city: body.city ?? null,
-            bio: body.bio ?? null,
-            avatarUrl: body.avatarUrl ?? null,
-            updatedAt: new Date(),
+          .insert(schema.profiles)
+          .values({ id: session.user.id, ...patch })
+          .onConflictDoUpdate({
+            target: schema.profiles.id,
+            set: patch,
           })
-          .where(eq(schema.profiles.id, session.user.id))
           .returning();
+
         return Response.json({ profile: updated });
       },
     },

@@ -37,6 +37,13 @@ export function logoFetchSize(displayPx: number): number {
 }
 
 /** Yedek sıralı logo URL listesi — img onError ile sırayla denenebilir */
+function isCustomUploadedLogo(url: string): boolean {
+  return (
+    url.startsWith("/api/files/brand-logos/") ||
+    url.startsWith("/brand-logos/")
+  );
+}
+
 export function brandLogoCandidates(opts: BrandLogoOpts): string[] {
   const slugKey = opts.slug?.trim().toLowerCase() ?? "";
   const out: string[] = [];
@@ -50,6 +57,17 @@ export function brandLogoCandidates(opts: BrandLogoOpts): string[] {
 
   const raw = opts.logoUrl?.trim() ?? "";
 
+  // Panelden yüklenen logo her zaman önce — otomatik çözümleyici override etmesin.
+  if (raw && !isLikelyBrokenLogo(raw)) {
+    if (raw.startsWith("/api/files/brand-logos/") || raw.startsWith("/brand-logos/")) {
+      push(raw);
+    } else if (raw.startsWith("/")) {
+      push(raw);
+    } else if (raw.startsWith("http")) {
+      push(proxyImage(raw) ?? raw);
+    }
+  }
+
   if (slugKey && SLUG_LOGO_OVERRIDES[slugKey]) {
     push(SLUG_LOGO_OVERRIDES[slugKey]);
   }
@@ -59,15 +77,10 @@ export function brandLogoCandidates(opts: BrandLogoOpts): string[] {
     push(`/api/brand-logo/${slugKey}`);
   }
 
-  // İyi depolanmış logo (MinIO / public)
-  if (raw.startsWith("/") && !isLikelyBrokenLogo(raw)) {
-    push(raw);
-  } else if (raw.startsWith("http") && !isLikelyBrokenLogo(raw)) {
-    push(proxyImage(raw) ?? raw);
-  }
-
   return out;
 }
+
+export { isCustomUploadedLogo };
 
 export function brandLogoUrl(opts: BrandLogoOpts): string | null {
   return brandLogoCandidates(opts)[0] ?? null;

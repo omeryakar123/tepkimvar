@@ -4,6 +4,78 @@ import { db, schema } from "@/db";
 import { HttpError, errorResponse, rateLimit, requireUser } from "@/lib/server/guard";
 import { publish } from "@/lib/server/events";
 import { notifyComplaintOwner } from "@/lib/server/notify";
+import { generateTalkedPreviewComments } from "@/lib/server/talked-preview-comments";
+
+const PREVIEW_TARGET = 3;
+
+type CommentItem = {
+  id: string;
+  complaint_id: string;
+  parent_id: string | null;
+  user_id: string;
+  body: string;
+  pinned: boolean;
+  upvotes: number;
+  downvotes: number;
+  created_at: string;
+  is_preview?: boolean;
+  profiles: { full_name: string | null; username: string | null; avatar_url: string | null } | null;
+};
+
+async function appendPreviewComments(complaintId: string, items: CommentItem[]) {
+  if (items.length >= PREVIEW_TARGET) return items;
+
+  const [row] = await db
+    .select({
+      id: schema.complaints.id,
+      title: schema.complaints.title,
+      body: schema.complaints.body,
+      botScenario: schema.complaints.botScenario,
+      brandName: schema.brands.name,
+    })
+    .from(schema.complaints)
+    .innerJoin(schema.brands, eq(schema.complaints.brandId, schema.brands.id))
+    .where(eq(schema.complaints.id, complaintId))
+    .limit(1);
+  if (!row) return items;
+
+  const need = PREVIEW_TARGET - items.length;
+  const existingBodies = items.map((c) => c.body);
+  const existingNames = items
+    .map((c) => c.profiles?.full_name ?? c.profiles?.username ?? "")
+    .filter(Boolean);
+
+  const generated = generateTalkedPreviewComments({
+    complaintId: row.id,
+    brandName: row.brandName,
+    title: row.title,
+    body: row.body,
+    scenario: row.botScenario,
+    count: need,
+    avoidBodies: existingBodies,
+    avoidNames: existingNames,
+  });
+
+  for (const g of generated) {
+    items.push({
+      id: g.id,
+      complaint_id: complaintId,
+      parent_id: null,
+      user_id: "",
+      body: g.body,
+      pinned: false,
+      upvotes: 0,
+      downvotes: 0,
+      created_at: g.created_at,
+      is_preview: true,
+      profiles: g.profiles
+        ? { full_name: g.profiles.full_name, username: g.profiles.username, avatar_url: null }
+        : null,
+    });
+  }
+
+  return items;
+}
 
 // Public: bir şikayetin yorumları (pinli önce, sonra tarih artan).
 export const Route = createFileRoute("/api/comments")({
@@ -20,7 +92,7 @@ export const Route = createFileRoute("/api/comments")({
           .where(eq(schema.comments.complaintId, complaintId))
           .orderBy(desc(schema.comments.pinned), asc(schema.comments.createdAt));
 
-        const items = rows.map((r) => ({
+        const items: CommentItem[] = rows.map((r) => ({
           id: r.id,
           complaint_id: r.complaintId,
           parent_id: r.parentId,
@@ -30,9 +102,7 @@ export const Route = createFileRoute("/api/comments")({
           upvotes: r.upvotes,
           downvotes: r.downvotes,
           created_at: r.createdAt instanceof Date ? r.createdAt.toISOString() : String(r.createdAt),
-          profiles: null as
-            | { full_name: string | null; username: string | null; avatar_url: string | null }
-            | null,
+          profiles: null,
         }));
 
         const ids = Array.from(new Set(items.map((i) => i.user_id).filter(Boolean)));
@@ -55,7 +125,8 @@ export const Route = createFileRoute("/api/comments")({
           }
         }
 
-        return Response.json(items);
+        const withPreviews = await appendPreviewComments(complaintId, items);
+        return Response.json(withPreviews);
       },
 
       // Yorum ekle. GÜVENLİK: user_id oturumdan; upvotes/downvotes/pinned
