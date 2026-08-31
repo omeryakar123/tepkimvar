@@ -519,6 +519,7 @@ export function buildComplaintMessages(input: ComplaintPromptInput) {
     "- For Turkish: amounts must be realistic for online betting/casino (20.000–1.000.000 TL). NEVER use trivial amounts like 100, 500, 1000 or 1500 TL.",
     "- Vary narrative structure every time: different opening, different complaint angle, different closing request.",
     "- Do NOT include a signature name or nickname in the body — the display name is assigned separately.",
+    "- Never use fake usernames like KayıtlıKullanıcı, User123, testuser, player1 in the body.",
     "- Use a different narrative structure than a generic 'I did X and Y happened' template.",
     avoidTitles.length ? `- Must NOT resemble these existing titles: ${avoidTitles.map((t) => `"${t}"`).join(", ")}` : "",
     avoidBodies.length ? `- Avoid similar story openings or endings to: ${avoidBodies.map((b) => `"${b}…"`).join("; ")}` : "",
@@ -694,15 +695,96 @@ const TR_LAST_INITIALS = [
 ] as const;
 
 const BOT_NAME_BLOCKLIST = new Set(
-  ["şikayet botu", "sikayet botu", "sikayet-botu", "complaint bot", "bot", "kullanici", "kullanıcı", "anonim"].map(
-    (s) => s.toLowerCase(),
-  ),
+  [
+    "şikayet botu", "sikayet botu", "sikayet-botu", "complaint bot", "bot",
+    "kullanici", "kullanıcı", "anonim", "mağdur müşteri", "magdur musteri",
+    "kayıtlı kullanıcı", "kayitli kullanici", "registered user", "test kullanıcı",
+  ].map((s) => s.toLowerCase()),
 );
+
+/** Bahis/casino sitelerinde görülen gerçekçi kullanıcı adı parçaları. */
+const PLATFORM_USER_STEMS = [
+  "murat", "ahmet", "mehmet", "can", "emre", "burak", "serkan", "kadir", "oguz", "mert",
+  "selin", "ayse", "elif", "zeynep", "deniz", "buse", "gizem", "pinar", "cem", "baris",
+  "onur", "tolga", "hakan", "volkan", "yusuf", "fatih", "kerem", "berk", "umut", "salih",
+  "kaan", "eren", "alp", "sinan", "tugce", "seda", "merve", "gamze", "hande", "yasin",
+] as const;
+
+const PLATFORM_USER_SUFFIXES = [
+  "kaya", "demir", "yilmaz", "celik", "arslan", "polat", "sahin", "ozturk", "koc", "kurt",
+] as const;
+
+function asciiUsername(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/ğ/g, "g")
+    .replace(/ü/g, "u")
+    .replace(/ş/g, "s")
+    .replace(/ı/g, "i")
+    .replace(/ö/g, "o")
+    .replace(/ç/g, "c")
+    .replace(/[^a-z0-9._-]/g, "");
+}
+
+/** Sahte / şablon platform kullanıcı adı mı? */
+export function looksLikeFakePlatformUsername(raw: string): boolean {
+  const s = raw.trim();
+  if (!s || s.length < 2) return true;
+  const lower = s.toLowerCase();
+  if (
+    /kay[iı]tl[iı]|registered|kullan[iı]c[iı]|user\d|player|test|demo|fake|oyuncu|magdur|guest|member|hesap|üye\b|uye\b|account|nickname|rumuz/.test(
+      lower,
+    )
+  ) {
+    return true;
+  }
+  if (/^(user|test|demo|player|member|guest|admin|support)\d*$/i.test(s)) return true;
+  if (/^[A-ZÇĞİÖŞÜ][a-zçğıöşü]+Kullan/i.test(s)) return true;
+  if (/kullanici\d+|kullanıcı\d+/i.test(s)) return true;
+  return false;
+}
+
+/** Sentetik / bot şikayetlerinde site kullanıcı adı — gerçekçi rumuz. */
+export function pickRealisticPlatformUsername(avoid: string[] = []): string {
+  const avoidSet = new Set(avoid.map((a) => a.trim().toLowerCase()).filter(Boolean));
+  for (let attempt = 0; attempt < 50; attempt++) {
+    const stem = pick(PLATFORM_USER_STEMS);
+    const roll = Math.random();
+    let username: string;
+    if (roll < 0.4) {
+      username = `${stem}${int(10, 99)}${pick(PLATFORM_USER_SUFFIXES).slice(0, 4)}`;
+    } else if (roll < 0.7) {
+      username = `${stem}_${pick(PLATFORM_USER_SUFFIXES)}${int(1, 99)}`;
+    } else if (roll < 0.88) {
+      username = `${stem.charAt(0)}${pick(PLATFORM_USER_SUFFIXES)}${int(10, 999)}`;
+    } else {
+      username = `${stem}${int(1986, 2003) % 100}${int(1, 9)}`;
+    }
+    username = asciiUsername(username).slice(0, 24);
+    if (username.length >= 4 && !avoidSet.has(username) && !looksLikeFakePlatformUsername(username)) {
+      return username;
+    }
+  }
+  return `${pick(PLATFORM_USER_STEMS)}${int(1000, 9999)}`;
+}
+
+export function normalizePlatformUsername(raw: string | undefined | null, avoid: string[] = []): string {
+  const s = (raw ?? "").trim();
+  if (!s || looksLikeFakePlatformUsername(s)) return pickRealisticPlatformUsername(avoid);
+  if (avoid.some((a) => a.trim().toLowerCase() === s.toLowerCase())) {
+    return pickRealisticPlatformUsername(avoid);
+  }
+  return asciiUsername(s).slice(0, 80) || pickRealisticPlatformUsername(avoid);
+}
 
 /** Rumuz / İngilizce takma ad değil, gerçek Türk ismi formatı mı? */
 function looksLikeTurkishPersonName(name: string): boolean {
-  if (/[_@0-9]|player|user|oyuncu|magdur|kullan/i.test(name)) return false;
-  return /^[A-ZÇĞİÖŞÜ][a-zçğıöşü]+(\s+[A-ZÇĞİÖŞÜ][a-zçğıöşü]+|\s+[A-ZÇĞİÖŞÜ]\.)?$/.test(name.trim());
+  const s = name.trim();
+  if (/kay[iı]tl[iı]|kullan[iı]c[iı]|registered|user\d|player|test|oyuncu|magdur|mağdur|guest|member/i.test(s)) {
+    return false;
+  }
+  if (/[_@]|player|user|oyuncu|magdur|kullan/i.test(s)) return false;
+  return /^[A-ZÇĞİÖŞÜ][a-zçğıöşü]+(\s+[A-ZÇĞİÖŞÜ][a-zçğıöşü]+|\s+[A-ZÇĞİÖŞÜ]\.)?$/.test(s);
 }
 
 /** Sentetik şikayet yazar adı — her seferinde farklı Türk ismi. */

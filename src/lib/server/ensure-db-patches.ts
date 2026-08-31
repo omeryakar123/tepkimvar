@@ -94,6 +94,88 @@ Sorularınız için iletişim sayfamızdan bize ulaşabilirsiniz.`;
         `.catch(() => {});
       }
 
+      const fakeNamesPatched = await pg<{ key: string }[]>`
+        SELECT key FROM app_meta WHERE key = 'fake_usernames_v1' LIMIT 1
+      `.catch(() => []);
+      if (fakeNamesPatched.length === 0) {
+        const {
+          pickTurkishDisplayName,
+          pickRealisticPlatformUsername,
+          normalizeBotDisplayName,
+          looksLikeFakePlatformUsername,
+        } = await import("./ai/prompts");
+
+        const platformRows = await pg<{ id: string; platform_username: string | null }[]>`
+          SELECT id, platform_username FROM complaints
+          WHERE platform_username IS NOT NULL
+            AND (
+              platform_username ~* 'kay[iı]tl[iı]|registered|kullan[iı]c[iı]|user[0-9]|player|test|demo|fake|oyuncu|magdur|guest|member'
+              OR platform_username ~* '^kullanici[0-9]+'
+              OR platform_username ~* '^kullanıcı[0-9]+'
+            )
+        `.catch(() => []);
+
+        const usedPlatform = new Set<string>();
+        for (const row of platformRows) {
+          const next = pickRealisticPlatformUsername([...usedPlatform]);
+          usedPlatform.add(next);
+          await pg`
+            UPDATE complaints SET platform_username = ${next} WHERE id = ${row.id}
+          `.catch(() => {});
+        }
+
+        const anonRows = await pg<{ id: string; anon_name: string | null }[]>`
+          SELECT id, anon_name FROM complaints
+          WHERE anon_name IS NOT NULL
+            AND (
+              anon_name ~* 'kay[iı]tl[iı]|kullan[iı]c[iı]|registered|user[0-9]|player|test|magdur|mağdur|guest|member|anonim'
+              OR anon_name IN ('Mağdur Müşteri', 'Magdur Musteri', 'Test Kullanıcı', 'Test Kullanici')
+            )
+        `.catch(() => []);
+
+        const usedAnon = new Set<string>();
+        for (const row of anonRows) {
+          const next = normalizeBotDisplayName(row.anon_name, [...usedAnon]);
+          usedAnon.add(next);
+          await pg`UPDATE complaints SET anon_name = ${next} WHERE id = ${row.id}`.catch(() => {});
+        }
+
+        const syntheticNoPlatform = await pg<{ id: string }[]>`
+          SELECT id FROM complaints
+          WHERE is_synthetic = true AND (platform_username IS NULL OR platform_username = '')
+        `.catch(() => []);
+        const usedSynth = new Set([...usedPlatform]);
+        for (const row of syntheticNoPlatform) {
+          const next = pickRealisticPlatformUsername([...usedSynth]);
+          usedSynth.add(next);
+          await pg`UPDATE complaints SET platform_username = ${next} WHERE id = ${row.id}`.catch(() => {});
+        }
+
+        const profileRows = await pg<{ id: string; username: string | null; full_name: string | null }[]>`
+          SELECT id, username, full_name FROM profiles
+          WHERE (username IS NOT NULL AND (
+              username ~* 'kay[iı]tl[iı]|registered|kullan[iı]c[iı]|user[0-9]|player|test'
+            ))
+            OR (full_name IS NOT NULL AND (
+              full_name ~* 'kay[iı]tl[iı]|kullan[iı]c[iı]|registered|user[0-9]|player|test|magdur|mağdur'
+            ))
+        `.catch(() => []);
+        for (const row of profileRows) {
+          if (row.username && looksLikeFakePlatformUsername(row.username)) {
+            await pg`UPDATE profiles SET username = NULL WHERE id = ${row.id}`.catch(() => {});
+          }
+          if (row.full_name && !/^[A-ZÇĞİÖŞÜ][a-zçğıöşü]+(\s+[A-ZÇĞİÖŞÜ][a-zçğıöşü]+|\s+[A-ZÇĞİÖŞÜ]\.)?$/.test(row.full_name.trim())) {
+            const next = pickTurkishDisplayName([]);
+            await pg`UPDATE profiles SET full_name = ${next} WHERE id = ${row.id}`.catch(() => {});
+          }
+        }
+
+        await pg`
+          INSERT INTO app_meta (key, value) VALUES ('fake_usernames_v1', '1')
+          ON CONFLICT (key) DO NOTHING
+        `.catch(() => {});
+      }
+
       done = true;
     } finally {
       await pg.end({ timeout: 5 });

@@ -27,6 +27,9 @@ import {
   fallbackComplaint,
   fallbackResponse,
   pickTurkishDisplayName,
+  pickRealisticPlatformUsername,
+  normalizePlatformUsername,
+  looksLikeFakePlatformUsername,
   pickVariationAngle,
   scenarioLabel,
   type ComplaintTone,
@@ -373,6 +376,8 @@ export type GeneratedComplaint = {
   body: string;
   /** Herkese görünen yazar adı (Türk ismi). */
   displayName: string;
+  /** Bahis/casino sitesindeki kullanıcı adı. */
+  platformUsername: string;
   source: "ai" | "template";
 };
 
@@ -408,6 +413,7 @@ export async function generateComplaint(input: {
       title: t.title,
       body: t.body,
       displayName: pickTurkishDisplayName(input.avoidDisplayNames),
+      platformUsername: pickRealisticPlatformUsername(input.avoidDisplayNames),
       source: "template",
     };
   }
@@ -437,8 +443,8 @@ export async function generateComplaint(input: {
   return {
     title,
     body,
-    // Yazar adı her zaman sistem tarafından üretilen Türk ismi — AI rumuzları kullanılmaz.
     displayName: pickTurkishDisplayName(input.avoidDisplayNames),
+    platformUsername: pickRealisticPlatformUsername(input.avoidDisplayNames),
     source: "ai",
   };
 }
@@ -622,6 +628,7 @@ async function writeComplaint(input: {
       isPublic: true,
       isAnonymous: true,
       anonName: input.generated.displayName,
+      platformUsername: input.generated.platformUsername,
       isSynthetic: true,
       generatedBy: input.generatedBy,
       language: input.config.language,
@@ -812,6 +819,7 @@ export async function runBotForBrand(opts: {
         body: schema.complaints.body,
         scenario: schema.complaints.botScenario,
         anonName: schema.complaints.anonName,
+        platformUsername: schema.complaints.platformUsername,
       })
       .from(schema.complaints)
       .where(eq(schema.complaints.brandId, opts.brandId))
@@ -820,9 +828,9 @@ export async function runBotForBrand(opts: {
 
     const avoidTitles = recent.map((r) => r.title);
     const avoidBodies = recent.map((r) => r.body);
-    const avoidDisplayNames = recent
-      .map((r) => r.anonName)
-      .filter((n): n is string => !!n);
+    const avoidDisplayNames = recent.flatMap((r) =>
+      [r.anonName, r.platformUsername].filter((n): n is string => !!n),
+    );
     const recentScenarios = recent
       .map((r) => r.scenario)
       .filter((s): s is string => !!s)
@@ -932,7 +940,7 @@ export async function runBotForBrand(opts: {
         generated = candidate;
         recentScenarios.unshift(attemptScenario);
         avoidBodies.unshift(candidate.body);
-        avoidDisplayNames.unshift(candidate.displayName);
+        avoidDisplayNames.unshift(candidate.displayName, candidate.platformUsername);
 
         const complaintId = await writeComplaint({
           brand,

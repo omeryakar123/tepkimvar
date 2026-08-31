@@ -7,6 +7,7 @@ import { recordStatusChange } from "@/lib/server/history";
 import { refreshBrandAggregates } from "@/lib/server/brand-stats";
 import { ensureDbPatches } from "@/lib/server/ensure-db-patches";
 import { moderateAndScore } from "@/lib/server/moderation";
+import { looksLikeFakePlatformUsername } from "@/lib/platform-username";
 import { complaintRankOrder, complaintRecentOrder, complaintTrendingOrder } from "@/lib/server/complaint-sort";
 import { supportedComplaintIds } from "@/lib/server/complaint-support";
 
@@ -209,6 +210,8 @@ export const Route = createFileRoute("/api/complaints")({
           if (body.length < 20) throw new HttpError(400, "Şikayet detayı en az 20 karakter olmalı");
           if (!platformUsername || platformUsername.length < 2)
             throw new HttpError(400, "Platform kullanıcı adı zorunludur");
+          if (looksLikeFakePlatformUsername(platformUsername))
+            throw new HttpError(400, "Lütfen sitedeki gerçek kullanıcı adınızı girin (KayıtlıKullanıcı gibi örnekler kabul edilmez)");
           if (!b.brandId) throw new HttpError(400, "Firma seçilmeli");
           const rating =
             Number(b.rating) >= 1 && Number(b.rating) <= 5 ? Math.round(Number(b.rating)) : null;

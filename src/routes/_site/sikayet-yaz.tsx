@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { PhoneInput } from "@/components/phone-input";
 import { toE164Tr } from "@/lib/phone";
+import { looksLikeFakePlatformUsername } from "@/lib/platform-username";
 import { FileDropzone, type AcceptedFile } from "@/components/file-dropzone";
 import { Combobox } from "@/components/combobox";
 import { seoHead } from "@/lib/seo";
@@ -80,6 +81,8 @@ function WriteComplaintPage() {
     if (!brandId) return toast.error("Lütfen bir firma seçin.");
     if (!platformUsername.trim() || platformUsername.trim().length < 2)
       return toast.error("Platform kullanıcı adınızı girin.");
+    if (looksLikeFakePlatformUsername(platformUsername))
+      return toast.error("Lütfen bahis/casino sitesindeki gerçek kullanıcı adınızı yazın.");
     if (rating < 1) return toast.error("Lütfen 1–5 yıldız puan verin.");
     if (title.trim().length < 6) return toast.error("Başlık en az 6 karakter olmalı.");
     if (body.trim().length < 20) return toast.error("Şikayet detayı en az 20 karakter olmalı.");

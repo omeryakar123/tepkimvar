@@ -3,6 +3,7 @@ import { and, eq, inArray, notInArray, or, sql, type SQL } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { toDbComplaint, type BrandNested } from "@/lib/db-shapes";
 import { displayPhone } from "@/lib/phone-mask";
+import { normalizePlatformUsername } from "@/lib/server/ai/prompts";
 import { isBrandMember, isStaff, optionalUser } from "@/lib/server/guard";
 import { supportedComplaintIds } from "@/lib/server/complaint-support";
 
@@ -81,7 +82,9 @@ export const Route = createFileRoute("/api/complaints/$id")({
           platform_username?: string | null;
           contact_phone?: string | null;
           contact_phone_display?: string | null;
-        }).platform_username = row.c.platformUsername ?? null;
+        }).platform_username = row.c.platformUsername
+          ? normalizePlatformUsername(row.c.platformUsername)
+          : null;
         (dc as typeof dc & { contact_phone?: string | null }).contact_phone =
           phoneMode === "hidden" ? null : row.c.contactPhone ?? null;
         (dc as typeof dc & { contact_phone_display?: string | null }).contact_phone_display =
