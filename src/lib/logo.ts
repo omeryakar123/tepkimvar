@@ -169,9 +169,14 @@ export type BrandLogoOpts = {
   size?: number;
 };
 
+/** Retina ekranlar için minimum 256px kaynak iste */
+export function logoFetchSize(displayPx: number): number {
+  return Math.max(256, Math.ceil(displayPx * 2.5));
+}
+
 /** Yedek sıralı logo URL listesi — img onError ile sırayla denenebilir */
 export function brandLogoCandidates(opts: BrandLogoOpts): string[] {
-  const fetchSize = Math.min(256, Math.max(128, opts.size ?? 128));
+  const fetchSize = 256;
   const slugKey = opts.slug?.trim().toLowerCase() ?? "";
   const dom = resolveDomain({ slug: opts.slug, website: opts.website });
   const out: string[] = [];

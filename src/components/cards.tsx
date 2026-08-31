@@ -5,7 +5,7 @@ import type { Company, Complaint } from "@/lib/mock-data";
 import { displayComplaintViews } from "@/lib/display-views";
 import { formatCompactCount, formatRating, formatResponseTime, statusClasses, statusLabel } from "@/lib/mock-data";
 import { proxyImage } from "@/lib/img";
-import { brandLogoUrl, brandLogoCandidates, SLUG_LOGO_OVERRIDES } from "@/lib/logo";
+import { brandLogoCandidates, SLUG_LOGO_OVERRIDES, logoFetchSize } from "@/lib/logo";
 import { ComplaintSupportButton } from "@/components/complaint-support-button";
 import { toast } from "sonner";
 
@@ -181,7 +181,7 @@ export function BrandLogoImage({
   logoUrl,
   website,
   size = 112,
-  className = "size-full object-contain bg-card",
+  className = "",
 }: {
   name: string;
   slug: string;
@@ -190,28 +190,15 @@ export function BrandLogoImage({
   size?: number;
   className?: string;
 }) {
-  const [candidateIdx, setCandidateIdx] = useState(0);
-  const px = Math.max(256, size * 2);
-  const candidates = brandLogoCandidates({ logoUrl, website, slug, size: px });
-  const src = candidates[candidateIdx] ?? null;
-
-  useEffect(() => {
-    setCandidateIdx(0);
-  }, [slug, logoUrl, website]);
-
-  if (!src) {
-    return <span className="text-xl font-semibold text-navy-mid">{name.slice(0, 2).toUpperCase()}</span>;
-  }
-
   return (
-    <img
-      src={src.startsWith("/") ? (proxyImage(src) ?? src) : src}
-      alt={name}
-      width={px}
-      height={px}
-      decoding="async"
+    <BrandAvatar
+      name={name}
+      slug={slug}
+      logoUrl={logoUrl}
+      website={website}
+      size={size}
+      rounded="rounded-full"
       className={className}
-      onError={() => setCandidateIdx((i) => i + 1)}
     />
   );
 }
@@ -261,7 +248,7 @@ export function BrandRankLogo({
           height={256}
           loading="lazy"
           decoding="async"
-          className="max-w-[84%] max-h-[84%] w-auto h-auto object-contain"
+          className="max-w-[78%] max-h-[78%] w-auto h-auto object-contain"
           onError={() => setCandidateIdx((i) => i + 1)}
         />
       ) : (
@@ -279,8 +266,9 @@ export function BrandAvatar({
   logoUrl,
   website,
   size = 48,
-  rounded = "rounded-xl",
+  rounded = "rounded-full",
   tone = "light",
+  className = "",
 }: {
   name: string;
   slug: string;
@@ -289,21 +277,25 @@ export function BrandAvatar({
   size?: number;
   rounded?: string;
   tone?: "light" | "dark";
+  className?: string;
 }) {
   const [candidateIdx, setCandidateIdx] = useState(0);
+  const px = logoFetchSize(size);
   const candidates = brandLogoCandidates({
     logoUrl,
     website,
     slug,
-    size: Math.max(256, size * 4),
+    size: px,
   });
   const src = candidates[candidateIdx] ?? null;
   const initials = name.slice(0, 2).toUpperCase();
+  const isWideAsset = Boolean(slug && slug in SLUG_LOGO_OVERRIDES);
   const shell =
     tone === "dark"
       ? "ring-white/15 bg-white/[0.92]"
-      : "ring-rule/80 bg-white shadow-[inset_0_0_0_1px_oklch(0.94_0.004_250)]";
-  const px = Math.max(256, size * 4);
+      : isWideAsset
+        ? "ring-rule/80 bg-black/85"
+        : "ring-rule/80 bg-white shadow-[inset_0_0_0_1px_oklch(0.94_0.004_250)]";
 
   useEffect(() => {
     setCandidateIdx(0);
@@ -317,7 +309,7 @@ export function BrandAvatar({
 
   return (
     <div
-      className={`relative shrink-0 ${rounded} overflow-hidden ring-1 ${shell} grid place-items-center`}
+      className={`relative shrink-0 aspect-square ${rounded} overflow-hidden ring-1 ${shell} grid place-items-center ${className}`}
       style={{ width: size, height: size }}
     >
       {src ? (
@@ -328,7 +320,7 @@ export function BrandAvatar({
           height={px}
           loading="lazy"
           decoding="async"
-          className="max-w-[86%] max-h-[86%] w-auto h-auto object-contain"
+          className="max-w-[78%] max-h-[78%] w-auto h-auto object-contain"
           onError={() => setCandidateIdx((i) => i + 1)}
         />
       ) : (

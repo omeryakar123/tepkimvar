@@ -12,7 +12,7 @@ import {
   Star,
   MessageSquare,
 } from "lucide-react";
-import { BrandProfileComplaintCard, BrandLogoImage } from "@/components/cards";
+import { BrandProfileComplaintCard, BrandAvatar } from "@/components/cards";
 import {
   formatRating,
   formatResponseTime,
@@ -299,15 +299,14 @@ function CompanyPage() {
         <div className="bg-card rounded-2xl ring-1 ring-rule p-5 sm:p-6 mt-6 relative">
           <div className="flex flex-col sm:flex-row sm:items-end gap-5">
             <div className="relative shrink-0">
-              <div className="size-24 sm:size-28 rounded-2xl bg-card ring-4 ring-white outline outline-1 -outline-offset-1 outline-black/5 shadow-sm flex items-center justify-center overflow-hidden">
-                <BrandLogoImage
-                  name={company.name}
-                  slug={raw.slug}
-                  logoUrl={raw.logo_url}
-                  website={raw.website}
-                  size={112}
-                />
-              </div>
+              <BrandAvatar
+                name={company.name}
+                slug={raw.slug}
+                logoUrl={raw.logo_url}
+                website={raw.website}
+                size={104}
+                className="ring-4 ring-white outline outline-1 -outline-offset-1 outline-black/5 shadow-sm"
+              />
               {isAdmin && (
                 <>
                   <button

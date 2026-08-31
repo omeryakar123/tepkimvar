@@ -88,7 +88,7 @@ function GlobalSearchModal({ open, onClose }: { open: boolean; onClose: () => vo
             <Section icon={Building2} title="Markalar">
               {brands.map((b) => (
                 <button key={b.id} onClick={() => go(`/firma/${b.slug}`)} className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-brand-soft/40 text-left">
-                  <BrandAvatar name={b.name} slug={b.slug} logoUrl={b.logo_url} website={b.website} size={32} rounded="rounded-lg" />
+                  <BrandAvatar name={b.name} slug={b.slug} logoUrl={b.logo_url} website={b.website} size={32} />
                   <span className="text-[14px] text-ink font-medium">{b.name}</span>
                   <span className="ml-auto text-[11px] text-navy-mid">/{b.slug}</span>
                 </button>

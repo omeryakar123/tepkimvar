@@ -12,6 +12,7 @@ import {
   Globe,
 } from "lucide-react";
 import { PhoneInput } from "@/components/phone-input";
+import { BrandAvatar } from "@/components/cards";
 import { proxyImage } from "@/lib/img";
 import { toE164Tr, fromE164 } from "@/lib/phone";
 
@@ -223,18 +224,15 @@ function BrandProfilePage() {
           </label>
         </div>
         <div className="p-6 flex items-center gap-4">
-          <div className="size-20 rounded-2xl ring-2 ring-white bg-card overflow-hidden grid place-items-center -mt-14 shadow-soft">
-            {brand.logo_url ? (
-              <img
-                src={proxyImage(brand.logo_url) ?? brand.logo_url}
-                alt=""
-                className="size-full object-cover"
-              />
-            ) : (
-              <span className="text-2xl font-black text-brand">
-                {brand.name[0]}
-              </span>
-            )}
+          <div className="-mt-14 shadow-soft">
+            <BrandAvatar
+              name={brand.name}
+              slug={brand.slug}
+              logoUrl={brand.logo_url}
+              website={brand.website}
+              size={80}
+              className="ring-2 ring-white shadow-soft"
+            />
           </div>
           <label className="text-[12px] font-semibold text-brand hover:underline cursor-pointer">
             Logo değiştir
