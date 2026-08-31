@@ -40,15 +40,41 @@ RESEND_API_KEY=<Resend anahtarı>     # gerçek e-posta doğrulaması için
 > **Not:** `VITE_*` değişkenleri build sırasında gömülür. Coolify'da bunları
 > "Build Variable" olarak da işaretle (yalnızca runtime değil).
 
-**Opsiyonel (Google ile giriş):**
+**Opsiyonel (Google / Facebook / Apple ile giriş):**
+
+Runtime (container):
 ```
 GOOGLE_CLIENT_ID=<...>
 GOOGLE_CLIENT_SECRET=<...>
-VITE_GOOGLE_ENABLED=true
+FACEBOOK_CLIENT_ID=<...>
+FACEBOOK_CLIENT_SECRET=<...>
+APPLE_CLIENT_ID=<...>
+APPLE_CLIENT_SECRET=<...>
+APPLE_APP_BUNDLE_IDENTIFIER=<opsiyonel>
 ```
-Google Cloud Console → OAuth client → redirect URI: `https://tepkimvar.com/api/auth/callback/google`
 
-**Opsiyonel (AI Complaint Bot):** Coolify `.env.selfhost` okumaz; bunları
+Build-time (**Build Variable** işaretle, redeploy gerekir):
+```
+VITE_OAUTH_GOOGLE=true
+VITE_OAUTH_FACEBOOK=true
+VITE_OAUTH_APPLE=true
+VITE_GOOGLE_ENABLED=true
+VITE_SITE_URL=https://tepkimvar.com
+```
+
+Callback URI'ler (OAuth konsollarında):
+- `https://tepkimvar.com/api/auth/callback/google`
+- `https://tepkimvar.com/api/auth/callback/facebook`
+- `https://tepkimvar.com/api/auth/callback/apple`
+
+**Otomatik (API açıksa):**
+```bash
+COOLIFY_TOKEN='1|...' \
+GOOGLE_CLIENT_ID='...' GOOGLE_CLIENT_SECRET='...' \
+node scripts/coolify-set-oauth-env.mjs --deploy
+```
+
+**Terminalden**
 Environment Variables'a yazmazsan panel "AI_API_KEY tanımlı değil" der ve
 bot şablon metin üretir.
 ```

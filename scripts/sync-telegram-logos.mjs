@@ -34,7 +34,7 @@ if (useS3) {
 }
 
 async function persistLogo(slug, hit) {
-  const key = `brand-logos/seed/${slug}-tg.png`;
+  const key = `brand-logos/seed/${slug}.png`;
   if (useS3 && hit.buf) {
     const { PutObjectCommand } = await import("@aws-sdk/client-s3");
     await s3.send(new PutObjectCommand({ Bucket: BUCKET, Key: key, Body: hit.buf, ContentType: hit.type }));
@@ -63,7 +63,7 @@ async function syncOne(slug) {
   }
   const channel = TELEGRAM_BRAND_CHANNELS[slug];
   const current = (row.logo_url ?? "").trim();
-  if (!force && current.includes("-tg.png")) {
+  if (!force && current.includes("/brand-logos/seed/") && current.endsWith(".png")) {
     skipped++;
     return;
   }

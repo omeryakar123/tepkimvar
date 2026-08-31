@@ -3,6 +3,7 @@ import { useNavigate, Link } from "@tanstack/react-router";
 import { Loader2, Mail, Lock, User as UserIcon, Building2 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { highestRoleRedirect, type AppRole } from "@/hooks/use-auth";
+import { enabledOAuthProviders, type OAuthProvider } from "@/lib/social-providers-client";
 import { PhoneInput } from "@/components/phone-input";
 import { toE164Tr } from "@/lib/phone";
 import { SiteLogoHeader } from "@/components/site-logo-mark";
@@ -43,10 +44,18 @@ export function AuthForm({
   const allowedRolesForVariant: AppRole[] =
     variant === "admin" ? ["admin", "super_admin"] : variant === "brand" ? ["brand"] : ["user", "admin", "super_admin", "brand"];
 
-  // Google butonu yalnızca OAuth yapılandırıldığında görünür.
-  // Etkinleştirmek için: sunucuda GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET,
-  // client'ta VITE_GOOGLE_ENABLED=true.
-  const googleEnabled = import.meta.env.VITE_GOOGLE_ENABLED === "true";
+  const oauthProviders = enabledOAuthProviders();
+
+  async function handleSocial(provider: OAuthProvider) {
+    setErr(null);
+    setLoading(true);
+    try {
+      await authClient.signIn.social({ provider, callbackURL: "/" });
+    } catch (e2: unknown) {
+      setErr(e2 instanceof Error ? e2.message : `${provider} ile giriş başarısız.`);
+      setLoading(false);
+    }
+  }
 
   async function postLoginRedirect() {
     const res = await fetch("/api/me", { credentials: "include" });
@@ -116,17 +125,6 @@ export function AuthForm({
     }
   }
 
-  async function handleGoogle() {
-    setErr(null); setLoading(true);
-    try {
-      // Google'a yönlendirir; dönüşte callbackURL'e gelir.
-      await authClient.signIn.social({ provider: "google", callbackURL: "/" });
-    } catch (e2: unknown) {
-      setErr(e2 instanceof Error ? e2.message : "Google ile giriş başarısız.");
-      setLoading(false);
-    }
-  }
-
   const t = titles[variant];
 
   return (
@@ -186,18 +184,43 @@ export function AuthForm({
             </button>
           </form>
 
-          {variant === "user" && googleEnabled && (
+          {variant === "user" && oauthProviders.length > 0 && (
             <>
               <div className="my-5 flex items-center gap-3 text-[11px] uppercase tracking-wider text-navy-mid">
                 <div className="h-px bg-rule flex-1" />ya da<div className="h-px bg-rule flex-1" />
               </div>
-              <button
-                onClick={handleGoogle}
-                disabled={loading}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-lg ring-1 ring-rule bg-card h-11 text-sm font-medium hover:bg-surface transition disabled:opacity-60"
-              >
-                <GoogleIcon /> Google ile devam et
-              </button>
+              <div className="space-y-2">
+                {oauthProviders.includes("google") && (
+                  <button
+                    type="button"
+                    onClick={() => handleSocial("google")}
+                    disabled={loading}
+                    className="w-full inline-flex items-center justify-center gap-2 rounded-lg ring-1 ring-rule bg-card h-11 text-sm font-medium hover:bg-surface transition disabled:opacity-60"
+                  >
+                    <GoogleIcon /> Google ile devam et
+                  </button>
+                )}
+                {oauthProviders.includes("facebook") && (
+                  <button
+                    type="button"
+                    onClick={() => handleSocial("facebook")}
+                    disabled={loading}
+                    className="w-full inline-flex items-center justify-center gap-2 rounded-lg ring-1 ring-[#1877F2]/30 bg-[#1877F2] text-white h-11 text-sm font-medium hover:brightness-110 transition disabled:opacity-60"
+                  >
+                    <FacebookIcon /> Facebook ile devam et
+                  </button>
+                )}
+                {oauthProviders.includes("apple") && (
+                  <button
+                    type="button"
+                    onClick={() => handleSocial("apple")}
+                    disabled={loading}
+                    className="w-full inline-flex items-center justify-center gap-2 rounded-lg ring-1 ring-ink/20 bg-ink text-white h-11 text-sm font-medium hover:brightness-110 transition disabled:opacity-60"
+                  >
+                    <AppleIcon /> Apple ile devam et
+                  </button>
+                )}
+              </div>
             </>
           )}
 
@@ -254,11 +277,27 @@ function Field({
 
 function GoogleIcon() {
   return (
-    <svg className="size-4" viewBox="0 0 48 48">
+    <svg className="size-4" viewBox="0 0 48 48" aria-hidden>
       <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.4 29.3 35.5 24 35.5c-6.4 0-11.5-5.1-11.5-11.5S17.6 12.5 24 12.5c3 0 5.7 1.1 7.7 2.9l5.7-5.7C33.9 6.5 29.2 4.5 24 4.5 13.2 4.5 4.5 13.2 4.5 24S13.2 43.5 24 43.5 43.5 34.8 43.5 24c0-1.2-.1-2.3-.4-3.5z" />
       <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 12.5 24 12.5c3 0 5.7 1.1 7.7 2.9l5.7-5.7C33.9 6.5 29.2 4.5 24 4.5 16.3 4.5 9.7 8.9 6.3 14.7z" />
       <path fill="#4CAF50" d="M24 43.5c5.1 0 9.8-2 13.3-5.2l-6.1-5c-1.9 1.3-4.4 2.2-7.2 2.2-5.3 0-9.7-3.1-11.3-7.5l-6.5 5C9.6 39 16.3 43.5 24 43.5z" />
       <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.2-4.1 5.4l6.1 5c-.4.4 6.7-4.9 6.7-14.4 0-1.2-.1-2.3-.4-3.5z" />
+    </svg>
+  );
+}
+
+function FacebookIcon() {
+  return (
+    <svg className="size-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+    </svg>
+  );
+}
+
+function AppleIcon() {
+  return (
+    <svg className="size-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
     </svg>
   );
 }

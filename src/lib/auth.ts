@@ -5,12 +5,13 @@ import { emailOTP } from "better-auth/plugins";
 import { db, schema } from "@/db";
 import { sendOtpEmail } from "@/lib/server/email";
 import { collectTrustedOrigins, resolveAuthBaseUrl } from "@/lib/auth-urls";
+import { buildSocialProviders } from "@/lib/social-providers";
 
 export const auth = betterAuth({
   baseURL: resolveAuthBaseUrl(),
   secret: process.env.BETTER_AUTH_SECRET,
 
-  trustedOrigins: collectTrustedOrigins(),
+  trustedOrigins: [...collectTrustedOrigins(), "https://appleid.apple.com"],
 
   // Prod'da sign-in varsayılanı 3/10sn — başarısız origin denemeleri hızla 429'a düşer.
   rateLimit: {
@@ -48,14 +49,7 @@ export const auth = betterAuth({
     },
   },
 
-  socialProviders: process.env.GOOGLE_CLIENT_ID
-    ? {
-        google: {
-          clientId: process.env.GOOGLE_CLIENT_ID,
-          clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
-        },
-      }
-    : undefined,
+  socialProviders: buildSocialProviders(),
 
   databaseHooks: {
     user: {

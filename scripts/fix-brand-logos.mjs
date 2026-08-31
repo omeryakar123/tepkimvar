@@ -205,8 +205,7 @@ async function bestLogo(slug, name, website) {
 async function persistLogo(slug, hit) {
   if (useS3 && hit.buf && hit.buf.length >= 400) {
     const { PutObjectCommand } = await import("@aws-sdk/client-s3");
-    const suffix = hit.src === "telegram" ? "-tg.png" : "-hq.png";
-    const key = `brand-logos/seed/${slug}${suffix}`;
+    const key = `brand-logos/seed/${slug}.png`;
     await s3.send(new PutObjectCommand({ Bucket: BUCKET, Key: key, Body: hit.buf, ContentType: hit.type }));
     return `/api/files/${key}`;
   }
