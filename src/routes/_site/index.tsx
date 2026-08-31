@@ -712,13 +712,12 @@ function Home() {
                 gerçek kullanıcı deneyimlerini gör.
               </p>
 
-              <Link
-                to="/markalar"
-                className="relative mt-6 sm:mt-auto sm:pt-8 site-cta-btn w-full sm:w-fit"
-              >
-                Tereddüt yok, sorgula
-                <ArrowRight className="size-4 shrink-0" />
-              </Link>
+              <div className="relative mt-6 sm:mt-auto sm:pt-8">
+                <Link to="/markalar" className="site-cta-btn w-full sm:w-fit">
+                  Tereddüt yok, sorgula
+                  <ArrowRight className="size-4 shrink-0" />
+                </Link>
+              </div>
             </div>
 
             {/* Paylaş */}
@@ -746,13 +745,12 @@ function Home() {
                 başkalarının doğru karar vermesine yardımcı ol.
               </p>
 
-              <Link
-                to="/sikayet-yaz"
-                className="relative mt-6 sm:mt-auto sm:pt-8 site-cta-btn w-full sm:w-fit"
-              >
-                Şikayetini yaz
-                <ArrowRight className="size-4 shrink-0" />
-              </Link>
+              <div className="relative mt-6 sm:mt-auto sm:pt-8">
+                <Link to="/sikayet-yaz" className="site-cta-btn w-full sm:w-fit">
+                  Şikayetini yaz
+                  <ArrowRight className="size-4 shrink-0" />
+                </Link>
+              </div>
             </div>
           </motion.div>
         </div>

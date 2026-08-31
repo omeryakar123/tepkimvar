@@ -1,7 +1,7 @@
 /** Listelerde en üste sabitlenen markalar (sıra önemli). */
 export const PRIORITY_BRAND_SLUGS = [
-  "jojobet", "matbet", "mavibet", "holiganbet", "kazansana", "bovbet", "bahsine", "evetabi",
-  "hadibet", "vippark", "galabet", "padisahbet", "betpuan", "volacasino", "betmarino", "hilarionbet",
+  "jojobet", "matbet", "holiganbet", "padisahbet", "beygirbet", "evetabi",
+  "mavibet", "bahsine", "hadibet", "vippark", "galabet", "betpuan", "volacasino", "betmarino", "hilarionbet",
   "avrupabahis", "ultrabahis", "smartbahis", "bahispub", "bahisenin", "sezercasino", "sahabet", "onwin",
   "supertotobet", "kralbet", "betmatik", "betturkey", "otobet", "tipobet", "slotin", "solobet",
   "matadorbet", "bets10", "xslot", "fixbet", "birwin", "hilbet", "zbahis", "xbahis",
@@ -14,7 +14,7 @@ export const PRIORITY_BRAND_SLUGS = [
   "taksimbet", "trendbet", "betixir", "capitolbet", "romabet", "slotbaba", "onlyspin", "biabet",
   "benjabet", "bullbahis", "esbahis", "bahisabi", "betcell", "cenabet", "bahiks", "neredebahis",
   "meritwin", "natobet", "betovis", "kalebet", "favoribahis", "yasalbahis", "tekelbet", "airbahis",
-  "21-com", "beygirbet", "betci", "betbox", "hiltonbet", "alfabahis", "tulipbet", "casinoforbet",
+  "21-com", "betci", "betbox", "hiltonbet", "alfabahis", "tulipbet", "casinoforbet",
   "gizabet", "titobet", "betmoney", "heybet", "otocasino", "gorabet", "elexbet", "casivera",
   "mojobet", "makrobet", "betifa", "zlot", "totemcasino", "levantacasino", "sans-casino", "baywin",
   "betnis", "nisbar", "betroz", "betine", "lord-palace-casino", "portbet", "playbet", "betgar",
@@ -26,6 +26,8 @@ export const PRIORITY_BRAND_SLUGS = [
   "radissonbet", "betwoon", "venombet", "netbahis", "palazzobet", "betgit", "altspin", "hasbet",
   "multiwin", "casibom", "casibow", "gettobet", "hepbet", "ramadabet", "celtabet", "klasbahis",
   "monobahis", "jestbahis", "pokerklas", "meritbet", "sloganbahis", "dodobet", "quatrobahis",
+  // Arka planda tutulan markalar
+  "kazansana", "bovbet",
 ] as const;
 
 /** Anasayfa «Çok Konuşulanlar» + Trend 100 — her zaman görünmesi gereken markalar. */
@@ -34,23 +36,25 @@ export const TALKED_PRIORITY_BRAND_SLUGS = [
   "holiganbet",
   "matbet",
   "padisahbet",
+  "beygirbet",
+  "evetabi",
 ] as const;
 
 export type PriorityBrandSlug = (typeof PRIORITY_BRAND_SLUGS)[number];
 
 const FOOTER_LINK_SLUGS = [
-  "jojobet", "matbet", "mavibet", "holiganbet", "kazansana", "bovbet", "bahsine", "evetabi", "hadibet"
+  "jojobet", "matbet", "holiganbet", "padisahbet", "beygirbet", "evetabi", "mavibet", "bahsine", "hadibet",
 ] as const;
 
 export const PRIORITY_BRAND_LABELS: Record<(typeof FOOTER_LINK_SLUGS)[number], string> = {
   jojobet: "Jojobet",
   matbet: "Matbet",
-  mavibet: "Mavibet",
   holiganbet: "Holiganbet",
-  kazansana: "Kazansana",
-  bovbet: "Bovbet",
-  bahsine: "Bahsine",
+  padisahbet: "Padisahbet",
+  beygirbet: "Beygirbet",
   evetabi: "Evetabi",
+  mavibet: "Mavibet",
+  bahsine: "Bahsine",
   hadibet: "Hadibet",
 };
 
@@ -59,3 +63,6 @@ export const PRIORITY_BRAND_LINKS = FOOTER_LINK_SLUGS.map((slug) => ({
   slug,
   name: PRIORITY_BRAND_LABELS[slug],
 }));
+
+/** Liste sıralamasında arkaya itilecek markalar. */
+export const BACKGROUND_BRAND_SLUGS = new Set(["kazansana", "bovbet"]);

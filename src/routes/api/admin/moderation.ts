@@ -4,6 +4,7 @@ import { db, schema } from "@/db";
 import { audit } from "@/lib/server/audit";
 import { refreshBrandAggregates } from "@/lib/server/brand-stats";
 import { recordStatusChange } from "@/lib/server/history";
+import { notifyBrandFollowers } from "@/lib/server/notify";
 import { HttpError, errorResponse, requireStaff } from "@/lib/server/guard";
 import { ensureDbPatches } from "@/lib/server/ensure-db-patches";
 
@@ -129,6 +130,32 @@ export const Route = createFileRoute("/api/admin/moderation")({
                     : "Moderasyon reddi",
               });
               await refreshBrandAggregates(c.brandId);
+
+              if (state === "resolved") {
+                const [detail] = await db
+                  .select({
+                    title: schema.complaints.title,
+                    publicId: schema.complaints.publicId,
+                    id: schema.complaints.id,
+                    userId: schema.complaints.userId,
+                    brandName: schema.brands.name,
+                    brandSlug: schema.brands.slug,
+                  })
+                  .from(schema.complaints)
+                  .innerJoin(schema.brands, eq(schema.complaints.brandId, schema.brands.id))
+                  .where(eq(schema.complaints.id, c.id))
+                  .limit(1);
+
+                if (detail) {
+                  await notifyBrandFollowers(c.brandId, {
+                    type: "system",
+                    title: `${detail.brandName} için yeni şikayet`,
+                    body: detail.title,
+                    link: `/sikayet/${detail.publicId ?? detail.id}`,
+                    skipUserIds: [detail.userId],
+                  });
+                }
+              }
             }
           }
 

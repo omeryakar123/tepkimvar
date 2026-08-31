@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { and, eq, inArray, notInArray, or, sql, type SQL } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { toDbComplaint, type BrandNested } from "@/lib/db-shapes";
-import { optionalUser } from "@/lib/server/guard";
+import { displayPhone } from "@/lib/phone-mask";
+import { isBrandMember, isStaff, optionalUser } from "@/lib/server/guard";
 import { supportedComplaintIds } from "@/lib/server/complaint-support";
 
 // Public: tek şikayet. $id uuid, public_id veya short_id olabilir.
@@ -21,7 +22,6 @@ export const Route = createFileRoute("/api/complaints/$id")({
               eq(schema.complaints.shortId, id.toUpperCase()),
             ) as SQL);
 
-        // AUTHZ: yayında veya (bot üretimi + onaylı) şikayetler görüntülenebilir.
         const [row] = await db
           .select({ c: schema.complaints, b: schema.brands })
           .from(schema.complaints)
@@ -40,7 +40,6 @@ export const Route = createFileRoute("/api/complaints/$id")({
 
         if (!row) return new Response("Not Found", { status: 404 });
 
-        // Atomic view increment (await'lı fire-and-forget).
         await db
           .update(schema.complaints)
           .set({ views: sql`${schema.complaints.views} + 1` })
@@ -54,7 +53,6 @@ export const Route = createFileRoute("/api/complaints/$id")({
         };
         const dc = toDbComplaint(row.c, brand);
 
-        // PII: anonim şikayette user_id ve profil sızdırma.
         if (dc.is_anonymous) {
           dc.user_id = null;
           dc.profiles = null;
@@ -72,6 +70,25 @@ export const Route = createFileRoute("/api/complaints/$id")({
         }
 
         const viewer = await optionalUser(request);
+        let phoneMode: "full" | "masked" | "hidden" = "masked";
+        if (viewer) {
+          const staff = await isStaff(viewer.id);
+          const brandAccess = await isBrandMember(viewer.id, row.c.brandId);
+          if (staff || brandAccess) phoneMode = "full";
+        }
+
+        (dc as typeof dc & {
+          platform_username?: string | null;
+          contact_phone?: string | null;
+          contact_phone_display?: string | null;
+        }).platform_username = row.c.platformUsername ?? null;
+        (dc as typeof dc & { contact_phone?: string | null }).contact_phone =
+          phoneMode === "hidden" ? null : row.c.contactPhone ?? null;
+        (dc as typeof dc & { contact_phone_display?: string | null }).contact_phone_display =
+          phoneMode === "hidden"
+            ? null
+            : displayPhone(row.c.contactPhone, phoneMode === "full" ? "full" : "masked");
+
         if (viewer) {
           const supported = await supportedComplaintIds(viewer.id, [dc.id]);
           (dc as typeof dc & { user_supported?: boolean }).user_supported = supported.has(dc.id);

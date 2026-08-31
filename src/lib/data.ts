@@ -186,6 +186,9 @@ export type DbComplaint = {
   comment_count?: number;
   user_supported?: boolean;
   preview_comments?: { id: string; body: string; created_at: string; profiles: { full_name: string | null; username: string | null } | null }[];
+  platform_username?: string | null;
+  contact_phone?: string | null;
+  contact_phone_display?: string | null;
 };
 
 export function dbComplaintToUi(c: DbComplaint): Complaint {
@@ -223,6 +226,8 @@ export function dbComplaintToUi(c: DbComplaint): Complaint {
       body: pc.body,
       createdAgo: formatAgo(pc.created_at),
     })),
+    platformUsername: c.platform_username ?? null,
+    contactPhoneDisplay: c.contact_phone_display ?? null,
   };
 }
 
@@ -270,7 +275,7 @@ export async function fetchComplaintsList(opts: { limit?: number; brandSlug?: st
   return items.map(dbComplaintToUi);
 }
 
-export async function fetchComplaintsPaged(opts: { page?: number; pageSize?: number; brandSlug?: string; categorySlug?: string; sortBy?: "recent" | "trending"; search?: string } = {}) {
+export async function fetchComplaintsPaged(opts: { page?: number; pageSize?: number; brandSlug?: string; categorySlug?: string; sortBy?: "recent" | "trending"; search?: string; durum?: string } = {}) {
   await ensureCategoryCache();
   const page = Math.max(1, opts.page ?? 1);
   const pageSize = opts.pageSize ?? PAGE_SIZE;
@@ -281,6 +286,7 @@ export async function fetchComplaintsPaged(opts: { page?: number; pageSize?: num
     categorySlug: opts.categorySlug,
     sortBy: opts.sortBy,
     search: opts.search,
+    durum: opts.durum,
   });
   const { items, total } = await getJson<{ items: DbComplaint[]; total: number }>(`/api/complaints${qs}`);
   return { items: items.map(dbComplaintToUi), total, page, pageSize };

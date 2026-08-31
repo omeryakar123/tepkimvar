@@ -355,6 +355,25 @@ export const brandRatings = pgTable(
   }),
 );
 
+/** Kullanıcı marka takibi — yeni şikayet bildirimi için. */
+export const brandFollows = pgTable(
+  "brand_follows",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    brandId: uuid("brand_id")
+      .notNull()
+      .references(() => brands.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => ({
+    pk: unique().on(t.userId, t.brandId),
+  }),
+);
+
 export const brandDocuments = pgTable("brand_documents", {
   id: uuid("id").primaryKey().defaultRandom(),
   brandId: uuid("brand_id")

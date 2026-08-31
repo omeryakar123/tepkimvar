@@ -162,7 +162,7 @@ function BrandComplaintsPage() {
                   <h1 className="font-display text-2xl font-black tracking-tight text-ink mt-1">{active.title}</h1>
                 </div>
                 <select value={active.status} onChange={(e) => setStatus(active.id, e.target.value as Status)} className="h-9 rounded-lg ring-1 ring-rule px-3 text-[13px]">
-                  {(["pending", "in_review", "answered", "resolved", "rejected", "spam"] as Status[]).map((s) => <option key={s} value={s}>{s}</option>)}
+                  {(["pending", "in_review", "answered", "rejected", "spam"] as Status[]).map((s) => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
               <p className="mt-4 text-[14px] text-navy leading-relaxed whitespace-pre-wrap">{active.body}</p>
@@ -189,9 +189,6 @@ function BrandComplaintsPage() {
                 <div className="flex gap-2 flex-wrap">
                   <button onClick={() => setEscOpen(true)} className="inline-flex items-center gap-2 rounded-full ring-1 ring-warning/30 text-warning bg-warning-soft px-4 h-10 text-[13px] font-semibold hover:bg-warning-soft">
                     <AlertTriangle className="size-4" /> Super Admin'e İlet
-                  </button>
-                  <button onClick={() => setStatus(active.id, "resolved")} className="inline-flex items-center gap-2 rounded-full ring-1 ring-rule text-ink px-4 h-10 text-[13px] font-semibold hover:bg-surface">
-                    <CheckCircle2 className="size-4" /> Çözüldü
                   </button>
                   <button onClick={sendReply} disabled={sending || !reply.trim()} className="inline-flex items-center gap-2 rounded-full bg-brand text-brand-foreground px-5 h-10 text-[13px] font-semibold hover:brightness-105 disabled:opacity-60">
                     <Send className="size-4" /> Yanıtla

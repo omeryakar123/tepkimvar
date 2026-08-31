@@ -62,6 +62,26 @@ export async function notifyComplaintOwner(
   await publish({ type: "complaint", complaintId });
 }
 
+/** Markayı takip eden kullanıcılara bildirim (yeni şikayet vb.). */
+export async function notifyBrandFollowers(
+  brandId: string,
+  input: Omit<NotifyInput, "userId"> & { skipUserIds?: string[] },
+): Promise<void> {
+  const followers = await db
+    .select({ userId: schema.brandFollows.userId })
+    .from(schema.brandFollows)
+    .where(eq(schema.brandFollows.brandId, brandId));
+
+  const skip = new Set(input.skipUserIds ?? []);
+  if (input.skipIfSameAs) skip.add(input.skipIfSameAs);
+
+  await Promise.all(
+    followers
+      .filter((f) => !skip.has(f.userId))
+      .map((f) => notify({ ...input, userId: f.userId })),
+  );
+}
+
 /** Marka temsilcilerine bildirim (kullanıcı yanıtı, anket vb.). */
 export async function notifyBrandMembers(
   brandId: string,

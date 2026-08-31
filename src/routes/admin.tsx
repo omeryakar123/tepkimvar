@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { LayoutDashboard, Building2, MessageSquare, Users, FileText, ImageIcon, Layers, Settings, LogOut, ShieldCheck, ShieldAlert, BadgeCheck, AlertTriangle, Crown, Tags, Bot, Menu, X } from "lucide-react";
 import { useAuth, type AppRole } from "@/hooks/use-auth";
 import { fetchMe } from "@/lib/me";
+import { AdminModerationAlert } from "@/components/admin-moderation-alert";
 
 export const Route = createFileRoute("/admin")({
   beforeLoad: async ({ location }) => {
@@ -76,6 +77,7 @@ function AdminLayout() {
             className="absolute left-0 top-14 bottom-0 w-[min(100%,280px)] bg-card border-r border-rule flex flex-col overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
+            <AdminModerationAlert />
             <nav className="p-3 space-y-1 text-[13.5px] flex-1">
               {NAV.filter((n) => !n.superOnly || isSuper).map((n) => (
                 <NavItem key={n.to} {...n} />
@@ -92,6 +94,7 @@ function AdminLayout() {
           <span className="font-display font-black text-[18px] tracking-tight">tepkimvar<span className="text-brand">.</span></span>
           <span className="ml-auto text-[9px] uppercase tracking-wider font-bold bg-ink text-paper dark:bg-surface dark:text-ink px-1.5 py-0.5 rounded">Admin</span>
         </Link>
+        <AdminModerationAlert />
         <nav className="flex-1 p-3 space-y-1 text-[13.5px] overflow-y-auto">
           {NAV.filter((n) => !n.superOnly || isSuper).map((n) => (
             <NavItem key={n.to} {...n} />

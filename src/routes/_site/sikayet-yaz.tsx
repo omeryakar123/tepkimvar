@@ -84,8 +84,8 @@ function WriteComplaintPage() {
     if (title.trim().length < 6) return toast.error("Başlık en az 6 karakter olmalı.");
     if (body.trim().length < 20) return toast.error("Şikayet detayı en az 20 karakter olmalı.");
     if (!kvkk) return toast.error("KVKK onayı zorunludur.");
-    const e164 = phone ? toE164Tr(phone) : null;
-    if (phone && !e164) return toast.error("Telefon numarası geçerli değil.");
+    const e164 = toE164Tr(phone);
+    if (!e164) return toast.error("Geçerli bir cep telefonu numarası zorunludur.");
 
     setSubmitting(true);
     try {
@@ -190,6 +190,14 @@ function WriteComplaintPage() {
         )}
 
         <form onSubmit={submit} className="mt-8 bg-card rounded-2xl ring-1 ring-rule p-6 space-y-5">
+          <div className="rounded-xl bg-brand-soft/60 ring-1 ring-brand/15 p-4 text-[13px] text-navy leading-relaxed">
+            <p className="font-semibold text-ink">Önemli bilgilendirme</p>
+            <p className="mt-1.5">
+              Lütfen şikayetinizde <b>platform kullanıcı adınızı</b> ve <b>cep telefonunuzu</b> eksiksiz belirtin.
+              Telefon numaranız yalnızca admin ve ilgili firma tarafından görülür; diğer ziyaretçiler yıldızlı olarak görür.
+            </p>
+          </div>
+
           <div>
             <label className="text-[12px] font-medium text-navy-mid">Firma</label>
             <div className="mt-1">
@@ -277,10 +285,11 @@ function WriteComplaintPage() {
 
           <div>
             <label className="text-[12px] font-medium text-navy-mid">
-              Telefon (opsiyonel, firma sizinle iletişime geçebilir)
+              Telefon <span className="text-danger">*</span>
+              <span className="text-navy-mid font-normal"> (sadece admin ve firma görür)</span>
             </label>
             <div className="mt-1">
-              <PhoneInput value={phone} onChange={setPhone} />
+              <PhoneInput value={phone} onChange={setPhone} required />
             </div>
           </div>
 

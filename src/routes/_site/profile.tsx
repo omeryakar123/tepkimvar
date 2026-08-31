@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Loader2, KeyRound, MessageSquare, Eye, CheckCircle2, Clock } from "lucide-react";
+import { Loader2, KeyRound, MessageSquare, Eye, CheckCircle2, Clock, Bell } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
@@ -36,7 +36,7 @@ function ProfilePage() {
   const { sekme } = Route.useSearch();
   const [tab, setTab] = useState<"info" | "complaints" | "messages" | "security">(sekme === "mesajlar" ? "messages" : "info");
   const [complaints, setComplaints] = useState<Complaint[]>([]);
-  const [stats, setStats] = useState({ total: 0, pending: 0, answered: 0, resolved: 0, views: 0 });
+  const [stats, setStats] = useState({ total: 0, pending: 0, answered: 0, resolved: 0, views: 0, follows: 0 });
   const [curPw, setCurPw] = useState("");
   const [newPw, setNewPw] = useState("");
   const [newPw2, setNewPw2] = useState("");
@@ -68,7 +68,15 @@ function ProfilePage() {
           answered: list.filter((c) => c.status === "answered").length,
           resolved: list.filter((c) => c.status === "resolved").length,
           views: list.reduce((s, c) => s + (c.views ?? 0), 0),
+          follows: 0,
         });
+
+        fetch("/api/me/follows", { credentials: "include" })
+          .then((r) => (r.ok ? r.json() : { count: 0 }))
+          .then((j: { count?: number }) => {
+            setStats((s) => ({ ...s, follows: j.count ?? 0 }));
+          })
+          .catch(() => {});
       } catch {
         toast.error("Profil yüklenemedi");
       } finally {
@@ -167,12 +175,13 @@ function ProfilePage() {
         </div>
 
         {/* Stats */}
-        <div className="mt-5 grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div className="mt-5 grid grid-cols-2 md:grid-cols-6 gap-3">
           <Stat icon={MessageSquare} label="Toplam Şikayet" v={stats.total} />
           <Stat icon={Clock} label="Beklemede" v={stats.pending} tone="warn" />
           <Stat icon={MessageSquare} label="Yanıtlandı" v={stats.answered} />
           <Stat icon={CheckCircle2} label="Çözüldü" v={stats.resolved} tone="brand" />
           <Stat icon={Eye} label="Görüntülenme" v={stats.views} />
+          <Stat icon={Bell} label="Takip Edilen Firma" v={stats.follows} tone="brand" />
         </div>
 
         {/* Tabs — mobilde yatay kaydırma */}

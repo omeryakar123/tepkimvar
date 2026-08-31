@@ -41,7 +41,6 @@ const BRAND_STATUSES: readonly Status[] = [
   "pending",
   "in_review",
   "answered",
-  "resolved",
   "rejected",
   "spam",
   "escalated",
@@ -117,6 +116,8 @@ export const Route = createFileRoute("/api/brand/complaints")({
               short_id: schema.complaints.shortId,
               brand_response: schema.complaints.brandResponse,
               rating: schema.complaints.rating,
+              platform_username: schema.complaints.platformUsername,
+              contact_phone: schema.complaints.contactPhone,
             })
             .from(schema.complaints)
             .where(where)
@@ -176,11 +177,11 @@ export const Route = createFileRoute("/api/brand/complaints")({
             skipIfSameAs: user.id,
           });
 
-          if (status === "resolved") {
+          if (status === "answered") {
             await notifyComplaintOwner(c.id, {
-              type: "system",
-              title: "Memnuniyet anketinizi doldurun",
-              body: "Şikayetiniz çözüldü. Deneyiminizi 1–5 yıldızla değerlendirin.",
+              type: "status_change",
+              title: "Şikayetinize yanıt verildi",
+              body: "Firma şikayetinizi yanıtladı.",
               skipIfSameAs: user.id,
             });
           }

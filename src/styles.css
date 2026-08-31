@@ -443,6 +443,7 @@
   color: oklch(0.14 0.02 262);
   padding: 0 1.5rem;
   height: 2.75rem;
+  line-height: 1;
   font-size: 0.8125rem;
   font-weight: 600;
   box-shadow:

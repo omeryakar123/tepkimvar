@@ -10,6 +10,18 @@ import { moderateAndScore } from "@/lib/server/moderation";
 import { complaintRankOrder, complaintRecentOrder, complaintTrendingOrder } from "@/lib/server/complaint-sort";
 import { supportedComplaintIds } from "@/lib/server/complaint-support";
 
+function isValidTrPhone(stored: string | null | undefined): boolean {
+  if (!stored) return false;
+  const digits = stored.replace(/\D/g, "");
+  const local = digits.startsWith("90") ? digits.slice(2) : digits;
+  return local.length === 10 && local.startsWith("5");
+}
+
+const UI_DURUM_TO_STATUSES: Record<string, string[]> = {
+  cozuldu: ["answered", "resolved"],
+  inceleniyor: ["approved", "in_review"],
+};
+
 // Public: şikayet listesi. RLS gitti; moderasyon filtresi BURADA zorlanıyor.
 const HIDDEN_STATUSES = ["pending", "rejected", "spam"] as const;
 
@@ -24,6 +36,7 @@ export const Route = createFileRoute("/api/complaints")({
         const categoryIdParam = p.get("categoryId") ?? undefined;
         const search = p.get("search") ?? undefined;
         const sortBy = p.get("sortBy") ?? undefined;
+        const durum = p.get("durum") ?? undefined;
         const limitParam = p.get("limit");
         const pageParam = p.get("page");
         const pageSize = Number(p.get("pageSize")) || 12;
@@ -63,6 +76,10 @@ export const Route = createFileRoute("/api/complaints")({
         }
 
         if (search) conditions.push(ilike(schema.complaints.title, `%${search}%`));
+
+        if (durum && UI_DURUM_TO_STATUSES[durum]) {
+          conditions.push(inArray(schema.complaints.status, UI_DURUM_TO_STATUSES[durum] as never));
+        }
 
         const where = and(...conditions);
         const base = db
@@ -196,6 +213,8 @@ export const Route = createFileRoute("/api/complaints")({
           const rating =
             Number(b.rating) >= 1 && Number(b.rating) <= 5 ? Math.round(Number(b.rating)) : null;
           if (!rating) throw new HttpError(400, "Lütfen 1–5 arası puan verin");
+          if (!isValidTrPhone(b.contactPhone))
+            throw new HttpError(400, "Geçerli bir cep telefonu numarası zorunludur");
 
           const [brand] = await db
             .select({ id: schema.brands.id })

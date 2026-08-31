@@ -33,6 +33,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { logAudit } from "@/lib/audit";
 import { BrandVerifyModal } from "@/components/brand-verify-modal";
+import { BrandFollowButton } from "@/components/brand-follow-button";
 import { seoHead, jsonLd, breadcrumbLd, clamp, absUrl } from "@/lib/seo";
 
 export const Route = createFileRoute("/_site/firma/$slug")({
@@ -397,6 +398,7 @@ function CompanyPage() {
               </div>
             </div>
             <div className="flex gap-2 flex-wrap">
+              <BrandFollowButton brandSlug={company.slug} brandName={company.name} />
               {isAdmin && (
                 <Link
                   to="/admin/firma/$id"

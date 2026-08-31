@@ -1,6 +1,5 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { SiteNav, SiteFooter } from "@/components/site-chrome";
-import { WelcomePromoPopup } from "@/components/welcome-promo-popup";
 
 /**
  * Genel site düzeni (pathless layout).
@@ -25,7 +24,6 @@ function SiteLayout() {
         <Outlet />
       </div>
       <SiteFooter />
-      <WelcomePromoPopup />
     </div>
   );
 }

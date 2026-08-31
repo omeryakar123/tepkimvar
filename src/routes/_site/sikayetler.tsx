@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
-import { Search, Filter, CheckCircle2, Clock, AlertCircle } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Search, Filter, CheckCircle2, Clock } from "lucide-react";
 import { ComplaintCard } from "@/components/cards";
 import { Pagination } from "@/components/pagination";
 import type { Complaint } from "@/lib/mock-data";
@@ -65,15 +65,11 @@ function SikayetlerPage() {
       categorySlug: sp.kategori || undefined,
       sortBy: sp.sirala ?? "recent",
       search: sp.q || undefined,
+      durum: sp.durum || undefined,
     })
       .then((r) => { setItems(r.items); setTotal(r.total); })
       .finally(() => setLoading(false));
   }, [page, sp.kategori, sp.durum, sp.sirala, sp.q]);
-
-  const filtered = useMemo(() => {
-    if (!sp.durum) return items;
-    return items.filter((c) => c.status === sp.durum);
-  }, [items, sp.durum]);
 
   const setParam = (patch: Partial<SP>) => nav({ search: (prev: SP) => ({ ...prev, ...patch }) });
 
@@ -81,7 +77,6 @@ function SikayetlerPage() {
     { key: undefined, label: "Tümü", icon: Filter },
     { key: "cozuldu", label: "Çözüldü", icon: CheckCircle2 },
     { key: "inceleniyor", label: "İnceleniyor", icon: Clock },
-    { key: "beklemede", label: "Beklemede", icon: AlertCircle },
   ];
 
   return (
@@ -143,14 +138,14 @@ function SikayetlerPage() {
           </div>
         </div>
 
-        {loading && filtered.length === 0 ? (
+        {loading && items.length === 0 ? (
           <div className="bg-card rounded-2xl p-12 text-center text-navy-mid ring-1 ring-rule">Yükleniyor…</div>
-        ) : filtered.length === 0 ? (
+        ) : items.length === 0 ? (
           <div className="bg-card rounded-2xl p-12 text-center text-navy-mid ring-1 ring-rule">Sonuç bulunamadı.</div>
         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filtered.map((c) => <ComplaintCard key={c.id} complaint={c} />)}
+              {items.map((c) => <ComplaintCard key={c.id} complaint={c} />)}
             </div>
             <Pagination page={page} pageSize={PAGE_SIZE} total={total} onChange={setPage} />
           </>

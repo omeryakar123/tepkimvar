@@ -64,6 +64,8 @@ export interface Complaint {
   brandId?: string;
   companyReply?: { body: string; agoLabel: string };
   previewComments?: { userName: string; body: string; createdAgo: string }[];
+  platformUsername?: string | null;
+  contactPhoneDisplay?: string | null;
 }
 
 

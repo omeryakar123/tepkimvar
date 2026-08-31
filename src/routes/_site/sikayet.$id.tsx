@@ -213,6 +213,21 @@ function ComplaintPage() {
 
           <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight leading-tight mb-4 text-balance">{complaint.title}</h1>
 
+          {(complaint.platformUsername || complaint.contactPhoneDisplay) && (
+            <div className="mb-5 rounded-xl bg-surface ring-1 ring-rule px-4 py-3 text-[13px] text-navy">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-navy-mid mb-2">İletişim bilgileri</p>
+              {complaint.platformUsername ? (
+                <p><span className="text-navy-mid">Platform kullanıcı adı:</span> <b className="text-ink">{complaint.platformUsername}</b></p>
+              ) : null}
+              {complaint.contactPhoneDisplay ? (
+                <p className={complaint.platformUsername ? "mt-1" : ""}>
+                  <span className="text-navy-mid">Telefon:</span> <b className="text-ink font-mono">{complaint.contactPhoneDisplay}</b>
+                  <span className="ml-2 text-[11px] text-navy-mid">(diğer kullanıcılar yıldızlı görür)</span>
+                </p>
+              ) : null}
+            </div>
+          )}
+
           {complaint.rating ? (
             <div className="mb-5 inline-flex items-center gap-1.5 text-sm text-navy">
               {[1, 2, 3, 4, 5].map((n) => (
