@@ -23,6 +23,15 @@ const STATUSES = [
 ] as const;
 type Status = (typeof STATUSES)[number];
 
+const SOURCES = ["organic", "bot", "all"] as const;
+type Source = (typeof SOURCES)[number];
+
+function sourceFilter(source: Source): SQL | undefined {
+  if (source === "organic") return eq(schema.complaints.isSynthetic, false);
+  if (source === "bot") return eq(schema.complaints.isSynthetic, true);
+  return undefined;
+}
+
 export const Route = createFileRoute("/api/admin/complaints")({
   server: {
     handlers: {
@@ -35,8 +44,12 @@ export const Route = createFileRoute("/api/admin/complaints")({
           const pageSize = Math.min(100, Math.max(1, Number(p.get("pageSize")) || 12));
           const status = p.get("status") ?? "";
           const q = (p.get("q") ?? "").trim();
+          const sourceParam = (p.get("source") ?? "organic") as Source;
+          if (!SOURCES.includes(sourceParam)) throw new HttpError(400, "Geçersiz kaynak filtresi");
 
           const conditions: SQL[] = [];
+          const src = sourceFilter(sourceParam);
+          if (src) conditions.push(src);
           if (status) {
             if (!STATUSES.includes(status as Status)) throw new HttpError(400, "Geçersiz durum");
             conditions.push(eq(schema.complaints.status, status as Status));
@@ -52,8 +65,11 @@ export const Route = createFileRoute("/api/admin/complaints")({
               created_at: schema.complaints.createdAt,
               brand_id: schema.complaints.brandId,
               user_id: schema.complaints.userId,
+              is_synthetic: schema.complaints.isSynthetic,
+              brand_name: schema.brands.name,
             })
             .from(schema.complaints)
+            .leftJoin(schema.brands, eq(schema.brands.id, schema.complaints.brandId))
             .where(where)
             .orderBy(desc(schema.complaints.createdAt))
             .limit(pageSize)
@@ -64,7 +80,7 @@ export const Route = createFileRoute("/api/admin/complaints")({
             .from(schema.complaints)
             .where(where);
 
-          return Response.json({ items: rows, total: Number(count) });
+          return Response.json({ items: rows, total: Number(count), source: sourceParam });
         } catch (e) {
           return errorResponse(e);
         }

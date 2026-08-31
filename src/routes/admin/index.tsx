@@ -10,6 +10,8 @@ import {
   CheckCircle2,
   Clock,
   MousePointerClick,
+  Bot,
+  User,
 } from "lucide-react";
 import { apiGet } from "@/lib/admin-api";
 
@@ -26,6 +28,15 @@ type FlowDay = {
   total: number;
 };
 
+type SourceStats = {
+  total: number;
+  today: number;
+  pending: number;
+  approved: number;
+  resolved: number;
+  spam: number;
+};
+
 type Stats = {
   brands: number;
   users: number;
@@ -36,7 +47,10 @@ type Stats = {
   resolved: number;
   premium: number;
   verified: number;
+  complaints_by_source: { organic: SourceStats; bot: SourceStats };
   complaint_flow: FlowDay[];
+  complaint_flow_organic: FlowDay[];
+  complaint_flow_bot: FlowDay[];
   page_views: { total: number; today: number; week: number; daily: { day: string; views: number }[] };
   user_signups: { total: number; today: number; week: number; daily: { day: string; signups: number }[] };
 };
@@ -79,6 +93,26 @@ function AdminDashboard() {
         <Stat icon={CheckCircle2} label="Çözülen" value={s?.resolved} tone="brand" />
         <Stat icon={Crown} label="Premium Firma" value={s?.premium} tone="warn" />
         <Stat icon={ShieldCheck} label="Doğrulanmış Firma" value={s?.verified} tone="brand" />
+      </div>
+
+      {/* Organik vs Bot şikayet özeti */}
+      <div className="grid md:grid-cols-2 gap-4">
+        <SourcePanel
+          title="Organik Şikayetler"
+          subtitle="Gerçek kullanıcılar tarafından yazılan"
+          icon={User}
+          stats={s?.complaints_by_source?.organic}
+          flow={s?.complaint_flow_organic ?? []}
+          tone="brand"
+        />
+        <SourcePanel
+          title="Bot Şikayetleri"
+          subtitle="Complaint Bot tarafından üretilen"
+          icon={Bot}
+          stats={s?.complaints_by_source?.bot}
+          flow={s?.complaint_flow_bot ?? []}
+          tone="purple"
+        />
       </div>
 
       <div className="grid lg:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -187,6 +221,77 @@ function AdminDashboard() {
             {" · "}Bu hafta: <b className="text-ink">{s?.user_signups?.week?.toLocaleString("tr-TR") ?? "—"}</b>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function SourcePanel({
+  title,
+  subtitle,
+  icon: Icon,
+  stats,
+  flow,
+  tone,
+}: {
+  title: string;
+  subtitle: string;
+  icon: typeof User;
+  stats: SourceStats | undefined;
+  flow: FlowDay[];
+  tone: "brand" | "purple";
+}) {
+  const maxFlow = Math.max(1, ...flow.map((d) => d.total));
+  const barColor = tone === "brand" ? "bg-brand" : "bg-accent-purple/80";
+  const iconBg = tone === "brand" ? "bg-brand-soft text-brand" : "bg-accent-purple/10 text-accent-purple";
+
+  return (
+    <div className="bg-card rounded-2xl ring-1 ring-rule p-6">
+      <div className="flex items-start gap-3">
+        <div className={`size-10 rounded-lg grid place-items-center shrink-0 ${iconBg}`}>
+          <Icon className="size-5" />
+        </div>
+        <div>
+          <h2 className="font-display text-lg font-bold text-ink">{title}</h2>
+          <p className="text-[13px] text-navy-mid mt-0.5">{subtitle}</p>
+        </div>
+      </div>
+
+      <div className="mt-5 grid grid-cols-3 sm:grid-cols-6 gap-2">
+        <SourceStat label="Toplam" value={stats?.total} />
+        <SourceStat label="Bugün" value={stats?.today} />
+        <SourceStat label="Bekleyen" value={stats?.pending} />
+        <SourceStat label="Onaylı" value={stats?.approved} />
+        <SourceStat label="Çözülen" value={stats?.resolved} />
+        <SourceStat label="Spam" value={stats?.spam} />
+      </div>
+
+      {flow.length === 0 ? (
+        <p className="mt-6 text-center text-navy-mid text-sm">Son 7 günde veri yok.</p>
+      ) : (
+        <div className="mt-6 flex items-end gap-1.5 h-28">
+          {flow.map((d) => (
+            <div key={d.day} className="flex-1 flex flex-col items-center gap-1 min-w-0">
+              <div
+                className={`w-full rounded-t min-h-[3px] ${barColor}`}
+                style={{ height: `${(d.total / maxFlow) * 100}%` }}
+                title={`${d.day}: ${d.total}`}
+              />
+              <span className="text-[9px] text-navy-mid truncate w-full text-center">{d.day.slice(5)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SourceStat({ label, value }: { label: string; value: number | undefined }) {
+  return (
+    <div className="text-center">
+      <div className="text-[10px] text-navy-mid font-medium">{label}</div>
+      <div className="text-[15px] font-black tabular-nums text-ink">
+        {value === undefined ? "—" : value.toLocaleString("tr-TR")}
       </div>
     </div>
   );

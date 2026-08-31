@@ -81,11 +81,21 @@ export const SCENARIOS: Scenario[] = [
     hint: "a deposit that never arrived, was credited to the wrong account, got stuck as pending, or was debited twice",
     tr: {
       label: "Para yatırma",
-      titles: ["Yatırdığım para hesabıma geçmedi", "Yatırım işlemi askıda kaldı", "Aynı yatırım iki kez çekildi"],
+      titles: [
+        "Yatırdığım para hesabıma geçmedi",
+        "Yatırım işlemi askıda kaldı",
+        "Aynı yatırım iki kez çekildi",
+        "{amount} TL yatırım bakiyeme yansımadı",
+        "Havale yaptım site hâlâ bekliyor diyor",
+        "Kripto yatırımım onaylandı bakiye sıfır",
+      ],
       details: [
         "{method} ile {amount} TL yatırım yaptım, tutar bankadan çıktı ama hesabıma tanımlanmadı.",
         "{amount} TL yatırımım {days} gündür 'beklemede' görünüyor, dekontu da ilettim.",
         "Tek yatırım yaptım fakat kartımdan {amount} TL iki kez çekilmiş, fazlası iade edilmedi.",
+        "Referans {ref} ile {amount} TL gönderdim; finans ekibi kayıt bulamadığını söylüyor.",
+        "Canlı destek 48 saat bekleyin dedi, {days} gün geçti durum aynı.",
+        "Mobil ve web bakiyesi tutmuyor; yatırdığım {amount} TL sadece webte görünüyor.",
       ],
     },
     en: {
@@ -103,11 +113,21 @@ export const SCENARIOS: Scenario[] = [
     hint: "a withdrawal that is delayed far beyond the promised window, silently cancelled, or repeatedly reset to pending",
     tr: {
       label: "Para çekme",
-      titles: ["Çekim talebim {days} gündür onaylanmadı", "Çekim talebim sebepsiz iptal edildi", "Para çekme sürekli beklemede"],
+      titles: [
+        "Çekim talebim {days} gündür onaylanmadı",
+        "Çekim talebim sebepsiz iptal edildi",
+        "Para çekme sürekli beklemede",
+        "{amount} TL çekimim hâlâ hesaba geçmedi",
+        "Çekim limiti düşürüldü gerekçe verilmedi",
+        "Onaylanan çekim bankaya ulaşmadı",
+      ],
       details: [
         "{amount} TL çekim talebim {days} gündür işleme alınmadı, açıklama da yapılmıyor.",
         "Çekim talebim hiçbir gerekçe gösterilmeden iptal edildi, bakiyem geri döndü ama sorunum sürüyor.",
         "{method} ile {amount} TL çekmek istedim; talep her seferinde tekrar 'beklemede' durumuna düşüyor.",
+        "Doğrulama tamamlandı denmesine rağmen {amount} TL çekimim {days} gündür bekliyor.",
+        "Günde bir kez çekim hakkım varken sistem {amount} TL talebimi reddediyor.",
+        "Çekim 'tamamlandı' görünüyor ama {amount} TL banka hesabıma {days} gündür yatmamış.",
       ],
     },
     en: {
@@ -125,11 +145,21 @@ export const SCENARIOS: Scenario[] = [
     hint: "a bonus that was not credited, was removed mid-play, or had wagering terms that were changed or hidden",
     tr: {
       label: "Bonus",
-      titles: ["Bonusum tanımlanmadı", "Bonusum oyun sırasında silindi", "Çevrim şartları sonradan değişti"],
+      titles: [
+        "Bonusum tanımlanmadı",
+        "Bonusum oyun sırasında silindi",
+        "Çevrim şartları sonradan değişti",
+        "{amount} TL hoş geldin bonusu gelmedi",
+        "Kayıp bonusu hesaba yansımadı",
+        "Freespin bonusu çevrimde kayboldu",
+      ],
       details: [
         "Kampanya koşullarını sağladım ama {amount} TL bonus hesabıma tanımlanmadı.",
         "Çevrimi sürerken bonusum ve kazancım tek seferde silindi, gerekçe iletilmedi.",
         "Bonusu alırken belirtilen çevrim şartı sonradan değiştirildi, kazancım geçersiz sayıldı.",
+        "{amount} TL yatırım bonusu için gereken tutarı yatırdım, promosyon kodu geçersiz denildi.",
+        "Haftalık kayıp iadesi {amount} TL olması gerekirken 0 TL yazıyor.",
+        "Canlı destek bonusu manuel tanımlayacağını söyledi, {days} gün geçti hâlâ yok.",
       ],
     },
     en: {
@@ -147,11 +177,21 @@ export const SCENARIOS: Scenario[] = [
     hint: "free spins that never appeared, expired early, or paid nothing due to an apparent error",
     tr: {
       label: "Free spin",
-      titles: ["Free spin haklarım yüklenmedi", "Free spinlerim süresi dolmadan kayboldu", "Free spin kazancı hesaba geçmedi"],
+      titles: [
+        "Free spin haklarım yüklenmedi",
+        "Free spinlerim süresi dolmadan kayboldu",
+        "Free spin kazancı hesaba geçmedi",
+        "Promosyon spinleri hesabımda görünmüyor",
+        "Spin kazancım çevrimde silindi",
+        "Günlük free spin hakkım tanımlanmadı",
+      ],
       details: [
         "Kampanyadan hak ettiğim free spinler {days} gündür hesabıma yüklenmedi.",
         "Kullanmadığım free spinler süresi bitmeden hesabımdan kaldırıldı.",
         "Free spinlerden kazandığım {amount} TL bakiyeme yansımadı.",
+        "Doğum günü promosyonundan {amount} TL değerinde spin gelmesi gerekirken hiç yüklenmedi.",
+        "Spinlerden {amount} TL kazandım; çevrim tamamlanmadan bakiye sıfırlandı.",
+        "VIP seviyeme göre günlük spin hakkım var ama {days} gündür panelde görünmüyor.",
       ],
     },
     en: {
@@ -169,11 +209,21 @@ export const SCENARIOS: Scenario[] = [
     hint: "a casino game that froze mid-round, lost a winning round after a disconnect, or settled a round incorrectly",
     tr: {
       label: "Casino oyunu",
-      titles: ["Oyun ortasında donma yaşadım", "Bağlantı koptu, kazancım silindi", "Tur yanlış sonuçlandı"],
+      titles: [
+        "Oyun ortasında donma yaşadım",
+        "Bağlantı koptu kazancım silindi",
+        "Tur yanlış sonuçlandı",
+        "{game} oyununda bakiye düştü tur bitmedi",
+        "Jackpot düştü hesaba yansımadı",
+        "Canlı masada kart dağıtılmadan bahis alındı",
+      ],
       details: [
         "{game} oyununda tur ortasında ekran dondu, bahsim düştü ama sonuç işlenmedi.",
         "Kazandığım turda bağlantı koptu ve dönüşte {amount} TL kazanç hesabımda yoktu.",
         "{game} oyununda tur yanlış sonuçlandırıldı, oyun geçmişi ile bakiyem uyuşmuyor.",
+        "{amount} TL bahis koydum; oyun kapandı, ne kazanç ne iade var.",
+        "Jackpot {amount} TL göründü, birkaç saniye sonra ekrandan silindi.",
+        "Canlı {game} masasında kartlar gelmeden {amount} TL eksildi, kayıt tutulmuyor denildi.",
       ],
     },
     en: {
@@ -191,11 +241,21 @@ export const SCENARIOS: Scenario[] = [
     hint: "a sports bet voided after placement, settled against the official result, or with odds changed at the last second",
     tr: {
       label: "Spor bahis",
-      titles: ["Kuponum haksız şekilde iptal edildi", "Maç sonucu yanlış işlendi", "Oran son saniyede değişti"],
+      titles: [
+        "Kuponum haksız şekilde iptal edildi",
+        "Maç sonucu yanlış işlendi",
+        "Oran son saniyede değişti",
+        "Kazanan kuponum ödenmedi",
+        "Canlı bahiste gol sonrası kupon iptal edildi",
+        "Kombine kuponum tek maçtan elendi",
+      ],
       details: [
         "Kazanan kuponum maç bitiminden sonra 'iptal' olarak işaretlendi.",
         "Resmî sonuç farklı olmasına rağmen kuponum kaybetti olarak sonuçlandırıldı.",
         "Bahsi onayladığım anda oran düşürüldü ve {amount} TL kazancım eksik ödendi.",
+        "{amount} TL tutarındaki kuponum kazandı ama bakiyeye sadece küçük bir kısmı yattı.",
+        "Canlı bahiste gol oldu, kuponum anında iptal edildi; gerekçe verilmedi.",
+        "Dört maçlık kuponumda üç maç tuttu, son maç oynanmadan kupon kaybetti sayıldı.",
       ],
     },
     en: {
@@ -213,11 +273,21 @@ export const SCENARIOS: Scenario[] = [
     hint: "KYC documents rejected without a reason, verification stuck for days, or the same document requested repeatedly",
     tr: {
       label: "Hesap doğrulama",
-      titles: ["Belgelerim sebepsiz reddedildi", "Doğrulama {days} gündür bitmedi", "Aynı belge tekrar tekrar isteniyor"],
+      titles: [
+        "Belgelerim sebepsiz reddedildi",
+        "Doğrulama {days} gündür bitmedi",
+        "Aynı belge tekrar tekrar isteniyor",
+        "KYC onaylandı çekim yine engellendi",
+        "Kimlik belgem kabul edilmedi gerekçe yok",
+        "Adres doğrulaması süresiz bekliyor",
+      ],
       details: [
         "Kimlik ve adres belgemi yükledim, gerekçe belirtilmeden reddedildi.",
-        "Doğrulama sürecim {days} gündür sonuçlanmadı, bu yüzden çekim yapamıyorum.",
+        "Doğrulama sürecim {days} gündür sonuçlanmadı, bu yüzden {amount} TL çekim yapamıyorum.",
         "Aynı belgeyi {days} kez yükledim, her seferinde yeniden talep ediliyor.",
+        "Hesabım doğrulandı yazıyor ama çekim ekranı hâlâ KYC istiyor.",
+        "Pasaport ve ikamet belgesi net; sistem bulanık fotoğraf diyerek reddediyor.",
+        "Doğrulama için {amount} TL tutarındaki işlem geçmişim de istendi, belgeler yetmiyor denildi.",
       ],
     },
     en: {
@@ -235,11 +305,21 @@ export const SCENARIOS: Scenario[] = [
     hint: "support that never replies, closes the chat without solving, or gives contradictory answers between agents",
     tr: {
       label: "Müşteri hizmetleri",
-      titles: ["Canlı destek yanıt vermiyor", "Talebim çözülmeden kapatıldı", "Her temsilci farklı şey söylüyor"],
+      titles: [
+        "Canlı destek yanıt vermiyor",
+        "Talebim çözülmeden kapatıldı",
+        "Her temsilci farklı şey söylüyor",
+        "Destek hattı saatlerce bekletiyor",
+        "Yazdığım mesajlar okunmadan kapanıyor",
+        "Telefonla ulaşamıyorum mail de yok",
+      ],
       details: [
         "Canlı desteğe {days} gündür yazıyorum, tek bir yanıt alamadım.",
         "Destek talebim çözüm üretilmeden 'kapatıldı' olarak işaretlendi.",
         "Görüştüğüm her temsilci farklı bir açıklama yapıyor, süreç ilerlemiyor.",
+        "{amount} TL'lik çekim sorunum için {hours} saat kuyrukta bekledim, bağlantı koptu.",
+        "WhatsApp hattına yazdım, okundu işareti var ama {days} gündür dönüş yok.",
+        "Mail attım, otomatik '24 saat içinde dönüş' denildi; {days} gün geçti.",
       ],
     },
     en: {
@@ -257,11 +337,21 @@ export const SCENARIOS: Scenario[] = [
     hint: "a technical fault: app crashes, login loops, pages not loading, or balance shown incorrectly",
     tr: {
       label: "Teknik sorun",
-      titles: ["Uygulama sürekli çöküyor", "Giriş ekranı döngüye giriyor", "Bakiyem hatalı görünüyor"],
+      titles: [
+        "Uygulama sürekli çöküyor",
+        "Giriş ekranı döngüye giriyor",
+        "Bakiyem hatalı görünüyor",
+        "Site açılmıyor DNS hatası veriyor",
+        "Oyun yüklenmiyor sürekli hata",
+        "İki cihazda farklı bakiye görüyorum",
+      ],
       details: [
         "Mobil uygulama açılışta kapanıyor, {days} gündür işlem yapamıyorum.",
         "Giriş yaptıktan sonra sürekli oturum düşüyor ve tekrar giriş ekranına dönüyorum.",
         "Bakiyem sitede {amount} TL, uygulamada farklı görünüyor; hangisi doğru bilmiyorum.",
+        "Canlı casino masaları yüklenmiyor; {amount} TL bakiyem varken oyun açılmıyor.",
+        "Tarayıcıda site donuyor, {hours} saattir çekim bile yapamıyorum.",
+        "Gece {amount} TL kazanç gördüm, sabah bakiye eski haline dönmüş.",
       ],
     },
     en: {
@@ -279,11 +369,21 @@ export const SCENARIOS: Scenario[] = [
     hint: "an account locked or self-excluded by mistake, closed without notice, or duplicated",
     tr: {
       label: "Hesap işlemleri",
-      titles: ["Hesabım habersiz kapatıldı", "Hesabım hatalı şekilde kilitlendi", "Hesabıma erişemiyorum"],
+      titles: [
+        "Hesabım habersiz kapatıldı",
+        "Hesabım hatalı şekilde kilitlendi",
+        "Hesabıma erişemiyorum",
+        "İçeride {amount} TL bakiyem kaldı",
+        "Hesap birleştirme talebim reddedildi",
+        "Yanlışlıkla kendi hesabımı kapattım geri açılmıyor",
+      ],
       details: [
-        "Hesabım hiçbir bildirim yapılmadan kapatıldı, bakiyem içeride kaldı.",
+        "Hesabım hiçbir bildirim yapılmadan kapatıldı, {amount} TL bakiyem içeride kaldı.",
         "Hesabım güvenlik gerekçesiyle kilitlendi ama hangi kural ihlal edilmiş açıklanmıyor.",
         "E-posta ve şifrem doğru olmasına rağmen {days} gündür hesabıma giriş yapamıyorum.",
+        "Kendi isteğimle mola verdim, süre bitince hesap açılmadı; {amount} TL içeride.",
+        "Eski hesabımla yeni hesabımı birleştirmek istedim, {amount} TL bakiye kayboldu denildi.",
+        "Telefon numaram değişti, SMS gelmiyor; {amount} TL bakiyeye ulaşamıyorum.",
       ],
     },
     en: {
@@ -301,11 +401,21 @@ export const SCENARIOS: Scenario[] = [
     hint: "a payment method failing, a refund never issued, or an unexplained fee deducted from a transaction",
     tr: {
       label: "Ödeme",
-      titles: ["Ödeme yöntemi çalışmıyor", "İade tutarı hiç yatmadı", "İşlemden açıklanmayan kesinti yapıldı"],
+      titles: [
+        "Ödeme yöntemi çalışmıyor",
+        "İade tutarı hiç yatmadı",
+        "İşlemden açıklanmayan kesinti yapıldı",
+        "Kartımdan çekildi site reddediyor",
+        "Papara/havale limiti aniden düştü",
+        "Çift provizyon alındı iade yok",
+      ],
       details: [
         "{method} ile ödeme her denemede hata veriyor, başka yöntem de sunulmuyor.",
         "İade edileceği söylenen {amount} TL {days} gündür hesabıma geçmedi.",
         "{amount} TL işlemimden açıklanmayan bir kesinti yapıldı, faturası da yok.",
+        "Bankadan {amount} TL çıktı, site 'işlem başarısız' diyor; para iade edilmedi.",
+        "{amount} TL yatırım denedim, 3D Secure geçti ama bakiye gelmedi.",
+        "Aynı gün iki kez {amount} TL çekildi; biri iade edilmedi, destek kayıt görmüyor.",
       ],
     },
     en: {
@@ -361,6 +471,7 @@ const COMPLAINT_SYSTEM = [
   "- Never invent real people's names, phone numbers, e-mails, IBANs, card numbers or ID numbers.",
   "- No profanity, no insults, no threats, no accusations of crime.",
   "- One incident only. No marketing language, no meta commentary, no emojis.",
+  "- For Turkish complaints: use realistic transaction amounts between 20.000 TL and 1.000.000 TL. Never 100, 500, 1000 or similarly trivial figures.",
   "- Every complaint MUST be structurally different: vary opening sentence, specific detail (amount OR days OR method OR game), and closing demand.",
   "- Do NOT reuse stock phrases like 'talep ediyorum', 'bilgilendirilmeyi', 'ivedilikle' in the same form across outputs.",
   "- Return ONLY a JSON object with keys: title, body, nickname.",
@@ -380,6 +491,9 @@ export const COMPLAINT_VARIATION_ANGLES = [
   "Focus on a sports bet settled against the official match result.",
   "Focus on account access blocked without clear reason.",
   "Focus on an unexplained fee deducted from a transaction.",
+  "Focus on a large withdrawal (50.000+ TL) stuck for many days.",
+  "Focus on a high-stakes casino round where winnings vanished after reconnect.",
+  "Focus on a sports coupon worth tens of thousands of TL settled incorrectly.",
 ] as const;
 
 export function pickVariationAngle(): string {
@@ -402,6 +516,8 @@ export function buildComplaintMessages(input: ComplaintPromptInput) {
     "Constraints:",
     "- title: 4-12 words, no quotes, no brand slogan, must NOT start the same way as recent titles.",
     "- body: 55-130 words, first person, includes TWO concrete details (amount, duration, method, reference number, or product name).",
+    "- For Turkish: amounts must be realistic for online betting/casino (20.000–1.000.000 TL). NEVER use trivial amounts like 100, 500, 1000 or 1500 TL.",
+    "- Vary narrative structure every time: different opening, different complaint angle, different closing request.",
     "- nickname: a short invented display name (no real-looking full names).",
     "- Use a different narrative structure than a generic 'I did X and Y happened' template.",
     avoidTitles.length ? `- Must NOT resemble these existing titles: ${avoidTitles.map((t) => `"${t}"`).join(", ")}` : "",
@@ -478,6 +594,20 @@ export function buildResponseMessages(input: ResponsePromptInput) {
 const pick = <T>(arr: readonly T[]): T => arr[Math.floor(Math.random() * arr.length)];
 const int = (min: number, max: number) => min + Math.floor(Math.random() * (max - min + 1));
 
+/** Bahis/casino şikayetlerinde gerçekçi tutarlar — 100/500 TL gibi komik rakamlar kullanılmaz. */
+function pickAmount(lang: "tr" | "en"): string {
+  if (lang === "tr") {
+    const amounts = [
+      20_000, 25_000, 30_000, 35_000, 40_000, 50_000, 60_000, 75_000, 80_000,
+      100_000, 120_000, 150_000, 180_000, 200_000, 250_000, 300_000, 400_000,
+      500_000, 750_000, 1_000_000,
+    ];
+    return pick(amounts).toLocaleString("tr-TR");
+  }
+  const amounts = [500, 1_000, 2_500, 5_000, 10_000, 25_000, 50_000];
+  return pick(amounts).toLocaleString("en-US");
+}
+
 const TOKEN_POOLS = {
   tr: {
     method: ["havale/EFT", "kredi kartı", "banka kartı", "mobil ödeme", "kripto (USDT)"],
@@ -499,6 +629,10 @@ const DEMANDS = {
     "Aynı sorunu tekrar yaşamamak için kalıcı bir çözüm istiyorum.",
     "Hesabımdaki bakiyemin güvenli şekilde iade edilmesini talep ediyorum.",
     "Canlı destek yerine bu şikayet üzerinden resmi dönüş almak istiyorum.",
+    "En geç 48 saat içinde net bir çözüm planı paylaşılmasını istiyorum.",
+    "İşlem tutarımın eksiksiz hesabıma geçmesini talep ediyorum.",
+    "Hatalı kesinti veya eksik ödemenin düzeltilmesini bekliyorum.",
+    "Sürecin hangi aşamada olduğunu şeffaf şekilde açıklamanızı rica ediyorum.",
   ],
   en: [
     "I expect this to be resolved urgently and to be informed about it.",
@@ -519,9 +653,13 @@ const CONTEXT = {
     "Aynı sorunu daha önce de yaşadım ama bu kez hiç dönüş olmadı.",
     "Referans numaram {ref}; kayıtlarda görünüyor olmalı.",
     "Ekran görüntüsü ve banka dekontunu da yükledim, inceleme yapılmadı.",
-    "Canlı destek oturumu {days} dakika açık kaldıktan sonra kapatıldı.",
+    "Canlı destek oturumu {hours} dakika açık kaldıktan sonra kapatıldı.",
     "Mobil uygulama üzerinden de aynı hatayı alıyorum.",
     "İşlem saati ve tutarı banka ekstremde görünüyor.",
+    "VIP müşteri olduğum halde öncelik verilmedi.",
+    "Finans birimi incelemeye aldı denildi, {days} gündür haber yok.",
+    "Telegram kanalından yazdım, buraya yönlendirdiler.",
+    "Hesap geçmişimde işlem görünüyor ama bakiye güncellenmedi.",
   ],
   en: [
     "I have contacted support {days} times with no result.",
@@ -586,14 +724,51 @@ export function normalizeBotDisplayName(raw: string | undefined | null, avoid: s
   return s;
 }
 
-function fillTokens(text: string, lang: "tr" | "en"): string {
-  const pools = TOKEN_POOLS[lang];
-  return text
-    .replace(/\{days\}/g, String(int(2, 21)))
-    .replace(/\{amount\}/g, lang === "tr" ? int(2, 60).toString() + "00" : int(50, 3000).toString())
-    .replace(/\{method\}/g, pick(pools.method))
-    .replace(/\{game\}/g, pick(pools.game))
-    .replace(/\{ref\}/g, `#${int(100000, 999999)}`);
+/** Şikayet gövdesi için farklı giriş cümleleri — aynı kalıptan kaçınır. */
+const BODY_OPENERS = {
+  tr: [
+    "Yaklaşık {months} aydır bu sitede oynuyorum;",
+    "Geçen hafta başlayan sorunum hâlâ devam ediyor:",
+    "İlk defa böyle bir mağduriyet yaşıyorum —",
+    "Canlı destekle görüşmem sonuçsuz kaldı;",
+    "Banka ekstremde işlem görünmesine rağmen",
+    "Kampanyadan yararlanıp işlem yaptıktan sonra",
+    "Dün akşam yaşanan olayla ilgili",
+    "Uzun süredir beklediğim işlem için",
+  ],
+  en: [
+    "I have been playing on this site for about {months} months;",
+    "The issue that started last week is still ongoing:",
+    "This is the first time I have faced such a problem —",
+    "My live chat session ended without a solution;",
+    "Even though the transaction appears on my bank statement",
+    "After taking part in a promotion and placing a transaction",
+    "Regarding what happened yesterday evening",
+    "For a transaction I have been waiting on for a long time",
+  ],
+} as const;
+
+/** Tek seferde tutarlı token seti — aynı şikayette farklı tutarlar çıkmasın. */
+function fillComplaintTokens(parts: string[], lang: "tr" | "en"): string[] {
+  const amount = pickAmount(lang);
+  const days = String(int(2, 28));
+  const hours = String(int(6, 72));
+  const months = String(int(3, 36));
+  const method = pick(TOKEN_POOLS[lang].method);
+  const game = pick(TOKEN_POOLS[lang].game);
+  const ref = `#${int(100000, 999999)}`;
+
+  const replace = (text: string) =>
+    text
+      .replace(/\{days\}/g, days)
+      .replace(/\{hours\}/g, hours)
+      .replace(/\{months\}/g, months)
+      .replace(/\{amount\}/g, amount)
+      .replace(/\{method\}/g, method)
+      .replace(/\{game\}/g, game)
+      .replace(/\{ref\}/g, ref);
+
+  return parts.map(replace);
 }
 
 /** Şablon yedeği yalnızca tr/en biliyor; diğer diller en'e düşer. */
@@ -609,12 +784,41 @@ export function fallbackComplaint(input: {
   const scenario = scenarioByKey(input.scenario) ?? SCENARIOS[0];
   const locale = scenario[lang];
 
-  const title = fillTokens(pick(locale.titles), lang);
-  const body = [
-    fillTokens(pick(locale.details), lang),
-    fillTokens(pick(CONTEXT[lang]), lang),
-    pick(DEMANDS[lang]),
-  ].join(" ");
+  const titleTpl = pick(locale.titles);
+  const detailTpl = pick(locale.details);
+  const contextTpl = Math.random() > 0.15 ? pick(CONTEXT[lang]) : "";
+  const demandTpl = pick(DEMANDS[lang]);
+  const openerTpl = Math.random() > 0.4 ? pick(BODY_OPENERS[lang]) : "";
+
+  const [title, detail, context, demand, opener] = fillComplaintTokens(
+    [titleTpl, detailTpl, contextTpl, demandTpl, openerTpl],
+    lang,
+  );
+
+  const segments: string[] = [];
+  const structure = int(0, 4);
+  switch (structure) {
+    case 0:
+      if (opener) segments.push(opener);
+      segments.push(detail, context, demand);
+      break;
+    case 1:
+      segments.push(detail, context, demand);
+      break;
+    case 2:
+      if (context) segments.push(context);
+      segments.push(detail, demand);
+      break;
+    case 3:
+      if (opener) segments.push(opener);
+      segments.push(detail, demand);
+      break;
+    default:
+      segments.push(detail, demand, context);
+      break;
+  }
+
+  const body = segments.filter(Boolean).join(" ").replace(/\s+/g, " ").trim();
 
   return { title, body, nickname: pickTurkishDisplayName() };
 }

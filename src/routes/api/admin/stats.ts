@@ -4,7 +4,16 @@ import postgres from "postgres";
 import { db, schema } from "@/db";
 import { errorResponse, requireStaff } from "@/lib/server/guard";
 import { ensureDbPatches } from "@/lib/server/ensure-db-patches";
-import { sqlTs } from "@/lib/server/complaint-bot";
+import { sqlTs, sqlTodayStart } from "@/lib/server/complaint-bot";
+
+type SourceStats = {
+  total: number;
+  today: number;
+  pending: number;
+  approved: number;
+  resolved: number;
+  spam: number;
+};
 
 /** Yönetim paneli özet sayaçları + grafik verileri. */
 export const Route = createFileRoute("/api/admin/stats")({
@@ -21,6 +30,29 @@ export const Route = createFileRoute("/api/admin/stats")({
           const n = (rows: { n: number }[]) => Number(rows[0]?.n ?? 0);
           const c = sql<number>`count(*)`;
 
+          async function sourceStats(isSynthetic: boolean): Promise<SourceStats> {
+            const base = eq(schema.complaints.isSynthetic, isSynthetic);
+            const [row] = await db
+              .select({
+                total: c,
+                today: sql<number>`count(*) FILTER (WHERE ${schema.complaints.createdAt} >= ${sqlTodayStart()})`,
+                pending: sql<number>`count(*) FILTER (WHERE ${schema.complaints.status} = 'pending')`,
+                approved: sql<number>`count(*) FILTER (WHERE ${schema.complaints.status} = 'approved')`,
+                resolved: sql<number>`count(*) FILTER (WHERE ${schema.complaints.status} = 'resolved')`,
+                spam: sql<number>`count(*) FILTER (WHERE ${schema.complaints.status} = 'spam')`,
+              })
+              .from(schema.complaints)
+              .where(base);
+            return {
+              total: Number(row?.total ?? 0),
+              today: Number(row?.today ?? 0),
+              pending: Number(row?.pending ?? 0),
+              approved: Number(row?.approved ?? 0),
+              resolved: Number(row?.resolved ?? 0),
+              spam: Number(row?.spam ?? 0),
+            };
+          }
+
           const [
             brands,
             users,
@@ -31,6 +63,8 @@ export const Route = createFileRoute("/api/admin/stats")({
             resolved,
             premium,
             verified,
+            organic,
+            bot,
           ] = await Promise.all([
             db.select({ n: c }).from(schema.brands).then(n),
             db.select({ n: c }).from(schema.profiles).then(n),
@@ -57,10 +91,14 @@ export const Route = createFileRoute("/api/admin/stats")({
               .then(n),
             db.select({ n: c }).from(schema.brands).where(eq(schema.brands.premium, true)).then(n),
             db.select({ n: c }).from(schema.brands).where(eq(schema.brands.verified, true)).then(n),
+            sourceStats(false),
+            sourceStats(true),
           ]);
 
           const url = process.env.DATABASE_URL;
           let complaint_flow: { day: string; pending: number; approved: number; answered: number; resolved: number; total: number }[] = [];
+          let complaint_flow_organic: typeof complaint_flow = [];
+          let complaint_flow_bot: typeof complaint_flow = [];
           let page_views: {
             total: number;
             today: number;
@@ -76,7 +114,7 @@ export const Route = createFileRoute("/api/admin/stats")({
 
           if (url) {
             const pg = postgres(url, { max: 1 });
-            complaint_flow = await pg`
+            const flowQuery = (synthetic: boolean | null) => pg`
               SELECT
                 to_char(date_trunc('day', created_at AT TIME ZONE 'Europe/Istanbul'), 'YYYY-MM-DD') AS day,
                 count(*) FILTER (WHERE status = 'pending')::int AS pending,
@@ -86,9 +124,15 @@ export const Route = createFileRoute("/api/admin/stats")({
                 count(*)::int AS total
               FROM complaints
               WHERE created_at >= now() - interval '6 days'
+                ${synthetic === null ? pg`` : synthetic ? pg`AND is_synthetic = true` : pg`AND is_synthetic = false`}
               GROUP BY 1
               ORDER BY 1
             `;
+            [complaint_flow, complaint_flow_organic, complaint_flow_bot] = await Promise.all([
+              flowQuery(null),
+              flowQuery(false),
+              flowQuery(true),
+            ]);
             const [pv] = await pg`
               SELECT
                 count(*)::int AS total,
@@ -136,7 +180,10 @@ export const Route = createFileRoute("/api/admin/stats")({
             resolved,
             premium,
             verified,
+            complaints_by_source: { organic, bot },
             complaint_flow,
+            complaint_flow_organic,
+            complaint_flow_bot,
             page_views,
             user_signups,
           });
