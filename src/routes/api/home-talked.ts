@@ -4,6 +4,7 @@ import { db, schema } from "@/db";
 import { toDbComplaint, type BrandNested, type DbComplaintShape } from "@/lib/db-shapes";
 import { TALKED_PRIORITY_BRAND_SLUGS } from "@/lib/featured-brands";
 import { errorResponse } from "@/lib/server/guard";
+import { generateTalkedPreviewComments } from "@/lib/server/talked-preview-comments";
 
 const HIDDEN_STATUSES = ["pending", "rejected", "spam"] as const;
 
@@ -51,7 +52,7 @@ async function attachCommentsAndProfiles(rows: { c: typeof schema.complaints.$in
   const commentsByComplaint = new Map<string, TalkedItem["preview_comments"]>();
   for (const c of commentRows) {
     const list = commentsByComplaint.get(c.complaintId) ?? [];
-    if (list.length >= 2) continue;
+    if (list.length >= 3) continue;
     const pr = profileMap.get(c.userId);
     list.push({
       id: c.id,
@@ -96,6 +97,27 @@ async function attachCommentsAndProfiles(rows: { c: typeof schema.complaints.$in
         : null;
     }
     dc.preview_comments = commentsByComplaint.get(r.c.id) ?? [];
+
+    const PREVIEW_TARGET = 3;
+    if (dc.preview_comments.length < PREVIEW_TARGET) {
+      const need = PREVIEW_TARGET - dc.preview_comments.length;
+      const existingBodies = dc.preview_comments.map((c) => c.body);
+      const existingNames = dc.preview_comments
+        .map((c) => c.profiles?.full_name ?? c.profiles?.username ?? "")
+        .filter(Boolean);
+      const generated = generateTalkedPreviewComments({
+        complaintId: r.c.id,
+        brandName: r.b.name,
+        title: r.c.title,
+        body: r.c.body,
+        scenario: r.c.botScenario,
+        count: need,
+        avoidBodies: existingBodies,
+        avoidNames: existingNames,
+      });
+      dc.preview_comments = [...dc.preview_comments, ...generated];
+    }
+
     items.push(dc);
   }
   return items;
