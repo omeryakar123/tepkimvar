@@ -9,7 +9,6 @@ import {
   MessageCircle,
   Award,
   ShieldCheck,
-  Star,
   FileText,
   Eye,
   Users,
@@ -18,16 +17,19 @@ import { formatRating, type Company, type Complaint } from "@/lib/mock-data";
 import { formatResolutionRate } from "@/lib/display-brand-metrics";
 import {
   fetchBrandsList,
+  fetchBrandsTrend,
   fetchCategoriesWithCount,
   fetchHomeAgenda,
   fetchHomeTalked,
   fetchLiveFeed,
   fetchPlatformStats,
 } from "@/lib/data";
+import type { TrendBrand } from "@/lib/trend-brand";
+import { TrendBrandMetrics, TrendBrandRow, TrendBrandRowInner } from "@/components/trend-brand-row";
 import { PRIORITY_BRAND_LINKS } from "@/lib/featured-brands";
 import { publicPlatformStats } from "@/lib/public-stats";
 import { SITE_CONTACT_EMAIL, siteContactMailto } from "@/lib/contact";
-import { BrandAvatar, BrandRankLogo } from "@/components/cards";
+import { BrandRankLogo } from "@/components/cards";
 import { LiveFeed } from "@/components/live-feed";
 import { ComplaintSupportButton } from "@/components/complaint-support-button";
 import { MobileCarousel } from "@/components/mobile-carousel";
@@ -53,7 +55,7 @@ export const Route = createFileRoute("/_site/")({
         fetchCategoriesWithCount().catch(() => []),
         fetchPlatformStats().catch(() => FALLBACK_STATS),
         fetchBrandsList({ limit: 5, sortBy: "resolution" }).catch(() => [] as Company[]),
-        fetchBrandsList({ limit: 10, sortBy: "complaints" }).catch(() => [] as Company[]),
+        fetchBrandsTrend({ limit: 10 }).catch(() => [] as TrendBrand[]),
       ]);
     return { latest: liveFeed, agenda, talked, categories, stats: platformStats, topBrands, trendBrands };
   },
@@ -104,7 +106,7 @@ function Home() {
   const [agenda, setAgenda] = useState<Complaint[]>(loaderData.agenda ?? []);
   const [talked, setTalked] = useState<Complaint[]>(loaderData.talked ?? []);
   const [top, setTop] = useState<Company[]>(loaderData.topBrands ?? []);
-  const [trend100, setTrend100] = useState<Company[]>(loaderData.trendBrands ?? []);
+  const [trend100, setTrend100] = useState<TrendBrand[]>(loaderData.trendBrands ?? []);
   const [stats, setStats] = useState(loaderData.stats ?? FALLBACK_STATS);
   const [feedLoading, setFeedLoading] = useState(false);
   const [lastFeedAt, setLastFeedAt] = useState<Date>(() => new Date());
@@ -122,7 +124,7 @@ function Home() {
         fetchHomeAgenda({ limit: 6 }),
         fetchHomeTalked({ limit: 4 }),
         fetchBrandsList({ limit: 5, sortBy: "resolution" }),
-        fetchBrandsList({ limit: 10, sortBy: "complaints" }),
+        fetchBrandsTrend({ limit: 10 }),
         fetchPlatformStats(),
       ]);
 
@@ -591,75 +593,49 @@ function Home() {
             <h2 className="font-display font-black text-[22px] sm:text-[28px] text-ink inline-flex items-center gap-2">
               Trend<span className="text-brand">100</span>
             </h2>
-            <p className="mt-1 text-[12px] sm:text-[13px] text-navy-mid px-2">Son 7 günün en çok konuşulan markaları.</p>
+            <p className="mt-1 text-[12px] sm:text-[13px] text-navy-mid px-2 max-w-lg mx-auto">
+              Son 7 günde en çok yeni şikayet, okunma ve topluluk desteği alan markalar — gerçek veriden hesaplanır.
+            </p>
           </div>
 
           {/* Mobil: swiper */}
           <div className="md:hidden">
             <MobileCarousel ariaLabel="Trend 100 markalar">
               {trend100.map((b, i) => (
-                <Link
+                <div
                   key={b.slug}
-                  to="/firma/$slug"
-                  params={{ slug: b.slug }}
-                  className="block h-full bg-card rounded-2xl ring-1 ring-rule p-3.5 sm:p-4 hover:shadow-pop transition"
+                  className="h-full bg-card rounded-2xl ring-1 ring-rule p-3.5 sm:p-4 hover:shadow-pop transition"
                 >
-                  <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-                    <span className="w-6 sm:w-7 text-[12px] sm:text-[13px] text-navy-mid font-bold tabular-nums shrink-0">{i + 1}.</span>
-                    <BrandAvatar name={b.name} slug={b.slug} logoUrl={b.logoUrl} website={b.website} size={36} />
-                    <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-[13px] sm:text-[14px] text-ink leading-snug line-clamp-2">{b.name}</div>
-                      <div className="text-[10.5px] sm:text-[11px] text-navy-mid mt-0.5 truncate">{b.categoryName}</div>
-                    </div>
-                    <div className="shrink-0 text-right">
-                      <TrendingUp className="inline size-3.5 sm:size-4 text-brand mb-0.5" />
-                      <div className="text-[12px] sm:text-[13px] font-bold text-ink tabular-nums inline-flex items-center gap-0.5">
-                        <Star className="size-3 fill-amber-400 text-amber-400" />
-                        {formatRating(b.rating, b.ratingCount)}
-                      </div>
-                    </div>
-                  </div>
-                </Link>
+                  <TrendBrandRow brand={b} rank={i + 1} />
+                </div>
               ))}
             </MobileCarousel>
           </div>
 
           {/* Masaüstü: tablo */}
           <div className="hidden md:block bg-card rounded-2xl overflow-hidden ring-1 ring-rule">
-            <div className="grid grid-cols-[48px_1fr_120px_80px] gap-4 px-5 py-3 border-b border-rule text-[11px] uppercase tracking-wider text-navy-mid font-semibold">
+            <div className="grid grid-cols-[40px_minmax(0,1fr)_minmax(140px,200px)] gap-4 px-5 py-3 border-b border-rule text-[11px] uppercase tracking-wider text-navy-mid font-semibold">
               <span>#</span>
               <span>Marka</span>
-              <span className="text-right">Trend</span>
-              <span className="text-right">Puan</span>
+              <span className="text-right">Son 7 gün</span>
             </div>
             {trend100.map((b, i) => (
               <Link
                 key={b.slug}
                 to="/firma/$slug"
                 params={{ slug: b.slug }}
-                className="grid grid-cols-[48px_1fr_120px_80px] items-center gap-4 px-5 py-3.5 border-b border-rule hover:bg-surface transition"
+                className={`grid grid-cols-[40px_minmax(0,1fr)_minmax(140px,200px)] items-center gap-4 px-5 py-3.5 border-b border-rule last:border-0 hover:bg-surface/80 transition group ${i < 3 ? "bg-brand-soft/20" : ""}`}
               >
-                <span className="text-[13px] text-navy-mid tabular-nums">{i + 1}.</span>
-                <div className="flex items-center gap-3 min-w-0">
-                  <BrandAvatar name={b.name} slug={b.slug} logoUrl={b.logoUrl} website={b.website} size={32} />
-                  <div className="min-w-0">
-                    <div className="font-semibold text-[14px] text-ink truncate">{b.name}</div>
-                    <div className="text-[11px] text-navy-mid truncate">{b.categoryName}</div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <TrendingUp className="inline size-4 text-brand" />
-                </div>
-                <div className="text-right text-[13px] font-bold text-ink tabular-nums">
-                  {formatRating(b.rating, b.ratingCount)}
-                </div>
+                <span className="text-[13px] text-navy-mid tabular-nums font-bold">{i + 1}.</span>
+                <TrendBrandRowInner brand={b} rank={i + 1} hideRank showMetrics={false} />
+                <TrendBrandMetrics brand={b} compact />
               </Link>
             ))}
           </div>
 
           <div className="mt-5 text-center">
             <Link
-              to="/trendler"
+              to="/trend-100"
               className="inline-flex items-center gap-2 rounded-full ring-1 ring-brand text-brand px-5 h-10 text-[13px] font-semibold hover:bg-brand-soft transition"
             >
               Devamını Gör

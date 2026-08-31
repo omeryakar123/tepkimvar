@@ -4,6 +4,7 @@
 import type { Company, Complaint, ComplaintStatus } from "@/lib/mock-data";
 import { brandCoverUrl } from "@/lib/brand-cover";
 import { publicPlatformStats, type RawPlatformStats } from "@/lib/public-stats";
+import type { TrendBrand } from "@/lib/trend-brand";
 
 const DB_TO_UI_STATUS: Record<string, ComplaintStatus> = {
   pending: "beklemede",
@@ -297,6 +298,38 @@ export async function fetchBrandsList(opts: { limit?: number; categorySlug?: str
   return items.map((b) => {
     const cat = b.category_id ? categoryNameCache.get(b.category_id) : null;
     return brandToCompany(b, cat?.name ?? "Genel", cat?.slug ?? "diger");
+  });
+}
+
+type DbTrendBrand = DbBrand & {
+  category_name?: string;
+  category_slug?: string;
+  recent_complaints?: number;
+  prior_complaints?: number;
+  recent_views?: number;
+  recent_supports?: number;
+  trend_score?: number;
+};
+
+export async function fetchBrandsTrend(opts: { limit?: number; categorySlug?: string } = {}): Promise<TrendBrand[]> {
+  await ensureCategoryCache();
+  const qs = buildQuery({
+    limit: opts.limit,
+    categorySlug: opts.categorySlug,
+  });
+  const { items } = await getJson<{ items: DbTrendBrand[] }>(`/api/brands/trend${qs}`);
+  return items.map((b) => {
+    const catName = b.category_name ?? (b.category_id ? categoryNameCache.get(b.category_id)?.name : null) ?? "Genel";
+    const catSlug = b.category_slug ?? (b.category_id ? categoryNameCache.get(b.category_id)?.slug : null) ?? "diger";
+    const company = brandToCompany(b, catName, catSlug);
+    return {
+      ...company,
+      recentComplaints: b.recent_complaints ?? 0,
+      priorComplaints: b.prior_complaints ?? 0,
+      recentViews: b.recent_views ?? 0,
+      recentSupports: b.recent_supports ?? 0,
+      trendScore: b.trend_score ?? 0,
+    };
   });
 }
 

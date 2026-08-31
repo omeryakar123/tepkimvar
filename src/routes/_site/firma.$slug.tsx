@@ -306,6 +306,7 @@ function CompanyPage() {
                 logoUrl={raw.logo_url}
                 website={raw.website}
                 size={104}
+                rounded="rounded-full"
                 className="ring-4 ring-white outline outline-1 -outline-offset-1 outline-black/5 shadow-sm"
               />
               {isAdmin && (
