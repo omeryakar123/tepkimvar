@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { and, asc, desc, eq, ilike, sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, gt, ilike, sql, type SQL } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { toDbBrand } from "@/lib/db-shapes";
 import { PRIORITY_BRAND_SLUGS } from "@/lib/featured-brands";
@@ -40,6 +40,7 @@ export const Route = createFileRoute("/api/brands")({
         }
         if (categoryId) conditions.push(eq(schema.brands.categoryId, categoryId));
         if (search) conditions.push(ilike(schema.brands.name, `%${search}%`));
+        if (sortBy === "resolution") conditions.push(gt(schema.brands.totalComplaints, 0));
         // Footer/filtre linkleri için: yalnızca doğrulanmış ya da premium markalar.
         if (p.get("verified") === "1") conditions.push(eq(schema.brands.verified, true));
         if (p.get("premium") === "1") conditions.push(eq(schema.brands.premium, true));

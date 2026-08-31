@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Trophy, TrendingUp, Star } from "lucide-react";
 import { BrandAvatar } from "@/components/cards";
 import { formatRating, type Company } from "@/lib/mock-data";
+import { formatResolutionRate } from "@/lib/display-brand-metrics";
 import { fetchBrandsList, fetchCategoriesWithCount } from "@/lib/data";
 
 type Search = { kategori?: string };
@@ -118,7 +119,11 @@ function Trend100Page() {
                     <div className="hidden sm:flex items-center gap-1 text-sm font-semibold text-ink">
                       <Star className="size-4 text-amber-500 fill-amber-500" /> {formatRating(b.rating, b.ratingCount)}
                     </div>
-                    <div className="hidden md:block text-xs text-navy-mid w-20 text-right">%{b.resolutionRate} çözüm</div>
+                    <div className="hidden md:block text-xs text-navy-mid w-20 text-right">
+                      {b.totalComplaints > 0
+                        ? `${formatResolutionRate(b.resolutionRate, b.totalComplaints)} çözüm`
+                        : "—"}
+                    </div>
                   </Link>
                 </li>
               );

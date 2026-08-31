@@ -25,7 +25,7 @@ import {
   BRAND_PROFILE_COMPLAINTS_LIMIT,
   type DbBrand,
 } from "@/lib/data";
-import { displayResolutionRate, displayResponseMinutes } from "@/lib/display-brand-metrics";
+import { displayResolutionRate, displayResponseMinutes, formatResolutionRate } from "@/lib/display-brand-metrics";
 import { brandCoverUrl } from "@/lib/brand-cover";
 import { proxyImage } from "@/lib/img";
 import { Pagination } from "@/components/pagination";
@@ -70,7 +70,9 @@ export const Route = createFileRoute("/_site/firma/$slug")({
       b.raw.seo_description ??
         (c.about
           ? c.about
-          : `${c.name} hakkında ${c.totalComplaints} müşteri şikayeti, marka yanıtları ve %${c.resolutionRate} çözüm oranı.`),
+          : c.totalComplaints > 0
+            ? `${c.name} hakkında ${c.totalComplaints} müşteri şikayeti, marka yanıtları ve ${formatResolutionRate(c.resolutionRate, c.totalComplaints)} çözüm oranı.`
+            : `${c.name} hakkında müşteri şikayetleri, marka yanıtları ve çözüm süreci.`),
       155,
     );
 
@@ -147,8 +149,8 @@ function CompanyPage() {
       ? displayResolutionRate(company.slug, company.resolutionRate, company.totalComplaints, undefined)
       : 0;
   const responseDisplay = raw
-    ? displayResponseMinutes(raw.slug, raw.avg_response_minutes)
-    : 0;
+    ? displayResponseMinutes(raw.slug, raw.avg_response_minutes, raw.total_complaints)
+    : null;
   const logoInput = useRef<HTMLInputElement>(null);
   const coverInput = useRef<HTMLInputElement>(null);
 
@@ -594,7 +596,7 @@ function CompanyPage() {
               <div className="space-y-3 text-sm">
                 <Row
                   label="Çözüm oranı"
-                  value={`%${resolutionDisplay}`}
+                  value={formatResolutionRate(resolutionDisplay, raw.total_complaints)}
                   tone="brand"
                 />
                 <Row

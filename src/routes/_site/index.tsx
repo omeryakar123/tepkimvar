@@ -15,6 +15,7 @@ import {
   Users,
 } from "lucide-react";
 import { formatRating, type Company, type Complaint } from "@/lib/mock-data";
+import { formatResolutionRate } from "@/lib/display-brand-metrics";
 import {
   fetchBrandsList,
   fetchCategoriesWithCount,
@@ -496,7 +497,7 @@ function Home() {
                 </div>
                 <div className="text-right shrink-0">
                   <div className="text-[12px] sm:text-[13px] font-bold text-brand tabular-nums">
-                    %{b.resolutionRate.toFixed(0)}
+                    {formatResolutionRate(b.resolutionRate, b.totalComplaints)}
                   </div>
                   <div className="text-[9.5px] sm:text-[10.5px] text-media-foreground/55">çözüm</div>
                 </div>

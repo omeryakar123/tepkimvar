@@ -4,6 +4,7 @@ import { BadgeCheck, Eye, MessageSquare, ChevronRight, Clock, Star, Send, Buildi
 import type { Company, Complaint } from "@/lib/mock-data";
 import { displayComplaintViews } from "@/lib/display-views";
 import { formatCompactCount, formatRating, formatResponseTime, statusClasses, statusLabel } from "@/lib/mock-data";
+import { formatResolutionRate } from "@/lib/display-brand-metrics";
 import { proxyImage } from "@/lib/img";
 import { brandLogoCandidates, SLUG_LOGO_OVERRIDES, logoFetchSize } from "@/lib/logo";
 import { ComplaintSupportButton } from "@/components/complaint-support-button";
@@ -370,7 +371,9 @@ export function CompanyCard({ company }: { company: Company }) {
       <div className="rounded-xl bg-surface p-3 grid grid-cols-3 gap-2 text-center">
         <div>
           <div className="text-[10px] uppercase tracking-wider text-navy-mid">Çözüm</div>
-          <div className="font-bold text-[13px] mt-0.5 text-brand tabular-nums">%{company.resolutionRate}</div>
+          <div className="font-bold text-[13px] mt-0.5 text-brand tabular-nums">
+            {formatResolutionRate(company.resolutionRate, company.totalComplaints)}
+          </div>
         </div>
         <div className="border-x border-rule">
           <div className="text-[10px] uppercase tracking-wider text-navy-mid">Şikayet</div>
