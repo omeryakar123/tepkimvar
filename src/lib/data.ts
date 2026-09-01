@@ -1,20 +1,13 @@
 // Data layer. READ queries now go through server API routes (/api/*) that run
 // Drizzle on the server; the routes return the same snake_case Db* shapes the
 // mappers below expect, so the pure mappers are unchanged from the Supabase era.
-import type { Company, Complaint, ComplaintStatus } from "@/lib/mock-data";
+import type { Company, Complaint } from "@/lib/mock-data";
+import { dbStatusToUi } from "@/lib/complaint-status";
 import { brandCoverUrl } from "@/lib/brand-cover";
 import { publicPlatformStats, type RawPlatformStats } from "@/lib/public-stats";
 import type { TrendBrand } from "@/lib/trend-brand";
 
-const DB_TO_UI_STATUS: Record<string, ComplaintStatus> = {
-  pending: "beklemede",
-  approved: "inceleniyor",
-  in_review: "inceleniyor",
-  answered: "cozuldu",
-  resolved: "cozuldu",
-  rejected: "kapatildi",
-  spam: "kapatildi",
-};
+const DB_TO_UI_STATUS = dbStatusToUi;
 
 /**
  * SSR sırasında göreli URL çalışmaz (fetch mutlak adres ister). Route
@@ -208,7 +201,7 @@ export function dbComplaintToUi(c: DbComplaint): Complaint {
     userInitials: initialsOf(userName),
     userName,
     createdAgo: formatAgo(c.created_at),
-    status: DB_TO_UI_STATUS[c.status] ?? "beklemede",
+    status: DB_TO_UI_STATUS(c.status),
     views: c.views ?? 0,
     comments: c.comment_count ?? 0,
     votes: c.votes ?? 0,

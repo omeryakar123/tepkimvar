@@ -36,7 +36,9 @@ export interface Company {
   coverUrl?: string | null;
 }
 
-export type ComplaintStatus = "beklemede" | "inceleniyor" | "cozuldu" | "kapatildi";
+export type { ComplaintStatus } from "@/lib/complaint-status";
+export { statusLabel, statusClasses } from "@/lib/complaint-status";
+import type { ComplaintStatus } from "@/lib/complaint-status";
 
 export interface Complaint {
   id: string;
@@ -68,26 +70,6 @@ export interface Complaint {
   contactPhoneDisplay?: string | null;
 }
 
-
-export const statusLabel: Record<ComplaintStatus, string> = {
-  beklemede: "Beklemede",
-  inceleniyor: "İnceleniyor",
-  cozuldu: "Çözüldü",
-  kapatildi: "Kapatıldı",
-};
-
-export function statusClasses(s: ComplaintStatus): string {
-  switch (s) {
-    case "cozuldu":
-      return "bg-success/10 text-success ring-success/20";
-    case "inceleniyor":
-      return "bg-warning/10 text-warning ring-warning/20";
-    case "beklemede":
-      return "bg-danger/10 text-danger ring-danger/20";
-    case "kapatildi":
-      return "bg-surface text-navy-mid ring-rule";
-  }
-}
 
 /** 0 / null = ölçüm yok; "0 dk" göstermek yanıltıcı olurdu. */
 export function formatResponseTime(minutes: number | null | undefined): string {

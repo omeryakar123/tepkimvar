@@ -10,6 +10,7 @@ import { moderateAndScore } from "@/lib/server/moderation";
 import { looksLikeFakePlatformUsername } from "@/lib/platform-username";
 import { complaintRankOrder, complaintRecentOrder, complaintTrendingOrder } from "@/lib/server/complaint-sort";
 import { supportedComplaintIds } from "@/lib/server/complaint-support";
+import { UI_DURUM_TO_DB } from "@/lib/complaint-status";
 
 function isValidTrPhone(stored: string | null | undefined): boolean {
   if (!stored) return false;
@@ -18,12 +19,6 @@ function isValidTrPhone(stored: string | null | undefined): boolean {
   return local.length === 10 && local.startsWith("5");
 }
 
-const UI_DURUM_TO_STATUSES: Record<string, string[]> = {
-  cozuldu: ["answered", "resolved"],
-  inceleniyor: ["approved", "in_review"],
-};
-
-// Public: şikayet listesi. RLS gitti; moderasyon filtresi BURADA zorlanıyor.
 const HIDDEN_STATUSES = ["pending", "rejected", "spam"] as const;
 
 export const Route = createFileRoute("/api/complaints")({
@@ -78,8 +73,8 @@ export const Route = createFileRoute("/api/complaints")({
 
         if (search) conditions.push(ilike(schema.complaints.title, `%${search}%`));
 
-        if (durum && UI_DURUM_TO_STATUSES[durum]) {
-          conditions.push(inArray(schema.complaints.status, UI_DURUM_TO_STATUSES[durum] as never));
+        if (durum && UI_DURUM_TO_DB[durum]) {
+          conditions.push(inArray(schema.complaints.status, UI_DURUM_TO_DB[durum] as never));
         }
 
         const where = and(...conditions);

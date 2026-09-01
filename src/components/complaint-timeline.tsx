@@ -12,7 +12,7 @@ export type HistoryRow = {
 
 const META: Record<string, { label: string; icon: typeof Check; color: string }> = {
   pending: { label: "Yeni", icon: Clock, color: "bg-warning-soft text-warning" },
-  approved: { label: "Onaylandı", icon: Check, color: "bg-info-soft text-info" },
+  approved: { label: "Yeni", icon: Check, color: "bg-info-soft text-info" },
   in_review: { label: "İncelemede", icon: Clock, color: "bg-info-soft text-info" },
   answered: { label: "Firma Yanıtladı", icon: Reply, color: "bg-success-soft text-success" },
   user_replied: { label: "Kullanıcı Yanıtladı", icon: MessageSquare, color: "bg-info-soft text-info" },

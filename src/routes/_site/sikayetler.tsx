@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Search, Filter, CheckCircle2, Clock } from "lucide-react";
+import { Search, Filter, CheckCircle2, Clock, MessageSquare } from "lucide-react";
 import { ComplaintCard } from "@/components/cards";
 import { Pagination } from "@/components/pagination";
 import type { Complaint } from "@/lib/mock-data";
@@ -75,8 +75,10 @@ function SikayetlerPage() {
 
   const durumChips: { key: SP["durum"]; label: string; icon: typeof CheckCircle2 }[] = [
     { key: undefined, label: "Tümü", icon: Filter },
-    { key: "cozuldu", label: "Çözüldü", icon: CheckCircle2 },
+    { key: "yeni", label: "Yeni", icon: Clock },
     { key: "inceleniyor", label: "İnceleniyor", icon: Clock },
+    { key: "yanitlandi", label: "Yanıtlandı", icon: MessageSquare },
+    { key: "cozuldu", label: "Çözüldü", icon: CheckCircle2 },
   ];
 
   return (

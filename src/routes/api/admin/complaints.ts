@@ -94,16 +94,25 @@ export const Route = createFileRoute("/api/admin/complaints")({
           if (!STATUSES.includes(b.status as Status)) throw new HttpError(400, "Geçersiz durum");
 
           const [before] = await db
-            .select({ status: schema.complaints.status, brandId: schema.complaints.brandId })
+            .select({
+              status: schema.complaints.status,
+              brandId: schema.complaints.brandId,
+              isPublic: schema.complaints.isPublic,
+            })
             .from(schema.complaints)
             .where(eq(schema.complaints.id, b.id))
             .limit(1);
           if (!before) throw new HttpError(404, "Şikayet bulunamadı");
 
-          await db
-            .update(schema.complaints)
-            .set({ status: b.status as Status, updatedAt: new Date() })
-            .where(eq(schema.complaints.id, b.id));
+          const nextStatus = b.status as Status;
+          const patch: Partial<typeof schema.complaints.$inferInsert> = {
+            status: nextStatus,
+            updatedAt: new Date(),
+          };
+          if (nextStatus === "approved") patch.isPublic = true;
+          if (nextStatus === "rejected" || nextStatus === "spam") patch.isPublic = false;
+
+          await db.update(schema.complaints).set(patch).where(eq(schema.complaints.id, b.id));
 
           await refreshBrandAggregates(before.brandId);
 

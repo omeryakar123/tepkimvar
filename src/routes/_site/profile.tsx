@@ -8,6 +8,9 @@ import { AvatarUpload } from "@/components/avatar-upload";
 import { Messenger } from "@/components/messenger";
 import { PhoneInput } from "@/components/phone-input";
 import { toE164Tr, fromE164 } from "@/lib/phone";
+import { Pagination } from "@/components/pagination";
+import { PAGE_SIZE } from "@/lib/data";
+import { dbStatusToUi, statusLabel, statusClasses } from "@/lib/complaint-status";
 
 export const Route = createFileRoute("/_site/profile")({
   head: () => ({ meta: [{ title: "Profilim — tepkimvar" }] }),
@@ -36,7 +39,7 @@ function ProfilePage() {
   const { sekme } = Route.useSearch();
   const [tab, setTab] = useState<"info" | "complaints" | "messages" | "security">(sekme === "mesajlar" ? "messages" : "info");
   const [complaints, setComplaints] = useState<Complaint[]>([]);
-  const [stats, setStats] = useState({ total: 0, pending: 0, answered: 0, resolved: 0, views: 0, follows: 0 });
+  const [stats, setStats] = useState({ total: 0, pending: 0, newCount: 0, answered: 0, resolved: 0, views: 0, follows: 0 });
   const [curPw, setCurPw] = useState("");
   const [newPw, setNewPw] = useState("");
   const [newPw2, setNewPw2] = useState("");
@@ -64,9 +67,10 @@ function ProfilePage() {
         setComplaints(list);
         setStats({
           total: list.length,
-          pending: list.filter((c) => c.status === "pending" || c.status === "in_review").length,
-          answered: list.filter((c) => c.status === "answered").length,
-          resolved: list.filter((c) => c.status === "resolved").length,
+          pending: list.filter((c) => dbStatusToUi(c.status) === "beklemede").length,
+          newCount: list.filter((c) => dbStatusToUi(c.status) === "yeni").length,
+          answered: list.filter((c) => dbStatusToUi(c.status) === "yanitlandi").length,
+          resolved: list.filter((c) => dbStatusToUi(c.status) === "cozuldu").length,
           views: list.reduce((s, c) => s + (c.views ?? 0), 0),
           follows: 0,
         });
@@ -186,9 +190,10 @@ function ProfilePage() {
         </div>
 
         {/* Stats */}
-        <div className="mt-5 grid grid-cols-2 md:grid-cols-6 gap-3">
+        <div className="mt-5 grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3">
           <Stat icon={MessageSquare} label="Toplam Şikayet" v={stats.total} />
-          <Stat icon={Clock} label="Beklemede" v={stats.pending} tone="warn" />
+          <Stat icon={Clock} label="Onay Bekliyor" v={stats.pending} tone="warn" />
+          <Stat icon={MessageSquare} label="Yeni" v={stats.newCount} tone="brand" />
           <Stat icon={MessageSquare} label="Yanıtlandı" v={stats.answered} />
           <Stat icon={CheckCircle2} label="Çözüldü" v={stats.resolved} tone="brand" />
           <Stat icon={Eye} label="Görüntülenme" v={stats.views} />
@@ -280,9 +285,6 @@ function Stat({ icon: Icon, label, v, tone = "ink" }: { icon: typeof MessageSqua
   );
 }
 
-import { Pagination } from "@/components/pagination";
-import { PAGE_SIZE } from "@/lib/data";
-
 function ComplaintsTab({ complaints }: { complaints: Complaint[] }) {
   const [page, setPage] = useState(1);
   const start = (page - 1) * PAGE_SIZE;
@@ -299,7 +301,9 @@ function ComplaintsTab({ complaints }: { complaints: Complaint[] }) {
           <Link key={c.id} to="/sikayet/$id" params={{ id: c.id }} className="flex items-center gap-4 p-4 hover:bg-surface">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <span className={`text-[10px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded ${badge(c.status)}`}>{c.status}</span>
+                <span className={`text-[10px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded ring-1 ring-inset ${statusClasses(dbStatusToUi(c.status))}`}>
+                  {statusLabel[dbStatusToUi(c.status)]}
+                </span>
                 <span className="text-[11px] text-navy-mid">{new Date(c.createdAt).toLocaleDateString("tr-TR")}</span>
               </div>
               <div className="mt-1 font-medium text-ink line-clamp-1">{c.title}</div>
@@ -311,16 +315,4 @@ function ComplaintsTab({ complaints }: { complaints: Complaint[] }) {
       <Pagination page={page} pageSize={PAGE_SIZE} total={complaints.length} onChange={setPage} />
     </div>
   );
-}
-
-function badge(s: string) {
-  switch (s) {
-    case "resolved": return "bg-brand-soft text-brand";
-    case "pending": return "bg-warning-soft text-warning";
-    case "answered": return "bg-surface text-ink";
-    case "in_review": return "bg-info-soft text-info";
-    case "spam":
-    case "rejected": return "bg-danger-soft text-danger";
-    default: return "bg-surface text-navy-mid";
-  }
 }
