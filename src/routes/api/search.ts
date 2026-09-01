@@ -33,8 +33,8 @@ export const Route = createFileRoute("/api/search")({
             .innerJoin(schema.brands, eq(schema.complaints.brandId, schema.brands.id))
             .where(
               and(
-                // Moderasyondan geçmemiş şikayetler aramada da görünmemeli.
                 eq(schema.complaints.isPublic, true),
+                eq(schema.complaints.hidden, false),
                 notInArray(schema.complaints.status, [...HIDDEN]),
                 or(
                   ilike(schema.complaints.title, like),

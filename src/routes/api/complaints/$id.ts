@@ -20,26 +20,30 @@ export const Route = createFileRoute("/api/complaints/$id")({
           ? eq(schema.complaints.id, id)
           : (or(
               eq(schema.complaints.publicId, id.toUpperCase()),
-              eq(schema.complaints.shortId, id.toUpperCase()),
+              eq(schema.complaints.shortId, id.toLowerCase()),
             ) as SQL);
 
         const [row] = await db
           .select({ c: schema.complaints, b: schema.brands })
           .from(schema.complaints)
           .innerJoin(schema.brands, eq(schema.complaints.brandId, schema.brands.id))
-          .where(
-            and(
-              idMatch,
-              notInArray(schema.complaints.status, [...HIDDEN_STATUSES]),
-              or(
-                eq(schema.complaints.isPublic, true),
-                eq(schema.complaints.isSynthetic, true),
-              ),
-            ),
-          )
+          .where(and(idMatch, notInArray(schema.complaints.status, [...HIDDEN_STATUSES])))
           .limit(1);
 
         if (!row) return new Response("Not Found", { status: 404 });
+
+        const viewer = await optionalUser(request);
+        const isOwner = !!viewer && row.c.userId === viewer.id;
+
+        if (row.c.hidden) {
+          // Gizli şikayet: yalnızca yazan müşteri görebilir.
+          if (!isOwner) return new Response("Not Found", { status: 404 });
+        } else {
+          const publiclyVisible = row.c.isPublic || row.c.isSynthetic;
+          if (!publiclyVisible && !isOwner) {
+            return new Response("Not Found", { status: 404 });
+          }
+        }
 
         await db
           .update(schema.complaints)
@@ -70,7 +74,6 @@ export const Route = createFileRoute("/api/complaints/$id")({
           dc.profiles = pr ?? null;
         }
 
-        const viewer = await optionalUser(request);
         let phoneMode: "full" | "masked" | "hidden" = "masked";
         if (viewer) {
           const staff = await isStaff(viewer.id);

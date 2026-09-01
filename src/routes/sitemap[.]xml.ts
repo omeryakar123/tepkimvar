@@ -45,6 +45,7 @@ export const Route = createFileRoute("/sitemap.xml")({
               .from(schema.complaints)
               .where(and(
                 eq(schema.complaints.isPublic, true),
+                eq(schema.complaints.hidden, false),
                 notInArray(schema.complaints.status, ["pending", "rejected", "spam"]),
               ))
               .orderBy(desc(schema.complaints.createdAt))

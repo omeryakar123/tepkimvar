@@ -154,6 +154,7 @@ export const Route = createFileRoute("/api/comments")({
               and(
                 eq(schema.complaints.id, b.complaintId),
                 eq(schema.complaints.isPublic, true),
+                eq(schema.complaints.hidden, false),
                 notInArray(schema.complaints.status, ["pending", "rejected", "spam"]),
               ),
             )

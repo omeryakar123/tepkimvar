@@ -40,6 +40,7 @@ export const Route = createFileRoute("/api/complaints")({
         // AUTHZ: yayında olan + (marka profili için) bot üretimi şikayetler.
         const conditions: SQL[] = [
           notInArray(schema.complaints.status, [...HIDDEN_STATUSES]),
+          eq(schema.complaints.hidden, false),
         ];
 
         if (brandSlug) {

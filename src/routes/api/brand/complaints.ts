@@ -57,6 +57,7 @@ async function loadComplaintWithAccess(userId: string, complaintId: string) {
       id: schema.complaints.id,
       brandId: schema.complaints.brandId,
       status: schema.complaints.status,
+      hidden: schema.complaints.hidden,
       createdAt: schema.complaints.createdAt,
       firstResponseAt: schema.complaints.firstResponseAt,
     })
@@ -64,6 +65,7 @@ async function loadComplaintWithAccess(userId: string, complaintId: string) {
     .where(eq(schema.complaints.id, complaintId))
     .limit(1);
   if (!c) throw new HttpError(404, "Şikayet bulunamadı");
+  if (c.hidden && !(await isStaff(userId))) throw new HttpError(404, "Şikayet bulunamadı");
   // Erişim, şikayetin GERÇEK brand_id'si üzerinden doğrulanır.
   await requireBrandAccess(userId, c.brandId);
   return c;
@@ -92,6 +94,7 @@ export const Route = createFileRoute("/api/brand/complaints")({
           // Moderasyon onayı almadan firmaya gösterilmez.
           const conditions: SQL[] = [
             eq(schema.complaints.brandId, brandId),
+            eq(schema.complaints.hidden, false),
             notInArray(schema.complaints.status, ["pending", "rejected", "spam"]),
           ];
           const statusParam = p.get("status");

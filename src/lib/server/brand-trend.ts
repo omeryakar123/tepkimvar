@@ -21,6 +21,7 @@ export async function fetchBrandTrendScores(opts: {
 
   const complaintVisible = and(
     notInArray(schema.complaints.status, [...HIDDEN]),
+    eq(schema.complaints.hidden, false),
     or(eq(schema.complaints.isPublic, true), eq(schema.complaints.isSynthetic, true)),
   );
 
@@ -121,6 +122,7 @@ export async function fetchBrandTrendScoresBySlugs(slugs: string[]): Promise<Bra
 
   const complaintVisible = and(
     notInArray(schema.complaints.status, [...HIDDEN]),
+    eq(schema.complaints.hidden, false),
     or(eq(schema.complaints.isPublic, true), eq(schema.complaints.isSynthetic, true)),
   );
 

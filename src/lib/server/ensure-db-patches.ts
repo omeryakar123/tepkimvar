@@ -17,6 +17,14 @@ export async function ensureDbPatches(): Promise<void> {
     const pg = postgres(url, { max: 1 });
     try {
       await applyDbPatches(pg);
+
+      // SK-435FI1 — yalnızca şikayet sahibi görebilir (siteden gizli).
+      await pg`
+        UPDATE complaints
+        SET hidden = true, is_public = false, updated_at = now()
+        WHERE public_id = 'SK-435FI1'
+      `.catch(() => {});
+
       await pg`
         UPDATE complaints c SET votes = COALESCE((
           SELECT count(*)::int FROM complaint_supports s WHERE s.complaint_id = c.id

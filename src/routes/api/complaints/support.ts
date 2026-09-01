@@ -32,6 +32,7 @@ export const Route = createFileRoute("/api/complaints/support")({
                   eq(schema.complaints.isPublic, true),
                   eq(schema.complaints.isSynthetic, true),
                 ),
+                eq(schema.complaints.hidden, false),
               ),
             )
             .limit(1);

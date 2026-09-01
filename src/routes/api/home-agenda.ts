@@ -23,6 +23,7 @@ export const Route = createFileRoute("/api/home-agenda")({
             .where(
               and(
                 notInArray(schema.complaints.status, [...HIDDEN_STATUSES]),
+                eq(schema.complaints.hidden, false),
                 or(
                   eq(schema.complaints.isPublic, true),
                   eq(schema.complaints.isSynthetic, true),
