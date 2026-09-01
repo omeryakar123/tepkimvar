@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { SiteNav, SiteFooter } from "@/components/site-chrome";
+import { TawkChat } from "@/components/tawk-chat";
 
 /**
  * Genel site düzeni (pathless layout).
@@ -24,6 +25,7 @@ function SiteLayout() {
         <Outlet />
       </div>
       <SiteFooter />
+      <TawkChat />
     </div>
   );
 }
