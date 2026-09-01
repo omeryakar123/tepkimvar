@@ -1,5 +1,6 @@
 // Brand logo — manuel override → sunucu çözümleyici → depolanmış URL.
 import { proxyImage } from "./img";
+import { isManualBrandLogoUrl } from "./brand-logo-manual";
 import { MANUAL_BRAND_LOGOS } from "./manual-brand-logos";
 
 /** Site olmayan veya favicon dışında kaynak gereken markalar */
@@ -38,10 +39,7 @@ export function logoFetchSize(displayPx: number): number {
 
 /** Yedek sıralı logo URL listesi — img onError ile sırayla denenebilir */
 function isCustomUploadedLogo(url: string): boolean {
-  return (
-    url.startsWith("/api/files/brand-logos/") ||
-    url.startsWith("/brand-logos/")
-  );
+  return isManualBrandLogoUrl(url);
 }
 
 export function brandLogoCandidates(opts: BrandLogoOpts): string[] {
@@ -72,15 +70,15 @@ export function brandLogoCandidates(opts: BrandLogoOpts): string[] {
     push(SLUG_LOGO_OVERRIDES[slugKey]);
   }
 
-  // Sunucu: Telegram → site ikonu → kalıcı depolama (self-heal)
-  if (slugKey) {
+  // Otomatik çözümleyici yalnızca özel logo yoksa — aksi halde DB'yi ezer.
+  if (slugKey && !isCustomUploadedLogo(raw)) {
     push(`/api/brand-logo/${slugKey}`);
   }
 
   return out;
 }
 
-export { isCustomUploadedLogo };
+export { isCustomUploadedLogo, isManualBrandLogoUrl };
 
 export function brandLogoUrl(opts: BrandLogoOpts): string | null {
   return brandLogoCandidates(opts)[0] ?? null;

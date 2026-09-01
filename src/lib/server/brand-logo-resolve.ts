@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 import { db, schema } from "@/db";
+import { isManualBrandLogoUrl } from "@/lib/brand-logo-manual";
 import { getObject, putObject } from "@/lib/server/storage";
 import { TELEGRAM_BRAND_CHANNELS } from "@/lib/telegram-brand-channels";
 
@@ -114,6 +115,26 @@ export async function resolveBrandLogo(slug: string): Promise<{ buf: Buffer; typ
   if (!brand) return null;
 
   const current = brand.logoUrl?.trim() ?? "";
+
+  // Manuel yüklenen logo asla otomatik çözümleyici ile ezilmez.
+  if (isManualBrandLogoUrl(current)) {
+    const key = storageKeyFromUrl(current);
+    if (key) {
+      try {
+        const obj = await getObject(key);
+        if (obj.Body) {
+          const buf = Buffer.from(await obj.Body.transformToByteArray());
+          if (buf.length > 0) {
+            return { buf, type: obj.ContentType || "image/png", logoUrl: current };
+          }
+        }
+      } catch {
+        /* dosya geçici olarak okunamadı — DB'yi değiştirme */
+      }
+    }
+    return null;
+  }
+
   if (!isBadUrl(current) && current.startsWith("/api/files/")) {
     const key = storageKeyFromUrl(current);
     if (key) {

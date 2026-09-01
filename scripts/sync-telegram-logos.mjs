@@ -33,6 +33,13 @@ if (useS3) {
   });
 }
 
+function isManualUpload(url) {
+  const u = (url ?? "").trim().toLowerCase();
+  if (!u) return false;
+  if (u.startsWith("/brand-logos/") && !u.includes("/seed/")) return true;
+  return u.startsWith("/api/files/brand-logos/") && !u.includes("/seed/");
+}
+
 async function persistLogo(slug, hit) {
   const key = `brand-logos/seed/${slug}.png`;
   if (useS3 && hit.buf) {
@@ -63,6 +70,10 @@ async function syncOne(slug) {
   }
   const channel = TELEGRAM_BRAND_CHANNELS[slug];
   const current = (row.logo_url ?? "").trim();
+  if (isManualUpload(current)) {
+    skipped++;
+    return;
+  }
   if (!force && current.includes("/brand-logos/seed/") && current.endsWith(".png")) {
     skipped++;
     return;

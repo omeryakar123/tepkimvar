@@ -99,14 +99,20 @@ function isLowResStored(url) {
   return !u.includes("-hq.png") && !u.includes("-superbonus.png") && !u.includes("-v2.png") && !u.includes("-tg.png");
 }
 
+function isManualUpload(url) {
+  const u = (url ?? "").trim().toLowerCase();
+  if (!u) return false;
+  if (u.startsWith("/brand-logos/") && !u.includes("/seed/")) return true;
+  return u.startsWith("/api/files/brand-logos/") && !u.includes("/seed/");
+}
+
 function isBad(url) {
+  if (isManualUpload(url)) return false;
   if (!url?.trim()) return true;
   const u = url.toLowerCase();
   if (isFaviconProxy(u)) return true;
   if (isLowResStored(url)) return true;
   if (u.includes("superbonus14.pro")) return true;
-  // Eski UUID tabanlı MinIO yüklemeleri sık 404 veriyor — yeniden çek
-  if (u.startsWith("/api/files/brand-logos/") && !u.includes("/seed/")) return true;
   return BAD.some((p) => u.includes(p));
 }
 
@@ -222,7 +228,9 @@ const rows = await sql`
   ORDER BY b.slug
 `;
 
-const toFix = force ? rows : rows.filter((r) => isBad(r.logo_url ?? ""));
+const toFix = force
+  ? rows.filter((r) => !isManualUpload(r.logo_url))
+  : rows.filter((r) => isBad(r.logo_url ?? ""));
 
 console.log(`Toplam: ${rows.length}, düzeltilecek: ${toFix.length}${useS3 ? " (MinIO)" : ""}`);
 

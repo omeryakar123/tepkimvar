@@ -59,8 +59,8 @@ export const Route = createFileRoute("/api/cron/maintenance")({
           await sql.end();
 
           const seed = await runScript("seed-bilisim-brands-bulk.mjs");
-          const telegram = await runScript("sync-telegram-logos.mjs", ["--force"]);
-          const logos = await runScript("fix-brand-logos.mjs", ["--all", "--force"]);
+          const telegram = await runScript("sync-telegram-logos.mjs");
+          const logos = await runScript("fix-brand-logos.mjs", ["--all"]);
           const votes = await runScript("sync-complaint-votes.mjs");
           const clear = await runScript("clear-synthetic-responses.mjs");
 

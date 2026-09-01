@@ -176,6 +176,56 @@ Sorularınız için iletişim sayfamızdan bize ulaşabilirsiniz.`;
         `.catch(() => {});
       }
 
+      const manualLogoRestore = await pg<{ key: string }[]>`
+        SELECT key FROM app_meta WHERE key = 'manual_logos_restore_v1' LIMIT 1
+      `.catch(() => []);
+      if (manualLogoRestore.length === 0) {
+        const { listObjects } = await import("./storage");
+        const { isManualBrandLogoUrl, timestampFromBrandLogoKey } = await import(
+          "@/lib/brand-logo-manual"
+        );
+
+        const brands = await pg<{ id: string; logo_url: string | null }[]>`
+          SELECT id, logo_url FROM brands
+        `.catch(() => []);
+
+        let restored = 0;
+        for (const b of brands) {
+          if (isManualBrandLogoUrl(b.logo_url)) continue;
+
+          let objects: { key: string; size: number; lastModified: Date }[] = [];
+          try {
+            objects = await listObjects(`brand-logos/${b.id}/`, 100);
+          } catch {
+            continue;
+          }
+
+          const files = objects.filter((o) => o.size > 0);
+          if (files.length === 0) continue;
+
+          files.sort((a, b) => {
+            const ta = timestampFromBrandLogoKey(a.key) || a.lastModified.getTime();
+            const tb = timestampFromBrandLogoKey(b.key) || b.lastModified.getTime();
+            return tb - ta;
+          });
+
+          const logoUrl = `/api/files/${files[0].key}`;
+          await pg`
+            UPDATE brands SET logo_url = ${logoUrl}, updated_at = now() WHERE id = ${b.id}
+          `.catch(() => {});
+          restored++;
+        }
+
+        if (restored > 0) {
+          console.log(`[ensure-db-patches] ${restored} manuel marka logosu depodan geri yüklendi`);
+        }
+
+        await pg`
+          INSERT INTO app_meta (key, value) VALUES ('manual_logos_restore_v1', '1')
+          ON CONFLICT (key) DO NOTHING
+        `.catch(() => {});
+      }
+
       done = true;
     } finally {
       await pg.end({ timeout: 5 });
