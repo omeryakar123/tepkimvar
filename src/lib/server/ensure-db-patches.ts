@@ -26,6 +26,15 @@ export async function ensureDbPatches(): Promise<void> {
       `.catch(() => {});
 
       await pg`
+        UPDATE profiles SET full_name = 'Mehmet Cakır', updated_at = now()
+        WHERE username = 'testadmin'
+      `.catch(() => {});
+      await pg`
+        UPDATE "user" SET name = 'Mehmet Cakır', updated_at = now()
+        WHERE email = 'admin@tepkimvar.com'
+      `.catch(() => {});
+
+      await pg`
         UPDATE complaints c SET votes = COALESCE((
           SELECT count(*)::int FROM complaint_supports s WHERE s.complaint_id = c.id
         ), 0)

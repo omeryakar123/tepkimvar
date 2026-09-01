@@ -30,7 +30,7 @@ if (!process.env.DATABASE_URL) {
 
 const ACCOUNTS = [
   { email: "user@tepkimvar.com", password: "user123!", name: "Test Kullanıcı", username: "testuser", roles: ["user"] },
-  { email: "admin@tepkimvar.com", password: "siftadmin123!", name: "Test Admin", username: "testadmin", roles: ["user", "super_admin"] },
+  { email: "admin@tepkimvar.com", password: "siftadmin123!", name: "Mehmet Cakır", username: "testadmin", roles: ["user", "super_admin"] },
   {
     email: "brand@tepkimvar.com",
     password: "brand123!",
