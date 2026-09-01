@@ -10,6 +10,7 @@ import { moderateAndScore } from "@/lib/server/moderation";
 import { looksLikeFakePlatformUsername } from "@/lib/platform-username";
 import { complaintRankOrder, complaintRecentOrder, complaintTrendingOrder } from "@/lib/server/complaint-sort";
 import { supportedComplaintIds } from "@/lib/server/complaint-support";
+import { loadAuthorProfiles } from "@/lib/server/author-profile";
 import { UI_DURUM_TO_DB } from "@/lib/complaint-status";
 
 function isValidTrPhone(stored: string | null | undefined): boolean {
@@ -128,16 +129,7 @@ export const Route = createFileRoute("/api/complaints")({
           new Set(items.map((i) => i.user_id).filter(Boolean) as string[]),
         );
         if (ids.length > 0) {
-          const profs = await db
-            .select({
-              id: schema.profiles.id,
-              full_name: schema.profiles.fullName,
-              username: schema.profiles.username,
-              avatar_url: schema.profiles.avatarUrl,
-            })
-            .from(schema.profiles)
-            .where(inArray(schema.profiles.id, ids));
-          const map = new Map(profs.map((pr) => [pr.id, pr]));
+          const profileMap = await loadAuthorProfiles(ids);
           for (const it of items) {
             if (it.is_anonymous) {
               it.user_id = null;
@@ -145,10 +137,7 @@ export const Route = createFileRoute("/api/complaints")({
               continue;
             }
             if (it.user_id) {
-              const pr = map.get(it.user_id);
-              it.profiles = pr
-                ? { full_name: pr.full_name, username: pr.username, avatar_url: pr.avatar_url }
-                : null;
+              it.profiles = profileMap.get(it.user_id) ?? null;
             }
           }
         }

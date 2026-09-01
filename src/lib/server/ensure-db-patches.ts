@@ -3,14 +3,27 @@
  */
 import postgres from "postgres";
 import { applyDbPatches } from "./db-patches";
+import { syncAdminDisplayName } from "./author-profile";
 
 let done = false;
 let running: Promise<void> | null = null;
+let adminNameSynced = false;
 
 export async function ensureDbPatches(): Promise<void> {
+  const url = process.env.DATABASE_URL;
+
+  if (url && !adminNameSynced) {
+    const quick = postgres(url, { max: 1 });
+    try {
+      await syncAdminDisplayName(quick);
+      adminNameSynced = true;
+    } finally {
+      await quick.end({ timeout: 5 }).catch(() => {});
+    }
+  }
+
   if (done) return;
   if (running) return running;
-  const url = process.env.DATABASE_URL;
   if (!url) return;
 
   running = (async () => {
@@ -23,15 +36,6 @@ export async function ensureDbPatches(): Promise<void> {
         UPDATE complaints
         SET hidden = true, is_public = false, updated_at = now()
         WHERE public_id = 'SK-435FI1'
-      `.catch(() => {});
-
-      await pg`
-        UPDATE profiles SET full_name = 'Mehmet Cakır', updated_at = now()
-        WHERE username = 'testadmin'
-      `.catch(() => {});
-      await pg`
-        UPDATE "user" SET name = 'Mehmet Cakır', updated_at = now()
-        WHERE email = 'admin@tepkimvar.com'
       `.catch(() => {});
 
       await pg`

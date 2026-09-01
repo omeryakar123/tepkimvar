@@ -1,11 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { and, eq, inArray, notInArray, or, sql, type SQL } from "drizzle-orm";
+import { and, eq, ilike, inArray, notInArray, or, sql, type SQL } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { toDbComplaint, type BrandNested } from "@/lib/db-shapes";
 import { displayPhone } from "@/lib/phone-mask";
 import { normalizePlatformUsername } from "@/lib/server/ai/prompts";
 import { isBrandMember, isStaff, optionalUser } from "@/lib/server/guard";
 import { supportedComplaintIds } from "@/lib/server/complaint-support";
+import { loadAuthorProfile } from "@/lib/server/author-profile";
+import { ensureDbPatches } from "@/lib/server/ensure-db-patches";
 
 // Public: tek şikayet. $id uuid, public_id veya short_id olabilir.
 const HIDDEN_STATUSES = ["pending", "rejected", "spam"] as const;
@@ -15,6 +17,8 @@ export const Route = createFileRoute("/api/complaints/$id")({
   server: {
     handlers: {
       GET: async ({ params, request }) => {
+        await ensureDbPatches();
+
         const id = params.id;
         const idMatch: SQL = UUID_RE.test(id)
           ? eq(schema.complaints.id, id)
@@ -62,16 +66,7 @@ export const Route = createFileRoute("/api/complaints/$id")({
           dc.user_id = null;
           dc.profiles = null;
         } else if (dc.user_id) {
-          const [pr] = await db
-            .select({
-              full_name: schema.profiles.fullName,
-              username: schema.profiles.username,
-              avatar_url: schema.profiles.avatarUrl,
-            })
-            .from(schema.profiles)
-            .where(inArray(schema.profiles.id, [dc.user_id]))
-            .limit(1);
-          dc.profiles = pr ?? null;
+          dc.profiles = await loadAuthorProfile(dc.user_id);
         }
 
         let phoneMode: "full" | "masked" | "hidden" = "masked";
