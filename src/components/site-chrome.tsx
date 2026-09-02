@@ -26,6 +26,7 @@ export function SiteNav() {
     { to: "/sikayetler" as const, label: "Şikayetler" },
     { to: "/markalar" as const, label: "Markalar" },
     { to: "/trendler" as const, label: "Trend 100", badge: "100" },
+    { to: "/nasil-calisir" as const, label: "Nasıl Çalışır" },
     { to: "/tepkimvar-seal" as const, label: "Seal", seal: true },
   ];
 
