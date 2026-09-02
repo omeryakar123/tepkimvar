@@ -3,6 +3,7 @@ import { Search, X, Building2, MessageSquare, FileText, Loader2 } from "lucide-r
 import { Link, useNavigate } from "@tanstack/react-router";
 import { BrandAvatar } from "@/components/cards";
 import { complaintLinkId } from "@/lib/complaint-link";
+import { Modal } from "@/components/ui/modal";
 
 type BrandHit = { id: string; slug: string; name: string; logo_url: string | null; website?: string | null };
 type ComplaintHit = { id: string; public_id: string | null; title: string; brands?: { slug: string; name: string } | null };

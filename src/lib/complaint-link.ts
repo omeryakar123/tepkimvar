@@ -4,7 +4,9 @@ export function complaintLinkId(c: {
   publicId?: string | null;
   public_id?: string | null;
 }): string {
-  return (c.publicId ?? c.public_id ?? c.id).trim();
+  const raw = c.publicId ?? c.public_id ?? c.id;
+  if (typeof raw !== "string" || !raw) return c.id ?? "";
+  return raw.trim();
 }
 
 export function complaintPath(c: Parameters<typeof complaintLinkId>[0]): string {

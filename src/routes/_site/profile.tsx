@@ -9,6 +9,7 @@ import { Messenger } from "@/components/messenger";
 import { PhoneInput } from "@/components/phone-input";
 import { toE164Tr, fromE164 } from "@/lib/phone";
 import { Pagination } from "@/components/pagination";
+import { PAGE_SIZE } from "@/lib/data";
 import { complaintLinkId } from "@/lib/complaint-link";
 import { dbStatusToUi, statusLabel, statusClasses } from "@/lib/complaint-status";
 

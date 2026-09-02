@@ -9,12 +9,14 @@ import { ComplaintRating } from "@/components/complaint-rating";
 import { ComplaintSupportButton } from "@/components/complaint-support-button";
 import { statusClasses, statusLabel, type Complaint } from "@/lib/mock-data";
 import { fetchComplaintsList, fetchComments, fetchComplaintResolution, formatAgo, loadComplaintById, type ComplaintLoadState, type DbComment, type ResolutionRow } from "@/lib/data";
-import { complaintLinkId, complaintPath } from "@/lib/complaint-link";
+import { complaintPath } from "@/lib/complaint-link";
 import { useAuth } from "@/hooks/use-auth";
 import { seoHead, jsonLd, breadcrumbLd, clamp, absUrl } from "@/lib/seo";
 import { toast } from "sonner";
 
 type ThreadReply = { id: string; body: string; is_brand: boolean; author: string; created_at: string };
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export const Route = createFileRoute("/_site/sikayet/$id")({
   // SSR: içerik sunucuda yüklenir, böylece arama motorları gerçek şikayeti görür.
@@ -111,9 +113,9 @@ function ComplaintPage() {
 
   useEffect(() => {
     if (loadState.kind !== "ok") return;
-    const slug = complaintLinkId(loadState.complaint);
-    if (slug !== id) {
-      navigate({ to: "/sikayet/$id", params: { id: slug }, replace: true });
+    const { complaint: c } = loadState;
+    if (c.publicId && UUID_RE.test(id)) {
+      navigate({ to: "/sikayet/$id", params: { id: c.publicId }, replace: true });
     }
   }, [id, loadState, navigate]);
 

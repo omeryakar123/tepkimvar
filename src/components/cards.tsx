@@ -9,6 +9,7 @@ import { proxyImage } from "@/lib/img";
 import { brandLogoCandidates, logoFetchSize } from "@/lib/logo";
 import { ComplaintSupportButton } from "@/components/complaint-support-button";
 import { complaintLinkId } from "@/lib/complaint-link";
+import { toast } from "sonner";
 
 const avatarPalette = [
   "bg-[oklch(0.78_0.13_158)] text-white",
