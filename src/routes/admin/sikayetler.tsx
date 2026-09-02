@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Bot, Search, User } from "lucide-react";
+import { Bot, Eye, Pencil, Search, User } from "lucide-react";
 import { toast } from "sonner";
 import { apiGet, apiSend } from "@/lib/admin-api";
+import { AdminComplaintModal } from "@/components/admin-complaint-modal";
 import { Pagination } from "@/components/pagination";
 import { PAGE_SIZE } from "@/lib/data";
 
@@ -42,6 +43,8 @@ function AdminComplaintsPage() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [stats, setStats] = useState<{ organic: SourceStats; bot: SourceStats } | null>(null);
+  const [previewId, setPreviewId] = useState<string | null>(null);
+  const [editOnOpen, setEditOnOpen] = useState(false);
 
   async function loadStats() {
     const data = await apiGet<{ complaints_by_source: { organic: SourceStats; bot: SourceStats } }>(
@@ -93,6 +96,11 @@ function AdminComplaintsPage() {
       load(page);
       loadStats();
     }
+  }
+
+  function openPreview(id: string, edit = false) {
+    setEditOnOpen(edit);
+    setPreviewId(id);
   }
 
   const activeStats = stats?.[source];
@@ -247,10 +255,26 @@ function AdminComplaintsPage() {
                   <td className="px-4 py-3 text-navy-mid whitespace-nowrap">
                     {new Date(c.created_at).toLocaleDateString("tr-TR")}
                   </td>
-                  <td className="px-4 py-3 text-right">
-                    <button onClick={() => remove(c.id)} className="text-[12px] text-danger hover:underline">
-                      Sil
-                    </button>
+                  <td className="px-4 py-3 text-right whitespace-nowrap">
+                    <div className="inline-flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => openPreview(c.id, false)}
+                        className="text-[12px] text-brand hover:underline inline-flex items-center gap-0.5"
+                      >
+                        <Eye className="size-3.5" /> Önizle
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => openPreview(c.id, true)}
+                        className="text-[12px] text-navy-mid hover:text-brand hover:underline inline-flex items-center gap-0.5"
+                      >
+                        <Pencil className="size-3.5" /> Düzenle
+                      </button>
+                      <button onClick={() => remove(c.id)} className="text-[12px] text-danger hover:underline">
+                        Sil
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -268,6 +292,20 @@ function AdminComplaintsPage() {
           <Pagination page={page} pageSize={PAGE_SIZE} total={total} onChange={setPage} />
         </div>
       </div>
+
+      <AdminComplaintModal
+        open={!!previewId}
+        complaintId={previewId}
+        startEditing={editOnOpen}
+        onClose={() => {
+          setPreviewId(null);
+          setEditOnOpen(false);
+        }}
+        onUpdated={() => {
+          load(page);
+          loadStats();
+        }}
+      />
     </div>
   );
 }

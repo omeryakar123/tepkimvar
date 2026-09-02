@@ -56,12 +56,13 @@ export const Route = createFileRoute("/api/complaints/$id")({
 
         const viewer = await optionalUser(request);
         const isOwner = !!viewer && row.c.userId === viewer.id;
+        const staff = !!viewer && (await isStaff(viewer.id));
 
         if (row.c.hidden) {
-          // Gizli şikayet: yalnızca yazan müşteri görebilir.
-          if (!isOwner) return new Response("Not Found", { status: 404 });
+          // Gizli şikayet: yalnızca yazan müşteri veya personel görebilir.
+          if (!isOwner && !staff) return new Response("Not Found", { status: 404 });
         } else if (row.c.status === "pending") {
-          if (!isOwner) {
+          if (!isOwner && !staff) {
             return Response.json(
               { error: "Bu şikayet henüz yayında değil veya moderasyon bekliyor.", code: "not_public" },
               { status: 403 },
@@ -69,7 +70,7 @@ export const Route = createFileRoute("/api/complaints/$id")({
           }
         } else {
           const publiclyVisible = row.c.isPublic || row.c.isSynthetic;
-          if (!publiclyVisible && !isOwner) {
+          if (!publiclyVisible && !isOwner && !staff) {
             return Response.json(
               { error: "Bu şikayet henüz yayında değil veya moderasyon bekliyor.", code: "not_public" },
               { status: 403 },
@@ -77,10 +78,12 @@ export const Route = createFileRoute("/api/complaints/$id")({
           }
         }
 
-        await db
-          .update(schema.complaints)
-          .set({ views: sql`${schema.complaints.views} + 1` })
-          .where(eq(schema.complaints.id, row.c.id));
+        if (!staff) {
+          await db
+            .update(schema.complaints)
+            .set({ views: sql`${schema.complaints.views} + 1` })
+            .where(eq(schema.complaints.id, row.c.id));
+        }
 
         const brand: BrandNested = {
           name: row.b.name,

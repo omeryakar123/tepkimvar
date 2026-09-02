@@ -8,9 +8,11 @@ import {
   CheckCircle2,
   XCircle,
   MessageSquare,
+  Eye,
 } from "lucide-react";
 import { toast } from "sonner";
 import { apiGet, apiSend } from "@/lib/admin-api";
+import { AdminComplaintModal } from "@/components/admin-complaint-modal";
 
 export const Route = createFileRoute("/admin/moderasyon")({ component: ModerationPage });
 
@@ -40,6 +42,8 @@ function ModerationPage() {
   const [items, setItems] = useState<Item[]>([]);
   const [filter, setFilter] = useState<"all" | Item["kind"]>("all");
   const [state, setState] = useState<"open" | "all">("open");
+  const [previewComplaintId, setPreviewComplaintId] = useState<string | null>(null);
+  const [previewModerationId, setPreviewModerationId] = useState<string | null>(null);
 
   async function load() {
     const params = new URLSearchParams({ kind: filter, state });
@@ -53,9 +57,21 @@ function ModerationPage() {
 
   async function complaintAction(id: string, action: "approve" | "reject") {
     if (!(await apiSend("/api/admin/moderation", "PATCH", { id, complaintAction: action })))
-      return;
+      return false;
     toast.success(action === "approve" ? "Şikayet onaylandı ve yayına alındı" : "Şikayet reddedildi");
     load();
+    return true;
+  }
+
+  function openPreview(it: Item) {
+    if (!it.target_id) return;
+    setPreviewComplaintId(it.target_id);
+    setPreviewModerationId(it.target_type === "complaint" ? it.id : null);
+  }
+
+  function closePreview() {
+    setPreviewComplaintId(null);
+    setPreviewModerationId(null);
   }
 
   async function resolve(id: string, target: "resolved" | "dismissed") {
@@ -154,16 +170,35 @@ function ModerationPage() {
                     </div>
                   )}
                   {it.target_type === "complaint" && it.target_id && (
-                    <Link
-                      to="/sikayet/$id"
-                      params={{ id: it.target_id }}
-                      className="mt-1 inline-flex items-center gap-0.5 text-[12px] text-brand hover:underline"
-                    >
-                      Şikayeti incele <ExternalLink className="size-3" />
-                    </Link>
+                    <div className="mt-2 flex items-center gap-3 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={() => openPreview(it)}
+                        className="inline-flex items-center gap-1 text-[12px] font-semibold text-brand hover:underline"
+                      >
+                        <Eye className="size-3.5" /> Önizle & düzenle
+                      </button>
+                      <Link
+                        to="/sikayet/$id"
+                        params={{ id: it.target_id }}
+                        target="_blank"
+                        className="inline-flex items-center gap-0.5 text-[12px] text-navy-mid hover:text-brand hover:underline"
+                      >
+                        Sayfayı aç <ExternalLink className="size-3" />
+                      </Link>
+                    </div>
                   )}
                 </div>
                 <div className="flex gap-2 shrink-0 flex-wrap">
+                  {it.target_type === "complaint" && it.target_id && (
+                    <button
+                      type="button"
+                      onClick={() => openPreview(it)}
+                      className="h-8 px-3 rounded-lg ring-1 ring-rule text-[12px] font-semibold inline-flex items-center gap-1 hover:bg-surface"
+                    >
+                      <Eye className="size-3.5" /> Önizle
+                    </button>
+                  )}
                   {it.target_type === "complaint" &&
                     (it.state === "open" || it.state === "reviewing") && (
                       <>
@@ -206,6 +241,19 @@ function ModerationPage() {
           )}
         </ul>
       </div>
+
+      <AdminComplaintModal
+        open={!!previewComplaintId}
+        complaintId={previewComplaintId}
+        moderationItemId={previewModerationId}
+        onClose={closePreview}
+        onUpdated={load}
+        onModerationAction={
+          previewModerationId
+            ? (action) => complaintAction(previewModerationId, action)
+            : undefined
+        }
+      />
     </div>
   );
 }
