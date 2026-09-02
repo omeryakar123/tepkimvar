@@ -67,7 +67,7 @@ export function TepkimvarSealPage({ stats }: Props) {
   return (
     <div className="min-h-screen bg-paper overflow-x-hidden">
       {/* ── HERO ── */}
-      <section className="relative overflow-hidden border-b border-rule bg-gradient-to-br from-ink via-[oklch(0.26_0.045_262)] to-brand/45 text-paper">
+      <section className="relative overflow-hidden border-b border-rule site-cta-shell">
         <HeroBackground reduceMotion={!!reduceMotion} />
 
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-16 sm:py-24 grid lg:grid-cols-2 gap-12 lg:gap-16 items-center relative">
@@ -77,16 +77,16 @@ export function TepkimvarSealPage({ stats }: Props) {
             variants={stagger}
             className="min-w-0"
           >
-            <motion.span variants={fadeUp()} className="inline-flex items-center gap-2 rounded-full bg-paper/10 backdrop-blur-md px-3 h-8 text-[11px] sm:text-[12px] font-semibold ring-1 ring-paper/20 mb-5">
-              <Sparkles className="size-3.5 text-brand" /> Markalar için doğrulama
+            <motion.span variants={fadeUp()} className="site-cta-badge mb-5">
+              <Sparkles className="size-3.5 shrink-0" /> Markalar için doğrulama
             </motion.span>
-            <motion.h1 variants={fadeUp(0.08)} className="font-display font-black text-[30px] sm:text-[46px] leading-[1.05] tracking-[-0.025em]">
+            <motion.h1 variants={fadeUp(0.08)} className="font-display font-black text-[30px] sm:text-[46px] leading-[1.05] tracking-[-0.025em] text-white">
               Oyuncu güvenini inşa edin.
-              <span className="block mt-1 bg-gradient-to-r from-brand via-[oklch(0.78_0.16_158)] to-brand bg-clip-text text-transparent">
+              <span className="block mt-1 site-cta-gradient-text">
                 tepkimvar SEAL ile kanıtlayın.
               </span>
             </motion.h1>
-            <motion.p variants={fadeUp(0.16)} className="mt-5 text-[14px] sm:text-[16px] text-paper/75 leading-relaxed max-w-xl">
+            <motion.p variants={fadeUp(0.16)} className="mt-5 text-[14px] sm:text-[16px] site-cta-muted leading-relaxed max-w-xl">
               Resmi temsilinizi doğrulayın, şikayetlere şeffaf yanıt verin ve QR kodlu rozetinizle
               oyunculara anında güven sinyali gönderin.
             </motion.p>
@@ -95,14 +95,14 @@ export function TepkimvarSealPage({ stats }: Props) {
                 href={siteContactMailto("tepkimvar SEAL başvurusu")}
                 whileHover={reduceMotion ? {} : { scale: 1.02 }}
                 whileTap={reduceMotion ? {} : { scale: 0.98 }}
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-brand text-brand-foreground px-6 h-11 text-[13px] font-semibold shadow-lg shadow-brand/25 hover:brightness-105 transition"
+                className="site-cta-btn w-full sm:w-auto shadow-lg shadow-brand/25"
               >
                 SEAL başvurusu yap <ArrowRight className="size-4" />
               </motion.a>
               <Link
                 to="/markalar"
                 search={{ dogrulanmis: true }}
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-paper/10 ring-1 ring-paper/25 px-6 h-11 text-[13px] font-semibold hover:bg-paper/15 transition backdrop-blur-sm"
+                className="site-cta-btn-ghost w-full sm:w-auto"
               >
                 Doğrulanmış markalar
               </Link>
@@ -252,12 +252,12 @@ export function TepkimvarSealPage({ stats }: Props) {
           >
             <div className="relative inline-flex mb-5">
               <span className="absolute inset-0 rounded-full bg-brand/30 animate-seal-pulse-ring" aria-hidden />
-              <BadgeCheck className="size-14 text-brand relative" />
+              <BadgeCheck className="size-14 site-cta-accent relative" />
             </div>
-            <h2 className="font-display font-black text-[26px] sm:text-[36px] text-paper tracking-tight">
+            <h2 className="font-display font-black text-[26px] sm:text-[36px] text-white tracking-tight">
               Güven görünür olsun.
             </h2>
-            <p className="mt-3 text-[14px] text-paper/75 max-w-lg mx-auto">
+            <p className="mt-3 text-[14px] site-cta-muted max-w-lg mx-auto">
               Oyuncuları koruyan ve marka güvenilirliğini artıran operatörlere katılın.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
@@ -265,13 +265,13 @@ export function TepkimvarSealPage({ stats }: Props) {
                 href={siteContactMailto("tepkimvar SEAL — bilgi talebi")}
                 whileHover={reduceMotion ? {} : { scale: 1.03 }}
                 whileTap={reduceMotion ? {} : { scale: 0.97 }}
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-brand text-brand-foreground px-7 h-11 text-[13px] font-semibold hover:brightness-105 transition shadow-lg shadow-brand/30"
+                className="site-cta-btn w-full sm:w-auto shadow-lg shadow-brand/30"
               >
                 SEAL hakkında bilgi alın <ArrowRight className="size-4" />
               </motion.a>
               <Link
                 to="/iletisim"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-paper/10 ring-1 ring-paper/20 text-paper px-7 h-11 text-[13px] font-semibold hover:bg-paper/15 transition"
+                className="site-cta-btn-ghost w-full sm:w-auto"
               >
                 İletişime geçin
               </Link>
@@ -289,8 +289,8 @@ function HeroBackground({ reduceMotion }: { reduceMotion: boolean }) {
   if (reduceMotion) {
     return (
       <>
-        <div className="pointer-events-none absolute -right-32 -top-32 size-[28rem] rounded-full bg-brand/15 blur-3xl" aria-hidden />
-        <div className="pointer-events-none absolute -left-24 bottom-0 size-64 rounded-full bg-accent-purple/15 blur-3xl" aria-hidden />
+        <div className="pointer-events-none absolute -right-32 -top-32 size-[28rem] rounded-full bg-brand/18 blur-3xl" aria-hidden />
+        <div className="pointer-events-none absolute -left-24 bottom-0 size-64 rounded-full bg-accent-purple/18 blur-3xl" aria-hidden />
       </>
     );
   }
@@ -299,16 +299,16 @@ function HeroBackground({ reduceMotion }: { reduceMotion: boolean }) {
       <motion.div
         animate={{ x: [0, 30, 0], y: [0, -20, 0] }}
         transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-        className="pointer-events-none absolute -right-32 -top-32 size-[28rem] rounded-full bg-brand/20 blur-3xl"
+        className="pointer-events-none absolute -right-32 -top-32 size-[28rem] rounded-full bg-brand/18 blur-3xl"
         aria-hidden
       />
       <motion.div
         animate={{ x: [0, -25, 0], y: [0, 15, 0] }}
         transition={{ duration: 14, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-        className="pointer-events-none absolute -left-24 bottom-0 size-64 rounded-full bg-accent-purple/25 blur-3xl"
+        className="pointer-events-none absolute -left-24 bottom-0 size-64 rounded-full bg-accent-purple/18 blur-3xl"
         aria-hidden
       />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,oklch(0.55_0.14_158/0.12),transparent_50%)]" aria-hidden />
+      <div className="site-cta-panel-shine pointer-events-none absolute inset-0" aria-hidden />
     </>
   );
 }
@@ -376,17 +376,21 @@ function LogoMarquee() {
       <div className="pointer-events-none absolute inset-y-0 right-0 w-16 sm:w-24 bg-gradient-to-l from-surface to-transparent z-10" aria-hidden />
       <div className="flex w-max animate-ticker hover:[animation-play-state:paused]">
         {logos.map((slug, i) => (
-          <div
+          <Link
             key={`${slug}-${i}`}
-            className="mx-3 sm:mx-5 flex items-center justify-center h-14 sm:h-16 w-28 sm:w-32 shrink-0 rounded-xl bg-card ring-1 ring-rule px-4 grayscale hover:grayscale-0 opacity-70 hover:opacity-100 transition-all duration-300"
+            to="/firma/$slug"
+            params={{ slug }}
+            className="mx-3 sm:mx-5 relative z-[1] flex items-center justify-center h-14 sm:h-16 w-28 sm:w-32 shrink-0 rounded-xl bg-card ring-1 ring-rule px-4 grayscale hover:grayscale-0 opacity-70 hover:opacity-100 hover:ring-brand/40 hover:shadow-soft transition-all duration-300"
+            title={slug}
           >
             <img
               src={`/brand-logos/${slug}.png`}
               alt={slug}
-              className="max-h-8 sm:max-h-9 w-auto object-contain"
+              className="max-h-8 sm:max-h-9 w-auto object-contain pointer-events-none"
               loading="lazy"
+              draggable={false}
             />
-          </div>
+          </Link>
         ))}
       </div>
     </div>
@@ -574,20 +578,20 @@ function VerifySection({ reduceMotion }: { reduceMotion: boolean }) {
   ];
 
   return (
-    <section className="py-14 sm:py-16 bg-ink text-paper relative overflow-hidden">
+    <section className="py-14 sm:py-16 site-cta-shell relative overflow-hidden">
       {!reduceMotion && (
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
-          className="pointer-events-none absolute -right-20 top-1/2 -translate-y-1/2 size-64 border border-dashed border-paper/10 rounded-full"
+          className="pointer-events-none absolute -right-20 top-1/2 -translate-y-1/2 size-64 border border-dashed border-white/10 rounded-full"
           aria-hidden
         />
       )}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 grid md:grid-cols-5 gap-10 items-center relative">
         <Reveal className="md:col-span-2">
-          <QrCode className="size-10 text-brand mb-4" />
-          <h2 className="font-display font-bold text-[24px] sm:text-[28px]">Kullanıcılar için doğrulama</h2>
-          <p className="mt-3 text-[13px] sm:text-[14px] text-paper/70 leading-relaxed">
+          <QrCode className="size-10 site-cta-accent mb-4" />
+          <h2 className="font-display font-bold text-[24px] sm:text-[28px] text-white">Kullanıcılar için doğrulama</h2>
+          <p className="mt-3 text-[13px] sm:text-[14px] site-cta-muted leading-relaxed">
             Bir markanın gerçekten doğrulanmış olup olmadığını saniyeler içinde kontrol edin.
           </p>
         </Reveal>
@@ -600,13 +604,13 @@ function VerifySection({ reduceMotion }: { reduceMotion: boolean }) {
               viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.5, delay: i * 0.12, ease: EASE }}
               whileHover={reduceMotion ? {} : { y: -4 }}
-              className="rounded-2xl bg-paper/5 ring-1 ring-paper/10 p-5 backdrop-blur-sm hover:bg-paper/8 transition-colors list-none"
+              className="rounded-2xl bg-white/5 ring-1 ring-white/10 p-5 backdrop-blur-sm hover:bg-white/8 transition-colors list-none"
             >
               <div className="size-9 rounded-full bg-brand text-brand-foreground grid place-items-center text-[13px] font-bold mb-3 shadow-lg shadow-brand/30">
                 {step.n}
               </div>
-              <div className="font-semibold text-[14px]">{step.t}</div>
-              <p className="mt-1.5 text-[12px] text-paper/65 leading-relaxed">{step.d}</p>
+              <div className="font-semibold text-[14px] text-white">{step.t}</div>
+              <p className="mt-1.5 text-[12px] site-cta-muted leading-relaxed">{step.d}</p>
             </motion.li>
           ))}
         </ol>
