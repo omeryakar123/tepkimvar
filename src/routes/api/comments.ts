@@ -4,7 +4,7 @@ import { db, schema } from "@/db";
 import { HttpError, errorResponse, rateLimit, requireUser } from "@/lib/server/guard";
 import { publish } from "@/lib/server/events";
 import { notifyComplaintOwner } from "@/lib/server/notify";
-import { generateTalkedPreviewComments } from "@/lib/server/talked-preview-comments";
+import { generateScheduledPreviewComments } from "@/lib/server/talked-preview-comments";
 
 const PREVIEW_TARGET = 3;
 
@@ -32,6 +32,7 @@ async function appendPreviewComments(complaintId: string, items: CommentItem[]) 
       body: schema.complaints.body,
       botScenario: schema.complaints.botScenario,
       brandName: schema.brands.name,
+      createdAt: schema.complaints.createdAt,
     })
     .from(schema.complaints)
     .innerJoin(schema.brands, eq(schema.complaints.brandId, schema.brands.id))
@@ -40,18 +41,21 @@ async function appendPreviewComments(complaintId: string, items: CommentItem[]) 
   if (!row) return items;
 
   const need = PREVIEW_TARGET - items.length;
+  if (need <= 0) return items;
+
   const existingBodies = items.map((c) => c.body);
   const existingNames = items
     .map((c) => c.profiles?.full_name ?? c.profiles?.username ?? "")
     .filter(Boolean);
 
-  const generated = generateTalkedPreviewComments({
+  const generated = generateScheduledPreviewComments({
     complaintId: row.id,
     brandName: row.brandName,
     title: row.title,
     body: row.body,
     scenario: row.botScenario,
-    count: need,
+    complaintCreatedAt: row.createdAt,
+    maxTotal: need,
     avoidBodies: existingBodies,
     avoidNames: existingNames,
   });

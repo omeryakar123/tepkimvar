@@ -8,7 +8,7 @@ import { ResolutionTunnel } from "@/components/resolution-tunnel";
 import { ComplaintRating } from "@/components/complaint-rating";
 import { ComplaintSupportButton } from "@/components/complaint-support-button";
 import { statusClasses, statusLabel, type Complaint } from "@/lib/mock-data";
-import { fetchComplaintById, fetchComplaintsList, fetchComments, fetchComplaintResolution, type DbComment, type ResolutionRow } from "@/lib/data";
+import { fetchComplaintById, fetchComplaintsList, fetchComments, fetchComplaintResolution, formatAgo, type DbComment, type ResolutionRow } from "@/lib/data";
 import { useAuth } from "@/hooks/use-auth";
 import { seoHead, jsonLd, breadcrumbLd, clamp, absUrl } from "@/lib/seo";
 import { toast } from "sonner";
@@ -116,6 +116,15 @@ function ComplaintPage() {
     es.addEventListener("complaint", onComplaint);
     return () => es.close();
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [complaint?.id]);
+
+  // Topluluk yorumları şikayetten saatler/günler sonra kademeli gelir — ara sıra yenile.
+  useEffect(() => {
+    if (!complaint?.id) return;
+    const t = setInterval(() => {
+      fetchComments(complaint.id).then(setComments).catch(() => {});
+    }, 15 * 60_000);
+    return () => clearInterval(t);
   }, [complaint?.id]);
 
   async function sendReply() {
@@ -413,7 +422,7 @@ function CommentNode({ c, replies, onReply, onVote, onPin }: {
           <div className="flex items-center gap-2 text-[12px] text-navy-mid mb-1">
             <span className="font-semibold text-ink">{name}</span>
             <span>·</span>
-            <span>{new Date(c.created_at).toLocaleString("tr-TR")}</span>
+            <span>{formatAgo(c.created_at)}</span>
             {c.pinned && <span className="inline-flex items-center gap-1 text-brand"><Pin className="size-3" /> Sabit</span>}
           </div>
           <p className="text-sm text-ink whitespace-pre-line">{c.body}</p>
@@ -432,7 +441,7 @@ function CommentNode({ c, replies, onReply, onVote, onPin }: {
                   <div className="text-[12px] text-navy-mid mb-1 flex items-center gap-2">
                     <span className="font-semibold text-ink">{r.profiles?.full_name ?? r.profiles?.username ?? "Kullanıcı"}</span>
                     <span>·</span>
-                    <span>{new Date(r.created_at).toLocaleString("tr-TR")}</span>
+                    <span>{formatAgo(r.created_at)}</span>
                   </div>
                   <p className="text-sm text-ink">{r.body}</p>
                   <div className="mt-1 flex items-center gap-3 text-[12px] text-navy-mid">
