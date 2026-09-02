@@ -8,7 +8,7 @@ import { formatResolutionRate } from "@/lib/display-brand-metrics";
 import { proxyImage } from "@/lib/img";
 import { brandLogoCandidates, logoFetchSize } from "@/lib/logo";
 import { ComplaintSupportButton } from "@/components/complaint-support-button";
-import { toast } from "sonner";
+import { complaintLinkId } from "@/lib/complaint-link";
 
 const avatarPalette = [
   "bg-[oklch(0.78_0.13_158)] text-white",
@@ -108,7 +108,7 @@ export function BrandProfileComplaintCard({
 
       <Link
         to="/sikayet/$id"
-        params={{ id: complaint.id }}
+        params={{ id: complaintLinkId(complaint) }}
         className="group block"
       >
         <h4 className="font-semibold text-[16px] leading-snug text-ink mb-2 line-clamp-2 group-hover:text-brand transition-colors">
@@ -168,7 +168,7 @@ export function BrandProfileComplaintCard({
           <span className="inline-flex items-center gap-1.5"><Eye className="size-3.5" /> {displayComplaintViews(complaint.id, complaint.views).toLocaleString("tr-TR")}</span>
           <span className="inline-flex items-center gap-1.5"><MessageSquare className="size-3.5" /> {complaint.comments}</span>
         </div>
-        <Link to="/sikayet/$id" params={{ id: complaint.id }} className="text-brand hover:underline text-[12px] font-medium">
+        <Link to="/sikayet/$id" params={{ id: complaintLinkId(complaint) }} className="text-brand hover:underline text-[12px] font-medium">
           Detayı gör →
         </Link>
       </div>
@@ -410,7 +410,7 @@ export function ComplaintCard({ complaint, variant = "default" }: { complaint: C
       <article className="py-3 border-b border-rule last:border-0">
         <Link
           to="/sikayet/$id"
-          params={{ id: complaint.id }}
+          params={{ id: complaintLinkId(complaint) }}
           className="group flex items-start gap-3"
         >
           <div className={`size-9 shrink-0 rounded-full grid place-items-center font-bold text-[11px] ${avatarFor(complaint.userInitials)}`}>
@@ -442,7 +442,7 @@ export function ComplaintCard({ complaint, variant = "default" }: { complaint: C
     <article className="flex flex-col rounded-2xl bg-paper border border-rule hover:border-brand/40 hover:shadow-pop transition-all">
       <Link
         to="/sikayet/$id"
-        params={{ id: complaint.id }}
+        params={{ id: complaintLinkId(complaint) }}
         className="group flex flex-col flex-1 p-5 pb-3"
       >
       <div className="flex items-center gap-3 mb-4">

@@ -9,7 +9,7 @@ import { Messenger } from "@/components/messenger";
 import { PhoneInput } from "@/components/phone-input";
 import { toE164Tr, fromE164 } from "@/lib/phone";
 import { Pagination } from "@/components/pagination";
-import { PAGE_SIZE } from "@/lib/data";
+import { complaintLinkId } from "@/lib/complaint-link";
 import { dbStatusToUi, statusLabel, statusClasses } from "@/lib/complaint-status";
 
 export const Route = createFileRoute("/_site/profile")({
@@ -25,7 +25,7 @@ type Profile = {
   avatarUrl: string | null; phone: string | null; city: string | null; bio: string | null;
 };
 
-type Complaint = { id: string; title: string; status: string; views: number; createdAt: string };
+type Complaint = { id: string; publicId: string | null; title: string; status: string; views: number; createdAt: string };
 
 function ProfilePage() {
   const { user, loading: authLoading } = useAuth();
@@ -298,7 +298,7 @@ function ComplaintsTab({ complaints }: { complaints: Complaint[] }) {
           </div>
         )}
         {slice.map((c) => (
-          <Link key={c.id} to="/sikayet/$id" params={{ id: c.id }} className="flex items-center gap-4 p-4 hover:bg-surface">
+          <Link key={c.id} to="/sikayet/$id" params={{ id: complaintLinkId(c) }} className="flex items-center gap-4 p-4 hover:bg-surface">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <span className={`text-[10px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded ring-1 ring-inset ${statusClasses(dbStatusToUi(c.status))}`}>

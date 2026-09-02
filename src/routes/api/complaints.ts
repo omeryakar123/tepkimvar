@@ -240,7 +240,7 @@ export const Route = createFileRoute("/api/complaints")({
               publicId: code,
               shortId: code.toLowerCase(),
             })
-            .returning({ id: schema.complaints.id });
+            .returning({ id: schema.complaints.id, publicId: schema.complaints.publicId });
 
           await recordStatusChange({
             complaintId: created.id,
@@ -268,7 +268,7 @@ export const Route = createFileRoute("/api/complaints")({
           });
 
           return Response.json(
-            { id: created.id, status, issues: mod.issues },
+            { id: created.id, publicId: created.publicId, status, issues: mod.issues },
             { status: 201 },
           );
         } catch (e) {

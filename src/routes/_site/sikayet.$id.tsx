@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ArrowUp, ArrowDown, Calendar, MessageSquare, Pin, Share2, Tag, Star, Copy, Sparkles, AlertOctagon, Clock } from "lucide-react";
 import { ReportButton } from "@/components/report-button";
@@ -8,7 +8,8 @@ import { ResolutionTunnel } from "@/components/resolution-tunnel";
 import { ComplaintRating } from "@/components/complaint-rating";
 import { ComplaintSupportButton } from "@/components/complaint-support-button";
 import { statusClasses, statusLabel, type Complaint } from "@/lib/mock-data";
-import { fetchComplaintById, fetchComplaintsList, fetchComments, fetchComplaintResolution, formatAgo, type DbComment, type ResolutionRow } from "@/lib/data";
+import { fetchComplaintsList, fetchComments, fetchComplaintResolution, formatAgo, loadComplaintById, type ComplaintLoadState, type DbComment, type ResolutionRow } from "@/lib/data";
+import { complaintLinkId, complaintPath } from "@/lib/complaint-link";
 import { useAuth } from "@/hooks/use-auth";
 import { seoHead, jsonLd, breadcrumbLd, clamp, absUrl } from "@/lib/seo";
 import { toast } from "sonner";
@@ -18,11 +19,13 @@ type ThreadReply = { id: string; body: string; is_brand: boolean; author: string
 export const Route = createFileRoute("/_site/sikayet/$id")({
   // SSR: içerik sunucuda yüklenir, böylece arama motorları gerçek şikayeti görür.
   loader: async ({ params }) => {
-    const complaint = await fetchComplaintById(params.id).catch(() => null);
-    return { complaint };
+    const result = await loadComplaintById(params.id).catch(
+      (): ComplaintLoadState => ({ kind: "not_found" }),
+    );
+    return { result };
   },
   head: ({ loaderData, params }) => {
-    const c = loaderData?.complaint;
+    const c = loaderData?.result?.kind === "ok" ? loaderData.result.complaint : null;
     if (!c) {
       return {
         ...seoHead({
@@ -72,9 +75,13 @@ export const Route = createFileRoute("/_site/sikayet/$id")({
 
 function ComplaintPage() {
   const { id } = Route.useParams();
-  const { complaint: initialComplaint } = Route.useLoaderData();
+  const navigate = useNavigate();
+  const { result: initialResult } = Route.useLoaderData();
   const { user, roles } = useAuth();
-  const [complaint, setComplaint] = useState<Complaint | null>(initialComplaint);
+  const [loadState, setLoadState] = useState<ComplaintLoadState>(
+    initialResult ?? { kind: "not_found" },
+  );
+  const complaint = loadState.kind === "ok" ? loadState.complaint : null;
   const [similar, setSimilar] = useState<Complaint[]>([]);
   const [comments, setComments] = useState<DbComment[]>([]);
   const [resolution, setResolution] = useState<ResolutionRow | null>(null);
@@ -91,16 +98,24 @@ function ComplaintPage() {
   }
 
   async function load() {
-    const c = await fetchComplaintById(id);
-    setComplaint(c);
-    if (c) {
-      setSimilar((await fetchComplaintsList({ brandSlug: c.companySlug, limit: 4 })).filter((x) => x.id !== c.id).slice(0, 3));
-      setComments(await fetchComments(c.id));
-      setResolution(await fetchComplaintResolution(c.id));
-      loadReplies(c.id);
-    }
+    const result = await loadComplaintById(id);
+    setLoadState(result);
+    if (result.kind !== "ok") return;
+    const c = result.complaint;
+    setSimilar((await fetchComplaintsList({ brandSlug: c.companySlug, limit: 4 })).filter((x) => x.id !== c.id).slice(0, 3));
+    setComments(await fetchComments(c.id));
+    setResolution(await fetchComplaintResolution(c.id));
+    loadReplies(c.id);
   }
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [id]);
+
+  useEffect(() => {
+    if (loadState.kind !== "ok") return;
+    const slug = complaintLinkId(loadState.complaint);
+    if (slug !== id) {
+      navigate({ to: "/sikayet/$id", params: { id: slug }, replace: true });
+    }
+  }, [id, loadState, navigate]);
 
 
   // Canlı güncelleme (SSE). Sunucu yalnızca "değişiklik oldu" sinyali yollar;
@@ -170,8 +185,28 @@ function ComplaintPage() {
     if (ok) setComments(await fetchComments(id));
   }
 
-  if (!complaint) {
-    return <div className="mx-auto max-w-5xl px-4 py-20 text-center text-navy-mid">Yükleniyor…</div>;
+  if (loadState.kind === "not_public") {
+    return (
+      <div className="mx-auto max-w-5xl px-4 py-20 text-center">
+        <h1 className="font-display text-2xl font-black text-ink">Şikayet henüz yayında değil</h1>
+        <p className="mt-3 text-[14px] text-navy-mid max-w-md mx-auto">
+          Bu şikayet moderasyon onayı bekliyor veya yalnızca yazarı tarafından görülebilir.
+        </p>
+        <Link to="/sikayetler" className="mt-6 inline-flex text-brand font-semibold hover:underline">Şikayetlere dön</Link>
+      </div>
+    );
+  }
+
+  if (loadState.kind === "not_found" || !complaint) {
+    return (
+      <div className="mx-auto max-w-5xl px-4 py-20 text-center">
+        <h1 className="font-display text-2xl font-black text-ink">Şikayet bulunamadı</h1>
+        <p className="mt-3 text-[14px] text-navy-mid max-w-md mx-auto">
+          Aradığınız şikayet kaldırılmış, reddedilmiş veya bağlantı hatalı olabilir.
+        </p>
+        <Link to="/sikayetler" className="mt-6 inline-flex text-brand font-semibold hover:underline">Şikayetlere dön</Link>
+      </div>
+    );
   }
 
   const topLevel = comments.filter((c) => !c.parent_id);
@@ -273,7 +308,7 @@ function ComplaintPage() {
               />
             )}
             <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg ring-1 ring-rule hover:bg-surface text-navy"><MessageSquare className="size-4" /> {realCommentCount || comments.length} yorum</button>
-            <button onClick={() => { navigator.clipboard.writeText(window.location.href); toast.success("Bağlantı kopyalandı"); }} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg ring-1 ring-rule hover:bg-surface text-navy"><Share2 className="size-4" /> Paylaş</button>
+            <button onClick={() => { navigator.clipboard.writeText(typeof window !== "undefined" ? `${window.location.origin}${complaintPath(complaint)}` : absUrl(complaintPath(complaint))); toast.success("Bağlantı kopyalandı"); }} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg ring-1 ring-rule hover:bg-surface text-navy"><Share2 className="size-4" /> Paylaş</button>
             <div className="ml-auto"><ReportButton targetType="complaint" targetId={id} /></div>
           </div>
         </article>

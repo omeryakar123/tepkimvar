@@ -13,6 +13,7 @@ export const Route = createFileRoute("/api/me/complaints")({
         const rows = await db
           .select({
             id: schema.complaints.id,
+            publicId: schema.complaints.publicId,
             title: schema.complaints.title,
             status: schema.complaints.status,
             views: schema.complaints.views,

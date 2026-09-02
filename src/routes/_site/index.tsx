@@ -27,6 +27,7 @@ import {
 import type { TrendBrand } from "@/lib/trend-brand";
 import { TrendBrandMetrics, TrendBrandMobileCard, TrendBrandRowInner } from "@/components/trend-brand-row";
 import { PRIORITY_BRAND_LINKS } from "@/lib/featured-brands";
+import { complaintLinkId } from "@/lib/complaint-link";
 import { publicPlatformStats } from "@/lib/public-stats";
 import { SITE_CONTACT_EMAIL, siteContactMailto } from "@/lib/contact";
 import { BrandRankLogo } from "@/components/cards";
@@ -312,7 +313,7 @@ function Home() {
                 >
                   <Link
                     to="/sikayet/$id"
-                    params={{ id: c.id }}
+                    params={{ id: complaintLinkId(c) }}
                     className="block flex-1"
                   >
                     <div className="flex gap-3">
@@ -350,7 +351,7 @@ function Home() {
               >
                 <Link
                   to="/sikayet/$id"
-                  params={{ id: c.id }}
+                  params={{ id: complaintLinkId(c) }}
                   className="flex gap-3 flex-1 hover:opacity-95 transition"
                 >
                   <div className="size-9 rounded-full bg-accent-purple text-paper grid place-items-center text-[12px] font-bold shrink-0">
@@ -393,7 +394,7 @@ function Home() {
                 <Link
                   key={c.id}
                   to="/sikayet/$id"
-                  params={{ id: c.id }}
+                  params={{ id: complaintLinkId(c) }}
                   className="block h-full bg-card rounded-2xl p-5 ring-1 ring-rule/40"
                 >
                   <div className="flex items-center gap-3 mb-3">
@@ -418,7 +419,7 @@ function Home() {
               <Link
                 key={c.id}
                 to="/sikayet/$id"
-                params={{ id: c.id }}
+                params={{ id: complaintLinkId(c) }}
                 className="bg-card rounded-2xl p-6 hover:shadow-pop transition ring-1 ring-rule/40"
               >
                 <div className="flex items-center gap-3 mb-3">

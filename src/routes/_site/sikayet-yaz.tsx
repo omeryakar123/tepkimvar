@@ -50,6 +50,7 @@ function WriteComplaintPage() {
   const [submitting, setSubmitting] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [createdId, setCreatedId] = useState<string | null>(null);
+  const [createdSlug, setCreatedSlug] = useState<string | null>(null);
   const [createdTitle, setCreatedTitle] = useState("");
   const [issues, setIssues] = useState<string[]>([]);
   const [mediaPrivacy, setMediaPrivacy] = useState<"public" | "brand_only" | "super_admin_only">("public");
@@ -108,12 +109,14 @@ function WriteComplaintPage() {
       });
       const json = (await res.json()) as {
         id?: string;
+        publicId?: string;
         status?: string;
         issues?: string[];
         error?: string;
       };
       if (!res.ok || !json.id) throw new Error(json.error ?? "Şikayet oluşturulamadı.");
       setCreatedId(json.id);
+      setCreatedSlug(json.publicId ?? json.id);
       setCreatedTitle(title.trim());
       setIssues(json.issues ?? []);
 
@@ -147,13 +150,13 @@ function WriteComplaintPage() {
 
   return (
     <div>
-      {createdId && (
+      {createdSlug && (
         <ComplaintShareModal
           open={shareOpen}
-          complaintId={createdId}
+          complaintId={createdSlug}
           title={createdTitle}
           onClose={() => setShareOpen(false)}
-          onView={() => navigate({ to: "/sikayet/$id", params: { id: createdId } })}
+          onView={() => navigate({ to: "/sikayet/$id", params: { id: createdSlug } })}
         />
       )}
 

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { and, eq, ilike, inArray, notInArray, or, sql, type SQL } from "drizzle-orm";
+import { and, eq, ilike, notInArray, or, sql, type SQL } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { toDbComplaint, type BrandNested } from "@/lib/db-shapes";
 import { displayPhone } from "@/lib/phone-mask";
@@ -10,8 +10,29 @@ import { loadAuthorProfile } from "@/lib/server/author-profile";
 import { ensureDbPatches } from "@/lib/server/ensure-db-patches";
 
 // Public: tek şikayet. $id uuid, public_id veya short_id olabilir.
-const HIDDEN_STATUSES = ["pending", "rejected", "spam"] as const;
+const HIDDEN_STATUSES = ["rejected", "spam"] as const;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function normalizeComplaintParam(raw: string): string {
+  try {
+    return decodeURIComponent(raw).trim();
+  } catch {
+    return raw.trim();
+  }
+}
+
+function buildIdMatch(id: string): SQL {
+  if (UUID_RE.test(id)) return eq(schema.complaints.id, id);
+
+  const upper = id.toUpperCase();
+  const lower = id.toLowerCase();
+
+  return or(
+    eq(schema.complaints.publicId, upper),
+    eq(schema.complaints.shortId, lower),
+    ilike(schema.complaints.publicId, upper),
+  ) as SQL;
+}
 
 export const Route = createFileRoute("/api/complaints/$id")({
   server: {
@@ -19,13 +40,10 @@ export const Route = createFileRoute("/api/complaints/$id")({
       GET: async ({ params, request }) => {
         await ensureDbPatches();
 
-        const id = params.id;
-        const idMatch: SQL = UUID_RE.test(id)
-          ? eq(schema.complaints.id, id)
-          : (or(
-              eq(schema.complaints.publicId, id.toUpperCase()),
-              eq(schema.complaints.shortId, id.toLowerCase()),
-            ) as SQL);
+        const id = normalizeComplaintParam(params.id);
+        if (!id) return new Response("Not Found", { status: 404 });
+
+        const idMatch = buildIdMatch(id);
 
         const [row] = await db
           .select({ c: schema.complaints, b: schema.brands })
@@ -42,10 +60,20 @@ export const Route = createFileRoute("/api/complaints/$id")({
         if (row.c.hidden) {
           // Gizli şikayet: yalnızca yazan müşteri görebilir.
           if (!isOwner) return new Response("Not Found", { status: 404 });
+        } else if (row.c.status === "pending") {
+          if (!isOwner) {
+            return Response.json(
+              { error: "Bu şikayet henüz yayında değil veya moderasyon bekliyor.", code: "not_public" },
+              { status: 403 },
+            );
+          }
         } else {
           const publiclyVisible = row.c.isPublic || row.c.isSynthetic;
           if (!publiclyVisible && !isOwner) {
-            return new Response("Not Found", { status: 404 });
+            return Response.json(
+              { error: "Bu şikayet henüz yayında değil veya moderasyon bekliyor.", code: "not_public" },
+              { status: 403 },
+            );
           }
         }
 

@@ -14,15 +14,12 @@ const DB_TO_UI_STATUS = dbStatusToUi;
  * loader'ları sunucuda da koştuğu için burada origin'i çözüyoruz.
  */
 function resolveUrl(url: string): string {
-  // Tarayıcıda göreli URL zaten çalışır.
   if (typeof window !== "undefined" || url.startsWith("http")) return url;
-  // Sunucuda mutlak adres gerekir. NOT: burada `@tanstack/react-start/server`
-  // import EDİLMEZ — bu dosya istemci paketine de giriyor ve Vite sunucu-only
-  // import'u engelliyor. Bu yüzden origin env'den çözülür.
+  // SSR: konteyner içinden kendi public domain'ine istek atmak sık sık başarısız olur.
+  const port = process.env.PORT || "8080";
   const base =
     process.env.INTERNAL_API_URL ||
-    process.env.SITE_URL ||
-    `http://localhost:${process.env.PORT || "8080"}`;
+    `http://127.0.0.1:${port}`;
   return new URL(url, base).toString();
 }
 
@@ -362,15 +359,26 @@ export async function fetchBrandBySlug(slug: string) {
   return { raw: b, company: brandToCompany(b, cat?.name ?? "Genel", cat?.slug ?? "diger") };
 }
 
-export async function fetchComplaintById(id: string) {
+export type ComplaintLoadState =
+  | { kind: "ok"; complaint: Awaited<ReturnType<typeof dbComplaintToUi>> }
+  | { kind: "not_found" }
+  | { kind: "not_public" };
+
+export async function loadComplaintById(id: string): Promise<ComplaintLoadState> {
   await ensureCategoryCache();
   const isBrowser = typeof window !== "undefined";
   const res = await fetch(resolveUrl(`/api/complaints/${encodeURIComponent(id)}`), {
     credentials: isBrowser ? "include" : undefined,
   });
-  if (!res.ok) return null;
+  if (res.status === 403) return { kind: "not_public" };
+  if (!res.ok) return { kind: "not_found" };
   const row = (await res.json()) as DbComplaint;
-  return dbComplaintToUi(row);
+  return { kind: "ok", complaint: dbComplaintToUi(row) };
+}
+
+export async function fetchComplaintById(id: string) {
+  const result = await loadComplaintById(id);
+  return result.kind === "ok" ? result.complaint : null;
 }
 
 export type ResolutionRow = {

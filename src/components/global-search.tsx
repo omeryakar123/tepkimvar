@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Search, X, Building2, MessageSquare, FileText, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { BrandAvatar } from "@/components/cards";
-import { Modal } from "@/components/ui/modal";
+import { complaintLinkId } from "@/lib/complaint-link";
 
 type BrandHit = { id: string; slug: string; name: string; logo_url: string | null; website?: string | null };
 type ComplaintHit = { id: string; public_id: string | null; title: string; brands?: { slug: string; name: string } | null };
@@ -99,7 +99,7 @@ function GlobalSearchModal({ open, onClose }: { open: boolean; onClose: () => vo
           {complaints.length > 0 && (
             <Section icon={MessageSquare} title="Şikayetler">
               {complaints.map((c) => (
-                <button key={c.id} onClick={() => go(`/sikayet/${c.id}`)} className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-brand-soft/40 text-left">
+                <button key={c.id} onClick={() => go(`/sikayet/${complaintLinkId({ id: c.id, public_id: c.public_id })}`)} className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-brand-soft/40 text-left">
                   {c.public_id && <span className="font-mono text-[10.5px] bg-surface text-navy rounded px-1.5 py-0.5">{c.public_id}</span>}
                   <span className="text-[13.5px] text-ink line-clamp-1">{c.title}</span>
                   {c.brands?.name && <span className="ml-auto text-[11.5px] text-navy-mid shrink-0">{c.brands.name}</span>}

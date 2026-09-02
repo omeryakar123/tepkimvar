@@ -17,10 +17,11 @@ export function ComplaintShareModal({ open, complaintId, title, onClose, onView 
 
   useEffect(() => {
     if (!open || !complaintId) return;
+    const slug = encodeURIComponent(complaintId);
     setShareUrl(
       typeof window !== "undefined"
-        ? `${window.location.origin}/sikayet/${complaintId}`
-        : absUrl(`/sikayet/${complaintId}`),
+        ? `${window.location.origin}/sikayet/${slug}`
+        : absUrl(`/sikayet/${slug}`),
     );
   }, [open, complaintId]);
 
