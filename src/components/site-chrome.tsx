@@ -212,6 +212,7 @@ export function SiteFooter() {
   ] as const;
   const topLinks = [
     ["Hakkımızda", "/hakkimizda"],
+    ["Nasıl Çalışır", "/nasil-calisir"],
     ["tepkimvar SEAL", "/tepkimvar-seal"],
     ["Markalar İçin", "/reklam-cozumleri"],
     ["Blog", "/blog"],
