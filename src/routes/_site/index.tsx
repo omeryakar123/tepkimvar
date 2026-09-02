@@ -503,11 +503,10 @@ function Home() {
               veren firmaları tepkimvar Ödülleri ile taçlandırıyoruz.
             </p>
             <Link
-              to="/markalar"
-              search={{ dogrulanmis: true }}
+              to="/tepkimvar-seal"
               className="mt-5 inline-flex items-center gap-2 text-[13px] font-semibold text-brand hover:gap-3 transition-all"
             >
-              Detaylı incele <ArrowRight className="size-4" />
+              SEAL & Doğrulama <ArrowRight className="size-4" />
             </Link>
           </div>
           <div className="relative w-full max-w-[320px] sm:max-w-[380px] md:max-w-[420px] lg:max-w-[460px] mx-auto md:ml-auto md:mr-0 mt-4 md:mt-0">

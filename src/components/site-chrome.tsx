@@ -204,6 +204,7 @@ export function SiteFooter() {
   ] as const;
   const topLinks = [
     ["Hakkımızda", "/hakkimizda"],
+    ["tepkimvar SEAL", "/tepkimvar-seal"],
     ["Markalar İçin", "/reklam-cozumleri"],
     ["Blog", "/blog"],
     ["Şeffaflık Raporu", "/seffaflik-raporu"],

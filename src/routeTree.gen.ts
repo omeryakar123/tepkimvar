@@ -117,6 +117,7 @@ import { Route as SiteBlogSlugRouteImport } from './routes/_site/blog.$slug'
 import { Route as SitekurumsalYardimRouteImport } from './routes/_site/(kurumsal)/yardim'
 import { Route as SitekurumsalSeffaflikRaporuRouteImport } from './routes/_site/(kurumsal)/seffaflik-raporu'
 import { Route as SitekurumsalReklamCozumleriRouteImport } from './routes/_site/(kurumsal)/reklam-cozumleri'
+import { Route as SitekurumsalTepkimvarSealRouteImport } from './routes/_site/(kurumsal)/tepkimvar-seal'
 import { Route as SitekurumsalKvkkRouteImport } from './routes/_site/(kurumsal)/kvkk'
 import { Route as SitekurumsalKullanimKosullariRouteImport } from './routes/_site/(kurumsal)/kullanim-kosullari'
 import { Route as SitekurumsalIletisimRouteImport } from './routes/_site/(kurumsal)/iletisim'
@@ -674,6 +675,12 @@ const SitekurumsalReklamCozumleriRoute =
     path: '/reklam-cozumleri',
     getParentRoute: () => SiteRoute,
   } as any)
+const SitekurumsalTepkimvarSealRoute =
+  SitekurumsalTepkimvarSealRouteImport.update({
+    id: '/(kurumsal)/tepkimvar-seal',
+    path: '/tepkimvar-seal',
+    getParentRoute: () => SiteRoute,
+  } as any)
 const SitekurumsalKvkkRoute = SitekurumsalKvkkRouteImport.update({
   id: '/(kurumsal)/kvkk',
   path: '/kvkk',
@@ -829,6 +836,7 @@ export interface FileRoutesByFullPath {
   '/kullanim-kosullari': typeof SitekurumsalKullanimKosullariRoute
   '/kvkk': typeof SitekurumsalKvkkRoute
   '/reklam-cozumleri': typeof SitekurumsalReklamCozumleriRoute
+  '/tepkimvar-seal': typeof SitekurumsalTepkimvarSealRoute
   '/seffaflik-raporu': typeof SitekurumsalSeffaflikRaporuRoute
   '/yardim': typeof SitekurumsalYardimRoute
   '/blog/$slug': typeof SiteBlogSlugRoute
@@ -951,6 +959,7 @@ export interface FileRoutesByTo {
   '/kullanim-kosullari': typeof SitekurumsalKullanimKosullariRoute
   '/kvkk': typeof SitekurumsalKvkkRoute
   '/reklam-cozumleri': typeof SitekurumsalReklamCozumleriRoute
+  '/tepkimvar-seal': typeof SitekurumsalTepkimvarSealRoute
   '/seffaflik-raporu': typeof SitekurumsalSeffaflikRaporuRoute
   '/yardim': typeof SitekurumsalYardimRoute
   '/blog/$slug': typeof SiteBlogSlugRoute
@@ -1077,6 +1086,7 @@ export interface FileRoutesById {
   '/_site/(kurumsal)/kullanim-kosullari': typeof SitekurumsalKullanimKosullariRoute
   '/_site/(kurumsal)/kvkk': typeof SitekurumsalKvkkRoute
   '/_site/(kurumsal)/reklam-cozumleri': typeof SitekurumsalReklamCozumleriRoute
+  '/_site/(kurumsal)/tepkimvar-seal': typeof SitekurumsalTepkimvarSealRoute
   '/_site/(kurumsal)/seffaflik-raporu': typeof SitekurumsalSeffaflikRaporuRoute
   '/_site/(kurumsal)/yardim': typeof SitekurumsalYardimRoute
   '/_site/blog/$slug': typeof SiteBlogSlugRoute
@@ -1203,6 +1213,7 @@ export interface FileRouteTypes {
     | '/kullanim-kosullari'
     | '/kvkk'
     | '/reklam-cozumleri'
+    | '/tepkimvar-seal'
     | '/seffaflik-raporu'
     | '/yardim'
     | '/blog/$slug'
@@ -1325,6 +1336,7 @@ export interface FileRouteTypes {
     | '/kullanim-kosullari'
     | '/kvkk'
     | '/reklam-cozumleri'
+    | '/tepkimvar-seal'
     | '/seffaflik-raporu'
     | '/yardim'
     | '/blog/$slug'
@@ -1450,6 +1462,7 @@ export interface FileRouteTypes {
     | '/_site/(kurumsal)/kullanim-kosullari'
     | '/_site/(kurumsal)/kvkk'
     | '/_site/(kurumsal)/reklam-cozumleri'
+    | '/_site/(kurumsal)/tepkimvar-seal'
     | '/_site/(kurumsal)/seffaflik-raporu'
     | '/_site/(kurumsal)/yardim'
     | '/_site/blog/$slug'
@@ -2330,6 +2343,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitekurumsalReklamCozumleriRouteImport
       parentRoute: typeof SiteRoute
     }
+    '/_site/(kurumsal)/tepkimvar-seal': {
+      id: '/_site/(kurumsal)/tepkimvar-seal'
+      path: '/tepkimvar-seal'
+      fullPath: '/tepkimvar-seal'
+      preLoaderRoute: typeof SitekurumsalTepkimvarSealRouteImport
+      parentRoute: typeof SiteRoute
+    }
     '/_site/(kurumsal)/kvkk': {
       id: '/_site/(kurumsal)/kvkk'
       path: '/kvkk'
@@ -2454,6 +2474,7 @@ interface SiteRouteChildren {
   SitekurumsalKullanimKosullariRoute: typeof SitekurumsalKullanimKosullariRoute
   SitekurumsalKvkkRoute: typeof SitekurumsalKvkkRoute
   SitekurumsalReklamCozumleriRoute: typeof SitekurumsalReklamCozumleriRoute
+  SitekurumsalTepkimvarSealRoute: typeof SitekurumsalTepkimvarSealRoute
   SitekurumsalSeffaflikRaporuRoute: typeof SitekurumsalSeffaflikRaporuRoute
   SitekurumsalYardimRoute: typeof SitekurumsalYardimRoute
   SiteBlogSlugRoute: typeof SiteBlogSlugRoute
@@ -2479,6 +2500,7 @@ const SiteRouteChildren: SiteRouteChildren = {
   SitekurumsalKullanimKosullariRoute: SitekurumsalKullanimKosullariRoute,
   SitekurumsalKvkkRoute: SitekurumsalKvkkRoute,
   SitekurumsalReklamCozumleriRoute: SitekurumsalReklamCozumleriRoute,
+  SitekurumsalTepkimvarSealRoute: SitekurumsalTepkimvarSealRoute,
   SitekurumsalSeffaflikRaporuRoute: SitekurumsalSeffaflikRaporuRoute,
   SitekurumsalYardimRoute: SitekurumsalYardimRoute,
   SiteBlogSlugRoute: SiteBlogSlugRoute,
