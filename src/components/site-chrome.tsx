@@ -23,28 +23,29 @@ export function SiteNav() {
   }
 
   const navLinks = [
-    { to: "/sikayetler" as const, label: "Şikayetler" },
-    { to: "/markalar" as const, label: "Markalar" },
-    { to: "/trendler" as const, label: "Trend 100", badge: "100" },
-    { to: "/nasil-calisir" as const, label: "Nasıl Çalışır" },
-    { to: "/tepkimvar-seal" as const, label: "Seal", seal: true },
-  ];
+    { to: "/sikayetler" as const, label: "Şikayetler", short: "Şikayetler" },
+    { to: "/markalar" as const, label: "Markalar", short: "Markalar" },
+    { to: "/trendler" as const, label: "Trend 100", short: "Trend", badge: "100" },
+    { to: "/nasil-calisir" as const, label: "Nasıl Çalışır", short: "Rehber" },
+    { to: "/tepkimvar-seal" as const, label: "Seal", short: "Seal", seal: true },
+  ] as const;
 
   return (
     <>
-      <header className="sticky top-0 z-40 bg-paper/90 backdrop-blur border-b border-rule">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 h-16 flex items-center gap-3 sm:gap-6">
+      <header className="sticky top-0 z-40 bg-paper/90 backdrop-blur border-b border-rule overflow-x-clip">
+        <div className="mx-auto max-w-7xl px-3 sm:px-6 h-16 flex items-center gap-2 sm:gap-3 min-w-0">
           <Link to="/" className="flex items-center shrink-0">
-            <span className="font-display font-black text-[20px] sm:text-[22px] tracking-tight text-ink leading-none">
+            <span className="font-display font-black text-[18px] sm:text-[22px] tracking-tight text-ink leading-none">
               tepkimvar<span className="text-brand">.</span>
             </span>
           </Link>
 
-          <nav className="hidden lg:flex items-center gap-7 text-[14px] font-medium text-navy">
+          <nav className="hidden xl:flex items-center gap-3 2xl:gap-5 shrink-0 text-[13px] 2xl:text-[14px] font-medium text-navy whitespace-nowrap">
             {navLinks.map((l) => (
               <Link key={l.to} to={l.to} className="hover:text-brand transition-colors inline-flex items-center gap-1">
-                {"seal" in l && l.seal && <BadgeCheck className="size-3.5 text-brand" />}
-                {l.label}
+                {"seal" in l && l.seal && <BadgeCheck className="size-3.5 text-brand shrink-0" />}
+                <span className="2xl:hidden">{l.short}</span>
+                <span className="hidden 2xl:inline">{l.label}</span>
                 {"badge" in l && l.badge && (
                   <span className="ml-0.5 inline-flex items-center justify-center text-[10px] font-bold bg-brand-soft text-brand rounded-full px-1.5 py-px">
                     {l.badge}
@@ -54,35 +55,42 @@ export function SiteNav() {
             ))}
           </nav>
 
-          <div className="flex-1 flex justify-center min-w-0">
-            <GlobalSearchTrigger className="hidden md:inline-flex items-center gap-2 rounded-full ring-1 ring-rule bg-card/70 backdrop-blur px-3 h-9 text-[13px] text-navy-mid hover:ring-brand/40 transition w-full max-w-xs" />
+          <div className="flex-1 flex justify-end xl:justify-center min-w-0">
+            <GlobalSearchTrigger className="hidden md:inline-flex items-center gap-2 rounded-full ring-1 ring-rule bg-card/70 backdrop-blur px-3 h-9 text-[13px] text-navy-mid hover:ring-brand/40 transition w-full max-w-[10rem] lg:max-w-[11rem] xl:max-w-[13rem] 2xl:max-w-xs min-w-0" />
           </div>
 
-          <NotificationBell />
-          <ThemeToggle compact />
+          <div className="hidden xl:flex items-center gap-1.5 2xl:gap-2 shrink-0">
+            <NotificationBell />
+            <ThemeToggle compact />
+          </div>
 
           {user ? (
-            <div className="hidden sm:flex items-center gap-3">
+            <div className="hidden xl:flex items-center gap-2 2xl:gap-3 shrink-0">
               {panelHref !== "/" && (
-                <Link to={panelHref} className="inline-flex items-center gap-2 text-[13px] font-medium text-navy hover:text-brand">
-                  <LayoutDashboard className="size-4" /> Panel
+                <Link to={panelHref} className="inline-flex items-center gap-1.5 text-[12px] 2xl:text-[13px] font-medium text-navy hover:text-brand whitespace-nowrap">
+                  <LayoutDashboard className="size-4 shrink-0" /> Panel
                 </Link>
               )}
-              <Link to="/profile" className="inline-flex items-center gap-2 text-[13px] font-medium text-navy hover:text-brand">
-                <UserCircle2 className="size-4" /> Profilim
+              <Link to="/profile" className="inline-flex items-center gap-1.5 text-[12px] 2xl:text-[13px] font-medium text-navy hover:text-brand whitespace-nowrap">
+                <UserCircle2 className="size-4 shrink-0" /> Profilim
               </Link>
-              <button onClick={handleSignOut} className="inline-flex items-center gap-2 text-[13px] font-medium text-navy hover:text-ink">
-                <LogOut className="size-4" /> Çıkış
+              <button onClick={handleSignOut} className="inline-flex items-center gap-1.5 text-[12px] 2xl:text-[13px] font-medium text-navy hover:text-ink whitespace-nowrap">
+                <LogOut className="size-4 shrink-0" /> Çıkış
               </button>
             </div>
           ) : (
-            <Link to="/login" className="hidden sm:inline-flex items-center gap-2 text-[13px] font-medium text-navy hover:text-ink">
-              <User className="size-4" /> Giriş / Üye Ol
+            <Link to="/login" className="hidden xl:inline-flex items-center gap-1.5 text-[12px] 2xl:text-[13px] font-medium text-navy hover:text-ink whitespace-nowrap shrink-0">
+              <User className="size-4 shrink-0" /> Giriş
             </Link>
           )}
 
-          <Link to="/sikayet-yaz" className="inline-flex items-center gap-2 rounded-full bg-brand text-brand-foreground px-3 sm:px-5 h-9 sm:h-10 text-[12px] sm:text-[13px] font-semibold shadow-soft hover:brightness-105 active:brightness-95 transition shrink-0">
-            <PenLine className="size-4" />
+          <div className="flex xl:hidden items-center gap-1 shrink-0">
+            <NotificationBell />
+            <ThemeToggle compact />
+          </div>
+
+          <Link to="/sikayet-yaz" className="inline-flex items-center gap-1.5 rounded-full bg-brand text-brand-foreground px-3 sm:px-4 2xl:px-5 h-9 sm:h-10 text-[12px] sm:text-[13px] font-semibold shadow-soft hover:brightness-105 active:brightness-95 transition shrink-0">
+            <PenLine className="size-4 shrink-0" />
             <span className="hidden min-[400px]:inline">Şikayet Yaz</span>
             <span className="min-[400px]:hidden">Yaz</span>
           </Link>
@@ -92,7 +100,7 @@ export function SiteNav() {
             aria-label={menuOpen ? "Menüyü kapat" : "Menüyü aç"}
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen((o) => !o)}
-            className="lg:hidden grid place-items-center size-10 rounded-lg border border-rule shrink-0"
+            className="xl:hidden grid place-items-center size-10 rounded-lg border border-rule shrink-0"
           >
             {menuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
           </button>
@@ -104,10 +112,10 @@ export function SiteNav() {
           <button
             type="button"
             aria-label="Menüyü kapat"
-            className="fixed inset-0 z-40 bg-black/40 lg:hidden"
+            className="fixed inset-0 z-40 bg-black/40 xl:hidden"
             onClick={closeMenu}
           />
-          <div className="fixed inset-y-0 right-0 z-50 w-[min(100vw-3rem,320px)] bg-paper border-l border-rule shadow-lift lg:hidden flex flex-col">
+          <div className="fixed inset-y-0 right-0 z-50 w-[min(100vw-3rem,320px)] bg-paper border-l border-rule shadow-lift xl:hidden flex flex-col">
             <div className="flex items-center justify-between px-4 h-16 border-b border-rule">
               <span className="font-display font-black text-lg text-ink">Menü</span>
               <button type="button" onClick={closeMenu} className="grid place-items-center size-9 rounded-lg hover:bg-surface">
