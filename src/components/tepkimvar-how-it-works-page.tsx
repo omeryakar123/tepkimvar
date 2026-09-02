@@ -3,6 +3,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
+  ArrowRight,
   BadgeCheck,
   Building2,
   CheckCircle2,
