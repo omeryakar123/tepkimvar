@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { PenLine, User, Menu, X, LogOut, LayoutDashboard, UserCircle2, Building2 } from "lucide-react";
+import { PenLine, User, Menu, X, LogOut, LayoutDashboard, UserCircle2, Building2, BadgeCheck } from "lucide-react";
 import { useAuth, highestRoleRedirect } from "@/hooks/use-auth";
 import { GlobalSearchTrigger } from "@/components/global-search";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -25,7 +25,8 @@ export function SiteNav() {
   const navLinks = [
     { to: "/sikayetler" as const, label: "Şikayetler" },
     { to: "/markalar" as const, label: "Markalar" },
-    { to: "/trendler" as const, label: "Trend 100" },
+    { to: "/trendler" as const, label: "Trend 100", badge: "100" },
+    { to: "/tepkimvar-seal" as const, label: "Seal", seal: true },
   ];
 
   return (
@@ -40,10 +41,13 @@ export function SiteNav() {
 
           <nav className="hidden lg:flex items-center gap-7 text-[14px] font-medium text-navy">
             {navLinks.map((l) => (
-              <Link key={l.to} to={l.to} className="hover:text-brand transition-colors">
+              <Link key={l.to} to={l.to} className="hover:text-brand transition-colors inline-flex items-center gap-1">
+                {"seal" in l && l.seal && <BadgeCheck className="size-3.5 text-brand" />}
                 {l.label}
-                {l.to === "/trendler" && (
-                  <span className="ml-1 inline-flex items-center justify-center text-[10px] font-bold bg-brand-soft text-brand rounded-full px-1.5 py-px">100</span>
+                {"badge" in l && l.badge && (
+                  <span className="ml-0.5 inline-flex items-center justify-center text-[10px] font-bold bg-brand-soft text-brand rounded-full px-1.5 py-px">
+                    {l.badge}
+                  </span>
                 )}
               </Link>
             ))}
@@ -116,9 +120,13 @@ export function SiteNav() {
                   key={l.to}
                   to={l.to}
                   onClick={closeMenu}
-                  className="flex items-center h-11 px-3 rounded-lg text-[14px] font-medium text-ink hover:bg-surface"
+                  className="flex items-center gap-2 h-11 px-3 rounded-lg text-[14px] font-medium text-ink hover:bg-surface"
                 >
+                  {"seal" in l && l.seal && <BadgeCheck className="size-4 text-brand" />}
                   {l.label}
+                  {"badge" in l && l.badge && (
+                    <span className="text-[10px] font-bold bg-brand-soft text-brand rounded-full px-1.5 py-px">{l.badge}</span>
+                  )}
                 </Link>
               ))}
               <Link to="/sikayet-yaz" onClick={closeMenu} className="flex items-center gap-2 h-11 px-3 rounded-lg text-[14px] font-semibold text-brand hover:bg-brand-soft">

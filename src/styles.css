@@ -279,6 +279,45 @@
   animation: floaty 6s ease-in-out infinite;
 }
 
+@keyframes sealScan {
+  0% { top: 8%; opacity: 0; }
+  8% { opacity: 1; }
+  92% { opacity: 1; }
+  100% { top: 88%; opacity: 0; }
+}
+
+@keyframes sealGlow {
+  0%, 100% { opacity: 0.35; transform: scale(1); }
+  50% { opacity: 0.75; transform: scale(1.08); }
+}
+
+@keyframes sealOrbit {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes sealPulseRing {
+  0% { transform: scale(0.92); opacity: 0.6; }
+  70% { transform: scale(1.15); opacity: 0; }
+  100% { transform: scale(1.15); opacity: 0; }
+}
+
+@utility animate-seal-scan {
+  animation: sealScan 2.8s ease-in-out infinite;
+}
+
+@utility animate-seal-glow {
+  animation: sealGlow 4s ease-in-out infinite;
+}
+
+@utility animate-seal-orbit {
+  animation: sealOrbit 18s linear infinite;
+}
+
+@utility animate-seal-pulse-ring {
+  animation: sealPulseRing 2.4s ease-out infinite;
+}
+
 @utility eyebrow {
   font-size: 0.6875rem;
   font-weight: 700;
