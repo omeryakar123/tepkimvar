@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowUp, ArrowDown, Calendar, MessageSquare, Pin, Share2, Tag, Star, Copy, Sparkles, AlertOctagon, Clock } from "lucide-react";
+import { ArrowUp, ArrowDown, Calendar, ImageIcon, MessageSquare, Pin, Share2, Tag, Star, Copy, Sparkles, AlertOctagon, Clock } from "lucide-react";
 import { ReportButton } from "@/components/report-button";
 import { ComplaintCard } from "@/components/cards";
 import { ComplaintTimeline } from "@/components/complaint-timeline";
@@ -298,6 +298,47 @@ function ComplaintPage() {
 
           <div className="prose prose-sm max-w-none text-navy leading-relaxed whitespace-pre-line">{complaint.body}</div>
 
+          {complaint.attachments && complaint.attachments.length > 0 && (
+            <div className="mt-6 rounded-xl ring-1 ring-rule bg-surface/60 p-4 sm:p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <ImageIcon className="size-4 text-brand" />
+                <h2 className="text-[13px] font-bold uppercase tracking-wide text-navy-mid">
+                  Kanıt dosyaları ({complaint.attachments.length})
+                </h2>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {complaint.attachments.map((a) => {
+                  const isVideo = (a.file_type ?? "").startsWith("video/");
+                  return (
+                    <a
+                      key={a.id}
+                      href={a.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group block rounded-xl overflow-hidden ring-1 ring-rule bg-card aspect-[4/3] relative"
+                    >
+                      {isVideo ? (
+                        <video src={a.url} className="size-full object-cover" muted playsInline />
+                      ) : (
+                        <img
+                          src={a.url}
+                          alt="Şikayet kanıtı"
+                          className={`size-full object-cover transition ${a.sensitive ? "blur-xl scale-105" : "group-hover:scale-[1.02]"}`}
+                          loading="lazy"
+                        />
+                      )}
+                      {a.sensitive && (
+                        <span className="absolute inset-x-2 bottom-2 rounded-md bg-black/60 text-white text-[10px] font-semibold px-2 py-1 text-center">
+                          Hassas bilgi gizlendi
+                        </span>
+                      )}
+                    </a>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <div className="mt-6 pt-6 border-t border-rule flex flex-wrap items-center gap-3 text-sm">
             {complaint && (
               <ComplaintSupportButton
@@ -305,7 +346,11 @@ function ComplaintPage() {
                 initialVotes={complaint.votes}
                 initialSupported={complaint.supported}
                 onChange={(votes, supported) =>
-                  setComplaint((prev) => (prev ? { ...prev, votes, supported } : prev))
+                  setLoadState((prev) =>
+                    prev.kind === "ok"
+                      ? { kind: "ok", complaint: { ...prev.complaint, votes, supported } }
+                      : prev,
+                  )
                 }
               />
             )}

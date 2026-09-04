@@ -9,7 +9,11 @@ import { refreshBrandAggregates } from "@/lib/server/brand-stats";
 import { loadAuthorProfile } from "@/lib/server/author-profile";
 import { displayPhone } from "@/lib/phone-mask";
 import { normalizePlatformUsername } from "@/lib/server/ai/prompts";
-import { assertComplaintHasVisualEvidence } from "@/lib/server/complaint-evidence";
+import {
+  assertComplaintHasVisualEvidence,
+  loadComplaintAttachments,
+  publishComplaintEvidence,
+} from "@/lib/server/complaint-evidence";
 
 // schema.complaintStatus enum ile birebir. İstemciden gelen değer BURADA doğrulanır.
 const STATUSES = [
@@ -102,6 +106,8 @@ export const Route = createFileRoute("/api/admin/complaints")({
 
             const author = row.is_anonymous ? null : await loadAuthorProfile(row.user_id);
 
+            const attachments = await loadComplaintAttachments(detailId);
+
             return Response.json({
               complaint: {
                 ...row,
@@ -110,6 +116,10 @@ export const Route = createFileRoute("/api/admin/complaints")({
                   : null,
                 contact_phone_display: displayPhone(row.contact_phone, "full"),
                 author,
+                attachments: attachments.map((a) => ({
+                  ...a,
+                  url: `/api/files/${a.storage_path}`,
+                })),
               },
             });
           }
@@ -228,6 +238,10 @@ export const Route = createFileRoute("/api/admin/complaints")({
           }
 
           await db.update(schema.complaints).set(patch).where(eq(schema.complaints.id, b.id));
+
+          if (b.status === "approved") {
+            await publishComplaintEvidence(b.id);
+          }
 
           await refreshBrandAggregates(before.brandId);
 

@@ -108,8 +108,8 @@ export function TepkimvarHowItWorksPage() {
           aria-hidden
         />
 
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 pt-14 sm:pt-20 pb-16 sm:pb-20 relative">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 pt-10 sm:pt-20 pb-12 sm:pb-20 relative">
+          <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-20 items-center">
             <motion.div initial="hidden" animate="visible" variants={stagger(reduceMotion)} className="min-w-0">
               <motion.div variants={fadeUp(reduceMotion)} className="site-cta-badge mb-8">
                 Platform rehberi
@@ -142,7 +142,7 @@ export function TepkimvarHowItWorksPage() {
               </motion.div>
             </motion.div>
 
-            <HeroFlowVisual reduceMotion={reduceMotion} />
+            <HeroFlowVisual reduceMotion={reduceMotion} className="hidden sm:block" />
           </div>
         </div>
 
@@ -175,7 +175,7 @@ export function TepkimvarHowItWorksPage() {
       </section>
 
       {/* PLATFORM */}
-      <section className="py-20 sm:py-28 bg-paper">
+      <section className="py-14 sm:py-28 bg-paper">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="grid lg:grid-cols-12 gap-12 lg:gap-16 items-center">
             <Reveal className="lg:col-span-5 order-2 lg:order-1">
@@ -242,7 +242,7 @@ export function TepkimvarHowItWorksPage() {
       </section>
 
       {/* STEPS */}
-      <section className="py-20 sm:py-28 bg-surface border-y border-rule">
+      <section className="py-14 sm:py-28 bg-surface border-y border-rule">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <Reveal className="text-center max-w-2xl mx-auto mb-14 sm:mb-16">
             <SectionLabel center>3 adım</SectionLabel>
@@ -272,7 +272,7 @@ export function TepkimvarHowItWorksPage() {
       </section>
 
       {/* FEATURES */}
-      <section className="py-20 sm:py-28 bg-paper">
+      <section className="py-14 sm:py-28 bg-paper">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <Reveal className="max-w-2xl mb-14">
             <SectionLabel>Kullanıcılar</SectionLabel>
@@ -455,13 +455,13 @@ function SectionLabel({ children, center, dark }: { children: ReactNode; center?
   );
 }
 
-function HeroFlowVisual({ reduceMotion }: { reduceMotion: boolean }) {
+function HeroFlowVisual({ reduceMotion, className = "" }: { reduceMotion: boolean; className?: string }) {
   return (
     <motion.div
       initial={reduceMotion ? { opacity: 0 } : { opacity: 0, x: 32 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.7, ease: EASE, delay: 0.15 }}
-      className="relative w-full max-w-[400px] mx-auto lg:ml-auto"
+      className={`relative w-full max-w-[400px] mx-auto lg:ml-auto ${className}`}
     >
       <div className="rounded-2xl overflow-hidden ring-1 ring-white/12 bg-white/[0.06] backdrop-blur-xl shadow-2xl">
         <div className="flex items-center justify-between px-4 py-3.5 border-b border-white/10 bg-white/[0.04]">

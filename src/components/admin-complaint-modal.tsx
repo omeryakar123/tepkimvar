@@ -4,9 +4,11 @@ import {
   CheckCircle2,
   ExternalLink,
   Eye,
+  EyeOff,
   Loader2,
   Pencil,
   Save,
+  Trash2,
   X,
   XCircle,
 } from "lucide-react";
@@ -44,6 +46,13 @@ export type AdminComplaintDetail = {
   brand_response_at: string | null;
   tags: string[];
   author: { full_name: string | null; username: string | null; avatar_url: string | null } | null;
+  attachments?: {
+    id: string;
+    url: string;
+    file_type: string | null;
+    visibility: string;
+    sensitive: boolean;
+  }[];
 };
 
 type Props = {
@@ -103,6 +112,28 @@ export function AdminComplaintModal({
     setEditing(startEditing);
     load(complaintId);
   }, [open, complaintId, startEditing, load]);
+
+  async function toggleAttachmentSensitive(id: string, sensitive: boolean) {
+    if (!detail) return;
+    setSaving(true);
+    const ok = await apiSend("/api/admin/complaint-attachments", "PATCH", { id, sensitive });
+    setSaving(false);
+    if (ok) {
+      toast.success(sensitive ? "Görsel hassas olarak işaretlendi" : "Hassas işaret kaldırıldı");
+      await load(detail.id);
+    }
+  }
+
+  async function deleteAttachment(id: string) {
+    if (!detail || !confirm("Bu kanıt dosyasını silmek istediğinize emin misiniz?")) return;
+    setSaving(true);
+    const ok = await apiSend("/api/admin/complaint-attachments", "DELETE", { id });
+    setSaving(false);
+    if (ok) {
+      toast.success("Kanıt silindi");
+      await load(detail.id);
+    }
+  }
 
   async function save() {
     if (!detail) return;
@@ -205,6 +236,54 @@ export function AdminComplaintModal({
                 </div>
               )}
             </div>
+
+            {c.attachments && c.attachments.length > 0 && (
+              <div>
+                <div className="text-[12px] font-medium text-navy-mid mb-2">
+                  Kanıt dosyaları ({c.attachments.length})
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {c.attachments.map((a) => {
+                    const isVideo = (a.file_type ?? "").startsWith("video/");
+                    return (
+                      <div key={a.id} className="rounded-xl ring-1 ring-rule overflow-hidden bg-surface">
+                        <a href={a.url} target="_blank" rel="noopener noreferrer" className="block aspect-[4/3] bg-black/5">
+                          {isVideo ? (
+                            <video src={a.url} className="size-full object-cover" muted playsInline />
+                          ) : (
+                            <img src={a.url} alt="" className="size-full object-cover" loading="lazy" />
+                          )}
+                        </a>
+                        <div className="flex items-center gap-1 p-2 border-t border-rule">
+                          <button
+                            type="button"
+                            disabled={saving}
+                            onClick={() => toggleAttachmentSensitive(a.id, !a.sensitive)}
+                            className="flex-1 h-8 rounded-lg text-[11px] font-semibold ring-1 ring-rule hover:bg-card inline-flex items-center justify-center gap-1 disabled:opacity-50"
+                            title={a.sensitive ? "Hassas işareti kaldır" : "Hassas bilgiyi gizle"}
+                          >
+                            {a.sensitive ? <EyeOff className="size-3" /> : <Eye className="size-3" />}
+                            {a.sensitive ? "Gizli" : "Gizle"}
+                          </button>
+                          <button
+                            type="button"
+                            disabled={saving}
+                            onClick={() => deleteAttachment(a.id)}
+                            className="h-8 px-2 rounded-lg text-[11px] font-semibold ring-1 ring-rule hover:bg-danger-soft/40 text-danger disabled:opacity-50"
+                            title="Sil"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="mt-2 text-[11px] text-navy-mid">
+                  «Gizle» ile hassas bilgiler yayında bulanık görünür. Onay sonrası kanıtlar herkese açık olur.
+                </p>
+              </div>
+            )}
 
             {c.brand_response && (
               <div>

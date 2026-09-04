@@ -80,13 +80,18 @@ import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-p
 import { Route as SiteBlogIndexRouteImport } from './routes/_site/blog.index'
 import { Route as ApiOtpVerifyRouteImport } from './routes/api/otp/verify'
 import { Route as ApiOtpSendRouteImport } from './routes/api/otp/send'
+import { Route as ApiMeFollowsRouteImport } from './routes/api/me/follows'
 import { Route as ApiMeComplaintsRouteImport } from './routes/api/me.complaints'
 import { Route as ApiFilesSplatRouteImport } from './routes/api/files/$'
 import { Route as ApiEventsComplaintIdRouteImport } from './routes/api/events/$complaintId'
+import { Route as ApiCronMaintenanceRouteImport } from './routes/api/cron/maintenance'
 import { Route as ApiCronComplaintBotRouteImport } from './routes/api/cron/complaint-bot'
+import { Route as ApiComplaintsSupportRouteImport } from './routes/api/complaints/support'
+import { Route as ApiComplaintsAssistRouteImport } from './routes/api/complaints/assist'
 import { Route as ApiComplaintsIdRouteImport } from './routes/api/complaints/$id'
 import { Route as ApiCommentsVoteRouteImport } from './routes/api/comments/vote'
 import { Route as ApiCommentsPinRouteImport } from './routes/api/comments/pin'
+import { Route as ApiBrandsTrendRouteImport } from './routes/api/brands/trend'
 import { Route as ApiBrandsSlugRouteImport } from './routes/api/brands/$slug'
 import { Route as ApiBrandStatsRouteImport } from './routes/api/brand/stats'
 import { Route as ApiBrandProfileRouteImport } from './routes/api/brand/profile'
@@ -94,16 +99,22 @@ import { Route as ApiBrandPremiumRouteImport } from './routes/api/brand/premium'
 import { Route as ApiBrandMembershipsRouteImport } from './routes/api/brand/memberships'
 import { Route as ApiBrandComplaintsRouteImport } from './routes/api/brand/complaints'
 import { Route as ApiBrandBotConfigRouteImport } from './routes/api/brand/bot-config'
+import { Route as ApiBrandLogoSlugRouteImport } from './routes/api/brand-logo/$slug'
+import { Route as ApiAuthOauthConfigRouteImport } from './routes/api/auth/oauth-config'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as ApiAnalyticsPageviewRouteImport } from './routes/api/analytics/pageview'
 import { Route as ApiAdminVerificationRouteImport } from './routes/api/admin/verification'
 import { Route as ApiAdminUsersRouteImport } from './routes/api/admin/users'
+import { Route as ApiAdminStorageHealthRouteImport } from './routes/api/admin/storage-health'
 import { Route as ApiAdminStatsRouteImport } from './routes/api/admin/stats'
 import { Route as ApiAdminSanctionsRouteImport } from './routes/api/admin/sanctions'
 import { Route as ApiAdminPremiumRouteImport } from './routes/api/admin/premium'
+import { Route as ApiAdminModerationStatsRouteImport } from './routes/api/admin/moderation-stats'
 import { Route as ApiAdminModerationRouteImport } from './routes/api/admin/moderation'
 import { Route as ApiAdminMediaRouteImport } from './routes/api/admin/media'
 import { Route as ApiAdminEscalationsRouteImport } from './routes/api/admin/escalations'
 import { Route as ApiAdminComplaintsRouteImport } from './routes/api/admin/complaints'
+import { Route as ApiAdminComplaintAttachmentsRouteImport } from './routes/api/admin/complaint-attachments'
 import { Route as ApiAdminCmsRouteImport } from './routes/api/admin/cms'
 import { Route as ApiAdminCategoriesRouteImport } from './routes/api/admin/categories'
 import { Route as ApiAdminBrandsRouteImport } from './routes/api/admin/brands'
@@ -115,10 +126,10 @@ import { Route as SiteKategoriSlugRouteImport } from './routes/_site/kategori.$s
 import { Route as SiteFirmaSlugRouteImport } from './routes/_site/firma.$slug'
 import { Route as SiteBlogSlugRouteImport } from './routes/_site/blog.$slug'
 import { Route as SitekurumsalYardimRouteImport } from './routes/_site/(kurumsal)/yardim'
+import { Route as SitekurumsalTepkimvarSealRouteImport } from './routes/_site/(kurumsal)/tepkimvar-seal'
 import { Route as SitekurumsalSeffaflikRaporuRouteImport } from './routes/_site/(kurumsal)/seffaflik-raporu'
 import { Route as SitekurumsalReklamCozumleriRouteImport } from './routes/_site/(kurumsal)/reklam-cozumleri'
 import { Route as SitekurumsalNasilCalisirRouteImport } from './routes/_site/(kurumsal)/nasil-calisir'
-import { Route as SitekurumsalTepkimvarSealRouteImport } from './routes/_site/(kurumsal)/tepkimvar-seal'
 import { Route as SitekurumsalKvkkRouteImport } from './routes/_site/(kurumsal)/kvkk'
 import { Route as SitekurumsalKullanimKosullariRouteImport } from './routes/_site/(kurumsal)/kullanim-kosullari'
 import { Route as SitekurumsalIletisimRouteImport } from './routes/_site/(kurumsal)/iletisim'
@@ -127,6 +138,9 @@ import { Route as SitekurumsalGizlilikRouteImport } from './routes/_site/(kurums
 import { Route as SitekurumsalErisimYokRouteImport } from './routes/_site/(kurumsal)/erisim-yok'
 import { Route as authRegisterMarkaBasvuruRouteImport } from './routes/(auth)/register/marka-basvuru'
 import { Route as authRegisterKurumsalRouteImport } from './routes/(auth)/register/kurumsal'
+import { Route as ApiOtpPhoneVerifyRouteImport } from './routes/api/otp/phone/verify'
+import { Route as ApiOtpPhoneSendRouteImport } from './routes/api/otp/phone/send'
+import { Route as ApiBrandsSlugFollowRouteImport } from './routes/api/brands/$slug/follow'
 import { Route as ApiAdminBrandsIdRouteImport } from './routes/api/admin/brands/$id'
 import { Route as ApiAdminBotStatsRouteImport } from './routes/api/admin/bot/stats'
 import { Route as ApiAdminBotRunsRouteImport } from './routes/api/admin/bot/runs'
@@ -489,6 +503,11 @@ const ApiOtpSendRoute = ApiOtpSendRouteImport.update({
   path: '/api/otp/send',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiMeFollowsRoute = ApiMeFollowsRouteImport.update({
+  id: '/follows',
+  path: '/follows',
+  getParentRoute: () => ApiMeRoute,
+} as any)
 const ApiMeComplaintsRoute = ApiMeComplaintsRouteImport.update({
   id: '/complaints',
   path: '/complaints',
@@ -504,10 +523,25 @@ const ApiEventsComplaintIdRoute = ApiEventsComplaintIdRouteImport.update({
   path: '/api/events/$complaintId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCronMaintenanceRoute = ApiCronMaintenanceRouteImport.update({
+  id: '/api/cron/maintenance',
+  path: '/api/cron/maintenance',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiCronComplaintBotRoute = ApiCronComplaintBotRouteImport.update({
   id: '/api/cron/complaint-bot',
   path: '/api/cron/complaint-bot',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ApiComplaintsSupportRoute = ApiComplaintsSupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => ApiComplaintsRoute,
+} as any)
+const ApiComplaintsAssistRoute = ApiComplaintsAssistRouteImport.update({
+  id: '/assist',
+  path: '/assist',
+  getParentRoute: () => ApiComplaintsRoute,
 } as any)
 const ApiComplaintsIdRoute = ApiComplaintsIdRouteImport.update({
   id: '/$id',
@@ -523,6 +557,11 @@ const ApiCommentsPinRoute = ApiCommentsPinRouteImport.update({
   id: '/pin',
   path: '/pin',
   getParentRoute: () => ApiCommentsRoute,
+} as any)
+const ApiBrandsTrendRoute = ApiBrandsTrendRouteImport.update({
+  id: '/trend',
+  path: '/trend',
+  getParentRoute: () => ApiBrandsRoute,
 } as any)
 const ApiBrandsSlugRoute = ApiBrandsSlugRouteImport.update({
   id: '/$slug',
@@ -559,9 +598,24 @@ const ApiBrandBotConfigRoute = ApiBrandBotConfigRouteImport.update({
   path: '/api/brand/bot-config',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiBrandLogoSlugRoute = ApiBrandLogoSlugRouteImport.update({
+  id: '/api/brand-logo/$slug',
+  path: '/api/brand-logo/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthOauthConfigRoute = ApiAuthOauthConfigRouteImport.update({
+  id: '/api/auth/oauth-config',
+  path: '/api/auth/oauth-config',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAnalyticsPageviewRoute = ApiAnalyticsPageviewRouteImport.update({
+  id: '/api/analytics/pageview',
+  path: '/api/analytics/pageview',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAdminVerificationRoute = ApiAdminVerificationRouteImport.update({
@@ -572,6 +626,11 @@ const ApiAdminVerificationRoute = ApiAdminVerificationRouteImport.update({
 const ApiAdminUsersRoute = ApiAdminUsersRouteImport.update({
   id: '/api/admin/users',
   path: '/api/admin/users',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminStorageHealthRoute = ApiAdminStorageHealthRouteImport.update({
+  id: '/api/admin/storage-health',
+  path: '/api/admin/storage-health',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAdminStatsRoute = ApiAdminStatsRouteImport.update({
@@ -587,6 +646,11 @@ const ApiAdminSanctionsRoute = ApiAdminSanctionsRouteImport.update({
 const ApiAdminPremiumRoute = ApiAdminPremiumRouteImport.update({
   id: '/api/admin/premium',
   path: '/api/admin/premium',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminModerationStatsRoute = ApiAdminModerationStatsRouteImport.update({
+  id: '/api/admin/moderation-stats',
+  path: '/api/admin/moderation-stats',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAdminModerationRoute = ApiAdminModerationRouteImport.update({
@@ -609,6 +673,12 @@ const ApiAdminComplaintsRoute = ApiAdminComplaintsRouteImport.update({
   path: '/api/admin/complaints',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAdminComplaintAttachmentsRoute =
+  ApiAdminComplaintAttachmentsRouteImport.update({
+    id: '/api/admin/complaint-attachments',
+    path: '/api/admin/complaint-attachments',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiAdminCmsRoute = ApiAdminCmsRouteImport.update({
   id: '/api/admin/cms',
   path: '/api/admin/cms',
@@ -664,6 +734,12 @@ const SitekurumsalYardimRoute = SitekurumsalYardimRouteImport.update({
   path: '/yardim',
   getParentRoute: () => SiteRoute,
 } as any)
+const SitekurumsalTepkimvarSealRoute =
+  SitekurumsalTepkimvarSealRouteImport.update({
+    id: '/(kurumsal)/tepkimvar-seal',
+    path: '/tepkimvar-seal',
+    getParentRoute: () => SiteRoute,
+  } as any)
 const SitekurumsalSeffaflikRaporuRoute =
   SitekurumsalSeffaflikRaporuRouteImport.update({
     id: '/(kurumsal)/seffaflik-raporu',
@@ -680,12 +756,6 @@ const SitekurumsalNasilCalisirRoute =
   SitekurumsalNasilCalisirRouteImport.update({
     id: '/(kurumsal)/nasil-calisir',
     path: '/nasil-calisir',
-    getParentRoute: () => SiteRoute,
-  } as any)
-const SitekurumsalTepkimvarSealRoute =
-  SitekurumsalTepkimvarSealRouteImport.update({
-    id: '/(kurumsal)/tepkimvar-seal',
-    path: '/tepkimvar-seal',
     getParentRoute: () => SiteRoute,
   } as any)
 const SitekurumsalKvkkRoute = SitekurumsalKvkkRouteImport.update({
@@ -729,6 +799,21 @@ const authRegisterKurumsalRoute = authRegisterKurumsalRouteImport.update({
   id: '/kurumsal',
   path: '/kurumsal',
   getParentRoute: () => authRegisterRoute,
+} as any)
+const ApiOtpPhoneVerifyRoute = ApiOtpPhoneVerifyRouteImport.update({
+  id: '/api/otp/phone/verify',
+  path: '/api/otp/phone/verify',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiOtpPhoneSendRoute = ApiOtpPhoneSendRouteImport.update({
+  id: '/api/otp/phone/send',
+  path: '/api/otp/phone/send',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiBrandsSlugFollowRoute = ApiBrandsSlugFollowRouteImport.update({
+  id: '/follow',
+  path: '/follow',
+  getParentRoute: () => ApiBrandsSlugRoute,
 } as any)
 const ApiAdminBrandsIdRoute = ApiAdminBrandsIdRouteImport.update({
   id: '/$id',
@@ -842,10 +927,10 @@ export interface FileRoutesByFullPath {
   '/iletisim': typeof SitekurumsalIletisimRoute
   '/kullanim-kosullari': typeof SitekurumsalKullanimKosullariRoute
   '/kvkk': typeof SitekurumsalKvkkRoute
-  '/reklam-cozumleri': typeof SitekurumsalReklamCozumleriRoute
   '/nasil-calisir': typeof SitekurumsalNasilCalisirRoute
-  '/tepkimvar-seal': typeof SitekurumsalTepkimvarSealRoute
+  '/reklam-cozumleri': typeof SitekurumsalReklamCozumleriRoute
   '/seffaflik-raporu': typeof SitekurumsalSeffaflikRaporuRoute
+  '/tepkimvar-seal': typeof SitekurumsalTepkimvarSealRoute
   '/yardim': typeof SitekurumsalYardimRoute
   '/blog/$slug': typeof SiteBlogSlugRoute
   '/firma/$slug': typeof SiteFirmaSlugRoute
@@ -857,30 +942,41 @@ export interface FileRoutesByFullPath {
   '/api/admin/brands': typeof ApiAdminBrandsRouteWithChildren
   '/api/admin/categories': typeof ApiAdminCategoriesRoute
   '/api/admin/cms': typeof ApiAdminCmsRoute
+  '/api/admin/complaint-attachments': typeof ApiAdminComplaintAttachmentsRoute
   '/api/admin/complaints': typeof ApiAdminComplaintsRoute
   '/api/admin/escalations': typeof ApiAdminEscalationsRoute
   '/api/admin/media': typeof ApiAdminMediaRoute
   '/api/admin/moderation': typeof ApiAdminModerationRoute
+  '/api/admin/moderation-stats': typeof ApiAdminModerationStatsRoute
   '/api/admin/premium': typeof ApiAdminPremiumRoute
   '/api/admin/sanctions': typeof ApiAdminSanctionsRoute
   '/api/admin/stats': typeof ApiAdminStatsRoute
+  '/api/admin/storage-health': typeof ApiAdminStorageHealthRoute
   '/api/admin/users': typeof ApiAdminUsersRoute
   '/api/admin/verification': typeof ApiAdminVerificationRoute
+  '/api/analytics/pageview': typeof ApiAnalyticsPageviewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/auth/oauth-config': typeof ApiAuthOauthConfigRoute
+  '/api/brand-logo/$slug': typeof ApiBrandLogoSlugRoute
   '/api/brand/bot-config': typeof ApiBrandBotConfigRoute
   '/api/brand/complaints': typeof ApiBrandComplaintsRoute
   '/api/brand/memberships': typeof ApiBrandMembershipsRoute
   '/api/brand/premium': typeof ApiBrandPremiumRoute
   '/api/brand/profile': typeof ApiBrandProfileRoute
   '/api/brand/stats': typeof ApiBrandStatsRoute
-  '/api/brands/$slug': typeof ApiBrandsSlugRoute
+  '/api/brands/$slug': typeof ApiBrandsSlugRouteWithChildren
+  '/api/brands/trend': typeof ApiBrandsTrendRoute
   '/api/comments/pin': typeof ApiCommentsPinRoute
   '/api/comments/vote': typeof ApiCommentsVoteRoute
   '/api/complaints/$id': typeof ApiComplaintsIdRoute
+  '/api/complaints/assist': typeof ApiComplaintsAssistRoute
+  '/api/complaints/support': typeof ApiComplaintsSupportRoute
   '/api/cron/complaint-bot': typeof ApiCronComplaintBotRoute
+  '/api/cron/maintenance': typeof ApiCronMaintenanceRoute
   '/api/events/$complaintId': typeof ApiEventsComplaintIdRoute
   '/api/files/$': typeof ApiFilesSplatRoute
   '/api/me/complaints': typeof ApiMeComplaintsRoute
+  '/api/me/follows': typeof ApiMeFollowsRoute
   '/api/otp/send': typeof ApiOtpSendRoute
   '/api/otp/verify': typeof ApiOtpVerifyRoute
   '/blog/': typeof SiteBlogIndexRoute
@@ -890,6 +986,9 @@ export interface FileRoutesByFullPath {
   '/api/admin/bot/runs': typeof ApiAdminBotRunsRoute
   '/api/admin/bot/stats': typeof ApiAdminBotStatsRoute
   '/api/admin/brands/$id': typeof ApiAdminBrandsIdRouteWithChildren
+  '/api/brands/$slug/follow': typeof ApiBrandsSlugFollowRoute
+  '/api/otp/phone/send': typeof ApiOtpPhoneSendRoute
+  '/api/otp/phone/verify': typeof ApiOtpPhoneVerifyRoute
   '/api/admin/brands/$id/members': typeof ApiAdminBrandsIdMembersRoute
 }
 export interface FileRoutesByTo {
@@ -966,10 +1065,10 @@ export interface FileRoutesByTo {
   '/iletisim': typeof SitekurumsalIletisimRoute
   '/kullanim-kosullari': typeof SitekurumsalKullanimKosullariRoute
   '/kvkk': typeof SitekurumsalKvkkRoute
-  '/reklam-cozumleri': typeof SitekurumsalReklamCozumleriRoute
   '/nasil-calisir': typeof SitekurumsalNasilCalisirRoute
-  '/tepkimvar-seal': typeof SitekurumsalTepkimvarSealRoute
+  '/reklam-cozumleri': typeof SitekurumsalReklamCozumleriRoute
   '/seffaflik-raporu': typeof SitekurumsalSeffaflikRaporuRoute
+  '/tepkimvar-seal': typeof SitekurumsalTepkimvarSealRoute
   '/yardim': typeof SitekurumsalYardimRoute
   '/blog/$slug': typeof SiteBlogSlugRoute
   '/firma/$slug': typeof SiteFirmaSlugRoute
@@ -981,30 +1080,41 @@ export interface FileRoutesByTo {
   '/api/admin/brands': typeof ApiAdminBrandsRouteWithChildren
   '/api/admin/categories': typeof ApiAdminCategoriesRoute
   '/api/admin/cms': typeof ApiAdminCmsRoute
+  '/api/admin/complaint-attachments': typeof ApiAdminComplaintAttachmentsRoute
   '/api/admin/complaints': typeof ApiAdminComplaintsRoute
   '/api/admin/escalations': typeof ApiAdminEscalationsRoute
   '/api/admin/media': typeof ApiAdminMediaRoute
   '/api/admin/moderation': typeof ApiAdminModerationRoute
+  '/api/admin/moderation-stats': typeof ApiAdminModerationStatsRoute
   '/api/admin/premium': typeof ApiAdminPremiumRoute
   '/api/admin/sanctions': typeof ApiAdminSanctionsRoute
   '/api/admin/stats': typeof ApiAdminStatsRoute
+  '/api/admin/storage-health': typeof ApiAdminStorageHealthRoute
   '/api/admin/users': typeof ApiAdminUsersRoute
   '/api/admin/verification': typeof ApiAdminVerificationRoute
+  '/api/analytics/pageview': typeof ApiAnalyticsPageviewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/auth/oauth-config': typeof ApiAuthOauthConfigRoute
+  '/api/brand-logo/$slug': typeof ApiBrandLogoSlugRoute
   '/api/brand/bot-config': typeof ApiBrandBotConfigRoute
   '/api/brand/complaints': typeof ApiBrandComplaintsRoute
   '/api/brand/memberships': typeof ApiBrandMembershipsRoute
   '/api/brand/premium': typeof ApiBrandPremiumRoute
   '/api/brand/profile': typeof ApiBrandProfileRoute
   '/api/brand/stats': typeof ApiBrandStatsRoute
-  '/api/brands/$slug': typeof ApiBrandsSlugRoute
+  '/api/brands/$slug': typeof ApiBrandsSlugRouteWithChildren
+  '/api/brands/trend': typeof ApiBrandsTrendRoute
   '/api/comments/pin': typeof ApiCommentsPinRoute
   '/api/comments/vote': typeof ApiCommentsVoteRoute
   '/api/complaints/$id': typeof ApiComplaintsIdRoute
+  '/api/complaints/assist': typeof ApiComplaintsAssistRoute
+  '/api/complaints/support': typeof ApiComplaintsSupportRoute
   '/api/cron/complaint-bot': typeof ApiCronComplaintBotRoute
+  '/api/cron/maintenance': typeof ApiCronMaintenanceRoute
   '/api/events/$complaintId': typeof ApiEventsComplaintIdRoute
   '/api/files/$': typeof ApiFilesSplatRoute
   '/api/me/complaints': typeof ApiMeComplaintsRoute
+  '/api/me/follows': typeof ApiMeFollowsRoute
   '/api/otp/send': typeof ApiOtpSendRoute
   '/api/otp/verify': typeof ApiOtpVerifyRoute
   '/blog': typeof SiteBlogIndexRoute
@@ -1014,6 +1124,9 @@ export interface FileRoutesByTo {
   '/api/admin/bot/runs': typeof ApiAdminBotRunsRoute
   '/api/admin/bot/stats': typeof ApiAdminBotStatsRoute
   '/api/admin/brands/$id': typeof ApiAdminBrandsIdRouteWithChildren
+  '/api/brands/$slug/follow': typeof ApiBrandsSlugFollowRoute
+  '/api/otp/phone/send': typeof ApiOtpPhoneSendRoute
+  '/api/otp/phone/verify': typeof ApiOtpPhoneVerifyRoute
   '/api/admin/brands/$id/members': typeof ApiAdminBrandsIdMembersRoute
 }
 export interface FileRoutesById {
@@ -1094,10 +1207,10 @@ export interface FileRoutesById {
   '/_site/(kurumsal)/iletisim': typeof SitekurumsalIletisimRoute
   '/_site/(kurumsal)/kullanim-kosullari': typeof SitekurumsalKullanimKosullariRoute
   '/_site/(kurumsal)/kvkk': typeof SitekurumsalKvkkRoute
-  '/_site/(kurumsal)/reklam-cozumleri': typeof SitekurumsalReklamCozumleriRoute
   '/_site/(kurumsal)/nasil-calisir': typeof SitekurumsalNasilCalisirRoute
-  '/_site/(kurumsal)/tepkimvar-seal': typeof SitekurumsalTepkimvarSealRoute
+  '/_site/(kurumsal)/reklam-cozumleri': typeof SitekurumsalReklamCozumleriRoute
   '/_site/(kurumsal)/seffaflik-raporu': typeof SitekurumsalSeffaflikRaporuRoute
+  '/_site/(kurumsal)/tepkimvar-seal': typeof SitekurumsalTepkimvarSealRoute
   '/_site/(kurumsal)/yardim': typeof SitekurumsalYardimRoute
   '/_site/blog/$slug': typeof SiteBlogSlugRoute
   '/_site/firma/$slug': typeof SiteFirmaSlugRoute
@@ -1109,30 +1222,41 @@ export interface FileRoutesById {
   '/api/admin/brands': typeof ApiAdminBrandsRouteWithChildren
   '/api/admin/categories': typeof ApiAdminCategoriesRoute
   '/api/admin/cms': typeof ApiAdminCmsRoute
+  '/api/admin/complaint-attachments': typeof ApiAdminComplaintAttachmentsRoute
   '/api/admin/complaints': typeof ApiAdminComplaintsRoute
   '/api/admin/escalations': typeof ApiAdminEscalationsRoute
   '/api/admin/media': typeof ApiAdminMediaRoute
   '/api/admin/moderation': typeof ApiAdminModerationRoute
+  '/api/admin/moderation-stats': typeof ApiAdminModerationStatsRoute
   '/api/admin/premium': typeof ApiAdminPremiumRoute
   '/api/admin/sanctions': typeof ApiAdminSanctionsRoute
   '/api/admin/stats': typeof ApiAdminStatsRoute
+  '/api/admin/storage-health': typeof ApiAdminStorageHealthRoute
   '/api/admin/users': typeof ApiAdminUsersRoute
   '/api/admin/verification': typeof ApiAdminVerificationRoute
+  '/api/analytics/pageview': typeof ApiAnalyticsPageviewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/auth/oauth-config': typeof ApiAuthOauthConfigRoute
+  '/api/brand-logo/$slug': typeof ApiBrandLogoSlugRoute
   '/api/brand/bot-config': typeof ApiBrandBotConfigRoute
   '/api/brand/complaints': typeof ApiBrandComplaintsRoute
   '/api/brand/memberships': typeof ApiBrandMembershipsRoute
   '/api/brand/premium': typeof ApiBrandPremiumRoute
   '/api/brand/profile': typeof ApiBrandProfileRoute
   '/api/brand/stats': typeof ApiBrandStatsRoute
-  '/api/brands/$slug': typeof ApiBrandsSlugRoute
+  '/api/brands/$slug': typeof ApiBrandsSlugRouteWithChildren
+  '/api/brands/trend': typeof ApiBrandsTrendRoute
   '/api/comments/pin': typeof ApiCommentsPinRoute
   '/api/comments/vote': typeof ApiCommentsVoteRoute
   '/api/complaints/$id': typeof ApiComplaintsIdRoute
+  '/api/complaints/assist': typeof ApiComplaintsAssistRoute
+  '/api/complaints/support': typeof ApiComplaintsSupportRoute
   '/api/cron/complaint-bot': typeof ApiCronComplaintBotRoute
+  '/api/cron/maintenance': typeof ApiCronMaintenanceRoute
   '/api/events/$complaintId': typeof ApiEventsComplaintIdRoute
   '/api/files/$': typeof ApiFilesSplatRoute
   '/api/me/complaints': typeof ApiMeComplaintsRoute
+  '/api/me/follows': typeof ApiMeFollowsRoute
   '/api/otp/send': typeof ApiOtpSendRoute
   '/api/otp/verify': typeof ApiOtpVerifyRoute
   '/_site/blog/': typeof SiteBlogIndexRoute
@@ -1142,6 +1266,9 @@ export interface FileRoutesById {
   '/api/admin/bot/runs': typeof ApiAdminBotRunsRoute
   '/api/admin/bot/stats': typeof ApiAdminBotStatsRoute
   '/api/admin/brands/$id': typeof ApiAdminBrandsIdRouteWithChildren
+  '/api/brands/$slug/follow': typeof ApiBrandsSlugFollowRoute
+  '/api/otp/phone/send': typeof ApiOtpPhoneSendRoute
+  '/api/otp/phone/verify': typeof ApiOtpPhoneVerifyRoute
   '/api/admin/brands/$id/members': typeof ApiAdminBrandsIdMembersRoute
 }
 export interface FileRouteTypes {
@@ -1222,10 +1349,10 @@ export interface FileRouteTypes {
     | '/iletisim'
     | '/kullanim-kosullari'
     | '/kvkk'
-    | '/reklam-cozumleri'
     | '/nasil-calisir'
-    | '/tepkimvar-seal'
+    | '/reklam-cozumleri'
     | '/seffaflik-raporu'
+    | '/tepkimvar-seal'
     | '/yardim'
     | '/blog/$slug'
     | '/firma/$slug'
@@ -1237,16 +1364,22 @@ export interface FileRouteTypes {
     | '/api/admin/brands'
     | '/api/admin/categories'
     | '/api/admin/cms'
+    | '/api/admin/complaint-attachments'
     | '/api/admin/complaints'
     | '/api/admin/escalations'
     | '/api/admin/media'
     | '/api/admin/moderation'
+    | '/api/admin/moderation-stats'
     | '/api/admin/premium'
     | '/api/admin/sanctions'
     | '/api/admin/stats'
+    | '/api/admin/storage-health'
     | '/api/admin/users'
     | '/api/admin/verification'
+    | '/api/analytics/pageview'
     | '/api/auth/$'
+    | '/api/auth/oauth-config'
+    | '/api/brand-logo/$slug'
     | '/api/brand/bot-config'
     | '/api/brand/complaints'
     | '/api/brand/memberships'
@@ -1254,13 +1387,18 @@ export interface FileRouteTypes {
     | '/api/brand/profile'
     | '/api/brand/stats'
     | '/api/brands/$slug'
+    | '/api/brands/trend'
     | '/api/comments/pin'
     | '/api/comments/vote'
     | '/api/complaints/$id'
+    | '/api/complaints/assist'
+    | '/api/complaints/support'
     | '/api/cron/complaint-bot'
+    | '/api/cron/maintenance'
     | '/api/events/$complaintId'
     | '/api/files/$'
     | '/api/me/complaints'
+    | '/api/me/follows'
     | '/api/otp/send'
     | '/api/otp/verify'
     | '/blog/'
@@ -1270,6 +1408,9 @@ export interface FileRouteTypes {
     | '/api/admin/bot/runs'
     | '/api/admin/bot/stats'
     | '/api/admin/brands/$id'
+    | '/api/brands/$slug/follow'
+    | '/api/otp/phone/send'
+    | '/api/otp/phone/verify'
     | '/api/admin/brands/$id/members'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -1346,10 +1487,10 @@ export interface FileRouteTypes {
     | '/iletisim'
     | '/kullanim-kosullari'
     | '/kvkk'
-    | '/reklam-cozumleri'
     | '/nasil-calisir'
-    | '/tepkimvar-seal'
+    | '/reklam-cozumleri'
     | '/seffaflik-raporu'
+    | '/tepkimvar-seal'
     | '/yardim'
     | '/blog/$slug'
     | '/firma/$slug'
@@ -1361,16 +1502,22 @@ export interface FileRouteTypes {
     | '/api/admin/brands'
     | '/api/admin/categories'
     | '/api/admin/cms'
+    | '/api/admin/complaint-attachments'
     | '/api/admin/complaints'
     | '/api/admin/escalations'
     | '/api/admin/media'
     | '/api/admin/moderation'
+    | '/api/admin/moderation-stats'
     | '/api/admin/premium'
     | '/api/admin/sanctions'
     | '/api/admin/stats'
+    | '/api/admin/storage-health'
     | '/api/admin/users'
     | '/api/admin/verification'
+    | '/api/analytics/pageview'
     | '/api/auth/$'
+    | '/api/auth/oauth-config'
+    | '/api/brand-logo/$slug'
     | '/api/brand/bot-config'
     | '/api/brand/complaints'
     | '/api/brand/memberships'
@@ -1378,13 +1525,18 @@ export interface FileRouteTypes {
     | '/api/brand/profile'
     | '/api/brand/stats'
     | '/api/brands/$slug'
+    | '/api/brands/trend'
     | '/api/comments/pin'
     | '/api/comments/vote'
     | '/api/complaints/$id'
+    | '/api/complaints/assist'
+    | '/api/complaints/support'
     | '/api/cron/complaint-bot'
+    | '/api/cron/maintenance'
     | '/api/events/$complaintId'
     | '/api/files/$'
     | '/api/me/complaints'
+    | '/api/me/follows'
     | '/api/otp/send'
     | '/api/otp/verify'
     | '/blog'
@@ -1394,6 +1546,9 @@ export interface FileRouteTypes {
     | '/api/admin/bot/runs'
     | '/api/admin/bot/stats'
     | '/api/admin/brands/$id'
+    | '/api/brands/$slug/follow'
+    | '/api/otp/phone/send'
+    | '/api/otp/phone/verify'
     | '/api/admin/brands/$id/members'
   id:
     | '__root__'
@@ -1473,10 +1628,10 @@ export interface FileRouteTypes {
     | '/_site/(kurumsal)/iletisim'
     | '/_site/(kurumsal)/kullanim-kosullari'
     | '/_site/(kurumsal)/kvkk'
-    | '/_site/(kurumsal)/reklam-cozumleri'
     | '/_site/(kurumsal)/nasil-calisir'
-    | '/_site/(kurumsal)/tepkimvar-seal'
+    | '/_site/(kurumsal)/reklam-cozumleri'
     | '/_site/(kurumsal)/seffaflik-raporu'
+    | '/_site/(kurumsal)/tepkimvar-seal'
     | '/_site/(kurumsal)/yardim'
     | '/_site/blog/$slug'
     | '/_site/firma/$slug'
@@ -1488,16 +1643,22 @@ export interface FileRouteTypes {
     | '/api/admin/brands'
     | '/api/admin/categories'
     | '/api/admin/cms'
+    | '/api/admin/complaint-attachments'
     | '/api/admin/complaints'
     | '/api/admin/escalations'
     | '/api/admin/media'
     | '/api/admin/moderation'
+    | '/api/admin/moderation-stats'
     | '/api/admin/premium'
     | '/api/admin/sanctions'
     | '/api/admin/stats'
+    | '/api/admin/storage-health'
     | '/api/admin/users'
     | '/api/admin/verification'
+    | '/api/analytics/pageview'
     | '/api/auth/$'
+    | '/api/auth/oauth-config'
+    | '/api/brand-logo/$slug'
     | '/api/brand/bot-config'
     | '/api/brand/complaints'
     | '/api/brand/memberships'
@@ -1505,13 +1666,18 @@ export interface FileRouteTypes {
     | '/api/brand/profile'
     | '/api/brand/stats'
     | '/api/brands/$slug'
+    | '/api/brands/trend'
     | '/api/comments/pin'
     | '/api/comments/vote'
     | '/api/complaints/$id'
+    | '/api/complaints/assist'
+    | '/api/complaints/support'
     | '/api/cron/complaint-bot'
+    | '/api/cron/maintenance'
     | '/api/events/$complaintId'
     | '/api/files/$'
     | '/api/me/complaints'
+    | '/api/me/follows'
     | '/api/otp/send'
     | '/api/otp/verify'
     | '/_site/blog/'
@@ -1521,6 +1687,9 @@ export interface FileRouteTypes {
     | '/api/admin/bot/runs'
     | '/api/admin/bot/stats'
     | '/api/admin/brands/$id'
+    | '/api/brands/$slug/follow'
+    | '/api/otp/phone/send'
+    | '/api/otp/phone/verify'
     | '/api/admin/brands/$id/members'
   fileRoutesById: FileRoutesById
 }
@@ -1570,16 +1739,22 @@ export interface RootRouteChildren {
   ApiAdminBrandsRoute: typeof ApiAdminBrandsRouteWithChildren
   ApiAdminCategoriesRoute: typeof ApiAdminCategoriesRoute
   ApiAdminCmsRoute: typeof ApiAdminCmsRoute
+  ApiAdminComplaintAttachmentsRoute: typeof ApiAdminComplaintAttachmentsRoute
   ApiAdminComplaintsRoute: typeof ApiAdminComplaintsRoute
   ApiAdminEscalationsRoute: typeof ApiAdminEscalationsRoute
   ApiAdminMediaRoute: typeof ApiAdminMediaRoute
   ApiAdminModerationRoute: typeof ApiAdminModerationRoute
+  ApiAdminModerationStatsRoute: typeof ApiAdminModerationStatsRoute
   ApiAdminPremiumRoute: typeof ApiAdminPremiumRoute
   ApiAdminSanctionsRoute: typeof ApiAdminSanctionsRoute
   ApiAdminStatsRoute: typeof ApiAdminStatsRoute
+  ApiAdminStorageHealthRoute: typeof ApiAdminStorageHealthRoute
   ApiAdminUsersRoute: typeof ApiAdminUsersRoute
   ApiAdminVerificationRoute: typeof ApiAdminVerificationRoute
+  ApiAnalyticsPageviewRoute: typeof ApiAnalyticsPageviewRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiAuthOauthConfigRoute: typeof ApiAuthOauthConfigRoute
+  ApiBrandLogoSlugRoute: typeof ApiBrandLogoSlugRoute
   ApiBrandBotConfigRoute: typeof ApiBrandBotConfigRoute
   ApiBrandComplaintsRoute: typeof ApiBrandComplaintsRoute
   ApiBrandMembershipsRoute: typeof ApiBrandMembershipsRoute
@@ -1587,6 +1762,7 @@ export interface RootRouteChildren {
   ApiBrandProfileRoute: typeof ApiBrandProfileRoute
   ApiBrandStatsRoute: typeof ApiBrandStatsRoute
   ApiCronComplaintBotRoute: typeof ApiCronComplaintBotRoute
+  ApiCronMaintenanceRoute: typeof ApiCronMaintenanceRoute
   ApiEventsComplaintIdRoute: typeof ApiEventsComplaintIdRoute
   ApiFilesSplatRoute: typeof ApiFilesSplatRoute
   ApiOtpSendRoute: typeof ApiOtpSendRoute
@@ -1596,6 +1772,8 @@ export interface RootRouteChildren {
   ApiAdminBotGenerateRoute: typeof ApiAdminBotGenerateRoute
   ApiAdminBotRunsRoute: typeof ApiAdminBotRunsRoute
   ApiAdminBotStatsRoute: typeof ApiAdminBotStatsRoute
+  ApiOtpPhoneSendRoute: typeof ApiOtpPhoneSendRoute
+  ApiOtpPhoneVerifyRoute: typeof ApiOtpPhoneVerifyRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -2097,6 +2275,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiOtpSendRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/me/follows': {
+      id: '/api/me/follows'
+      path: '/follows'
+      fullPath: '/api/me/follows'
+      preLoaderRoute: typeof ApiMeFollowsRouteImport
+      parentRoute: typeof ApiMeRoute
+    }
     '/api/me/complaints': {
       id: '/api/me/complaints'
       path: '/complaints'
@@ -2118,12 +2303,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiEventsComplaintIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/cron/maintenance': {
+      id: '/api/cron/maintenance'
+      path: '/api/cron/maintenance'
+      fullPath: '/api/cron/maintenance'
+      preLoaderRoute: typeof ApiCronMaintenanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/cron/complaint-bot': {
       id: '/api/cron/complaint-bot'
       path: '/api/cron/complaint-bot'
       fullPath: '/api/cron/complaint-bot'
       preLoaderRoute: typeof ApiCronComplaintBotRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/api/complaints/support': {
+      id: '/api/complaints/support'
+      path: '/support'
+      fullPath: '/api/complaints/support'
+      preLoaderRoute: typeof ApiComplaintsSupportRouteImport
+      parentRoute: typeof ApiComplaintsRoute
+    }
+    '/api/complaints/assist': {
+      id: '/api/complaints/assist'
+      path: '/assist'
+      fullPath: '/api/complaints/assist'
+      preLoaderRoute: typeof ApiComplaintsAssistRouteImport
+      parentRoute: typeof ApiComplaintsRoute
     }
     '/api/complaints/$id': {
       id: '/api/complaints/$id'
@@ -2145,6 +2351,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/comments/pin'
       preLoaderRoute: typeof ApiCommentsPinRouteImport
       parentRoute: typeof ApiCommentsRoute
+    }
+    '/api/brands/trend': {
+      id: '/api/brands/trend'
+      path: '/trend'
+      fullPath: '/api/brands/trend'
+      preLoaderRoute: typeof ApiBrandsTrendRouteImport
+      parentRoute: typeof ApiBrandsRoute
     }
     '/api/brands/$slug': {
       id: '/api/brands/$slug'
@@ -2195,11 +2408,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiBrandBotConfigRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/brand-logo/$slug': {
+      id: '/api/brand-logo/$slug'
+      path: '/api/brand-logo/$slug'
+      fullPath: '/api/brand-logo/$slug'
+      preLoaderRoute: typeof ApiBrandLogoSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/oauth-config': {
+      id: '/api/auth/oauth-config'
+      path: '/api/auth/oauth-config'
+      fullPath: '/api/auth/oauth-config'
+      preLoaderRoute: typeof ApiAuthOauthConfigRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
       fullPath: '/api/auth/$'
       preLoaderRoute: typeof ApiAuthSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/analytics/pageview': {
+      id: '/api/analytics/pageview'
+      path: '/api/analytics/pageview'
+      fullPath: '/api/analytics/pageview'
+      preLoaderRoute: typeof ApiAnalyticsPageviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/admin/verification': {
@@ -2214,6 +2448,13 @@ declare module '@tanstack/react-router' {
       path: '/api/admin/users'
       fullPath: '/api/admin/users'
       preLoaderRoute: typeof ApiAdminUsersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/storage-health': {
+      id: '/api/admin/storage-health'
+      path: '/api/admin/storage-health'
+      fullPath: '/api/admin/storage-health'
+      preLoaderRoute: typeof ApiAdminStorageHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/admin/stats': {
@@ -2235,6 +2476,13 @@ declare module '@tanstack/react-router' {
       path: '/api/admin/premium'
       fullPath: '/api/admin/premium'
       preLoaderRoute: typeof ApiAdminPremiumRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/moderation-stats': {
+      id: '/api/admin/moderation-stats'
+      path: '/api/admin/moderation-stats'
+      fullPath: '/api/admin/moderation-stats'
+      preLoaderRoute: typeof ApiAdminModerationStatsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/admin/moderation': {
@@ -2263,6 +2511,13 @@ declare module '@tanstack/react-router' {
       path: '/api/admin/complaints'
       fullPath: '/api/admin/complaints'
       preLoaderRoute: typeof ApiAdminComplaintsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/complaint-attachments': {
+      id: '/api/admin/complaint-attachments'
+      path: '/api/admin/complaint-attachments'
+      fullPath: '/api/admin/complaint-attachments'
+      preLoaderRoute: typeof ApiAdminComplaintAttachmentsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/admin/cms': {
@@ -2342,6 +2597,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitekurumsalYardimRouteImport
       parentRoute: typeof SiteRoute
     }
+    '/_site/(kurumsal)/tepkimvar-seal': {
+      id: '/_site/(kurumsal)/tepkimvar-seal'
+      path: '/tepkimvar-seal'
+      fullPath: '/tepkimvar-seal'
+      preLoaderRoute: typeof SitekurumsalTepkimvarSealRouteImport
+      parentRoute: typeof SiteRoute
+    }
     '/_site/(kurumsal)/seffaflik-raporu': {
       id: '/_site/(kurumsal)/seffaflik-raporu'
       path: '/seffaflik-raporu'
@@ -2361,13 +2623,6 @@ declare module '@tanstack/react-router' {
       path: '/nasil-calisir'
       fullPath: '/nasil-calisir'
       preLoaderRoute: typeof SitekurumsalNasilCalisirRouteImport
-      parentRoute: typeof SiteRoute
-    }
-    '/_site/(kurumsal)/tepkimvar-seal': {
-      id: '/_site/(kurumsal)/tepkimvar-seal'
-      path: '/tepkimvar-seal'
-      fullPath: '/tepkimvar-seal'
-      preLoaderRoute: typeof SitekurumsalTepkimvarSealRouteImport
       parentRoute: typeof SiteRoute
     }
     '/_site/(kurumsal)/kvkk': {
@@ -2425,6 +2680,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/register/kurumsal'
       preLoaderRoute: typeof authRegisterKurumsalRouteImport
       parentRoute: typeof authRegisterRoute
+    }
+    '/api/otp/phone/verify': {
+      id: '/api/otp/phone/verify'
+      path: '/api/otp/phone/verify'
+      fullPath: '/api/otp/phone/verify'
+      preLoaderRoute: typeof ApiOtpPhoneVerifyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/otp/phone/send': {
+      id: '/api/otp/phone/send'
+      path: '/api/otp/phone/send'
+      fullPath: '/api/otp/phone/send'
+      preLoaderRoute: typeof ApiOtpPhoneSendRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/brands/$slug/follow': {
+      id: '/api/brands/$slug/follow'
+      path: '/follow'
+      fullPath: '/api/brands/$slug/follow'
+      preLoaderRoute: typeof ApiBrandsSlugFollowRouteImport
+      parentRoute: typeof ApiBrandsSlugRoute
     }
     '/api/admin/brands/$id': {
       id: '/api/admin/brands/$id'
@@ -2493,10 +2769,10 @@ interface SiteRouteChildren {
   SitekurumsalIletisimRoute: typeof SitekurumsalIletisimRoute
   SitekurumsalKullanimKosullariRoute: typeof SitekurumsalKullanimKosullariRoute
   SitekurumsalKvkkRoute: typeof SitekurumsalKvkkRoute
-  SitekurumsalReklamCozumleriRoute: typeof SitekurumsalReklamCozumleriRoute
   SitekurumsalNasilCalisirRoute: typeof SitekurumsalNasilCalisirRoute
-  SitekurumsalTepkimvarSealRoute: typeof SitekurumsalTepkimvarSealRoute
+  SitekurumsalReklamCozumleriRoute: typeof SitekurumsalReklamCozumleriRoute
   SitekurumsalSeffaflikRaporuRoute: typeof SitekurumsalSeffaflikRaporuRoute
+  SitekurumsalTepkimvarSealRoute: typeof SitekurumsalTepkimvarSealRoute
   SitekurumsalYardimRoute: typeof SitekurumsalYardimRoute
   SiteBlogSlugRoute: typeof SiteBlogSlugRoute
   SiteFirmaSlugRoute: typeof SiteFirmaSlugRoute
@@ -2520,10 +2796,10 @@ const SiteRouteChildren: SiteRouteChildren = {
   SitekurumsalIletisimRoute: SitekurumsalIletisimRoute,
   SitekurumsalKullanimKosullariRoute: SitekurumsalKullanimKosullariRoute,
   SitekurumsalKvkkRoute: SitekurumsalKvkkRoute,
-  SitekurumsalReklamCozumleriRoute: SitekurumsalReklamCozumleriRoute,
   SitekurumsalNasilCalisirRoute: SitekurumsalNasilCalisirRoute,
-  SitekurumsalTepkimvarSealRoute: SitekurumsalTepkimvarSealRoute,
+  SitekurumsalReklamCozumleriRoute: SitekurumsalReklamCozumleriRoute,
   SitekurumsalSeffaflikRaporuRoute: SitekurumsalSeffaflikRaporuRoute,
+  SitekurumsalTepkimvarSealRoute: SitekurumsalTepkimvarSealRoute,
   SitekurumsalYardimRoute: SitekurumsalYardimRoute,
   SiteBlogSlugRoute: SiteBlogSlugRoute,
   SiteFirmaSlugRoute: SiteFirmaSlugRoute,
@@ -2606,12 +2882,26 @@ const authRegisterRouteWithChildren = authRegisterRoute._addFileChildren(
   authRegisterRouteChildren,
 )
 
+interface ApiBrandsSlugRouteChildren {
+  ApiBrandsSlugFollowRoute: typeof ApiBrandsSlugFollowRoute
+}
+
+const ApiBrandsSlugRouteChildren: ApiBrandsSlugRouteChildren = {
+  ApiBrandsSlugFollowRoute: ApiBrandsSlugFollowRoute,
+}
+
+const ApiBrandsSlugRouteWithChildren = ApiBrandsSlugRoute._addFileChildren(
+  ApiBrandsSlugRouteChildren,
+)
+
 interface ApiBrandsRouteChildren {
-  ApiBrandsSlugRoute: typeof ApiBrandsSlugRoute
+  ApiBrandsSlugRoute: typeof ApiBrandsSlugRouteWithChildren
+  ApiBrandsTrendRoute: typeof ApiBrandsTrendRoute
 }
 
 const ApiBrandsRouteChildren: ApiBrandsRouteChildren = {
-  ApiBrandsSlugRoute: ApiBrandsSlugRoute,
+  ApiBrandsSlugRoute: ApiBrandsSlugRouteWithChildren,
+  ApiBrandsTrendRoute: ApiBrandsTrendRoute,
 }
 
 const ApiBrandsRouteWithChildren = ApiBrandsRoute._addFileChildren(
@@ -2634,10 +2924,14 @@ const ApiCommentsRouteWithChildren = ApiCommentsRoute._addFileChildren(
 
 interface ApiComplaintsRouteChildren {
   ApiComplaintsIdRoute: typeof ApiComplaintsIdRoute
+  ApiComplaintsAssistRoute: typeof ApiComplaintsAssistRoute
+  ApiComplaintsSupportRoute: typeof ApiComplaintsSupportRoute
 }
 
 const ApiComplaintsRouteChildren: ApiComplaintsRouteChildren = {
   ApiComplaintsIdRoute: ApiComplaintsIdRoute,
+  ApiComplaintsAssistRoute: ApiComplaintsAssistRoute,
+  ApiComplaintsSupportRoute: ApiComplaintsSupportRoute,
 }
 
 const ApiComplaintsRouteWithChildren = ApiComplaintsRoute._addFileChildren(
@@ -2646,10 +2940,12 @@ const ApiComplaintsRouteWithChildren = ApiComplaintsRoute._addFileChildren(
 
 interface ApiMeRouteChildren {
   ApiMeComplaintsRoute: typeof ApiMeComplaintsRoute
+  ApiMeFollowsRoute: typeof ApiMeFollowsRoute
 }
 
 const ApiMeRouteChildren: ApiMeRouteChildren = {
   ApiMeComplaintsRoute: ApiMeComplaintsRoute,
+  ApiMeFollowsRoute: ApiMeFollowsRoute,
 }
 
 const ApiMeRouteWithChildren = ApiMeRoute._addFileChildren(ApiMeRouteChildren)
@@ -2723,16 +3019,22 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAdminBrandsRoute: ApiAdminBrandsRouteWithChildren,
   ApiAdminCategoriesRoute: ApiAdminCategoriesRoute,
   ApiAdminCmsRoute: ApiAdminCmsRoute,
+  ApiAdminComplaintAttachmentsRoute: ApiAdminComplaintAttachmentsRoute,
   ApiAdminComplaintsRoute: ApiAdminComplaintsRoute,
   ApiAdminEscalationsRoute: ApiAdminEscalationsRoute,
   ApiAdminMediaRoute: ApiAdminMediaRoute,
   ApiAdminModerationRoute: ApiAdminModerationRoute,
+  ApiAdminModerationStatsRoute: ApiAdminModerationStatsRoute,
   ApiAdminPremiumRoute: ApiAdminPremiumRoute,
   ApiAdminSanctionsRoute: ApiAdminSanctionsRoute,
   ApiAdminStatsRoute: ApiAdminStatsRoute,
+  ApiAdminStorageHealthRoute: ApiAdminStorageHealthRoute,
   ApiAdminUsersRoute: ApiAdminUsersRoute,
   ApiAdminVerificationRoute: ApiAdminVerificationRoute,
+  ApiAnalyticsPageviewRoute: ApiAnalyticsPageviewRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiAuthOauthConfigRoute: ApiAuthOauthConfigRoute,
+  ApiBrandLogoSlugRoute: ApiBrandLogoSlugRoute,
   ApiBrandBotConfigRoute: ApiBrandBotConfigRoute,
   ApiBrandComplaintsRoute: ApiBrandComplaintsRoute,
   ApiBrandMembershipsRoute: ApiBrandMembershipsRoute,
@@ -2740,6 +3042,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiBrandProfileRoute: ApiBrandProfileRoute,
   ApiBrandStatsRoute: ApiBrandStatsRoute,
   ApiCronComplaintBotRoute: ApiCronComplaintBotRoute,
+  ApiCronMaintenanceRoute: ApiCronMaintenanceRoute,
   ApiEventsComplaintIdRoute: ApiEventsComplaintIdRoute,
   ApiFilesSplatRoute: ApiFilesSplatRoute,
   ApiOtpSendRoute: ApiOtpSendRoute,
@@ -2749,6 +3052,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAdminBotGenerateRoute: ApiAdminBotGenerateRoute,
   ApiAdminBotRunsRoute: ApiAdminBotRunsRoute,
   ApiAdminBotStatsRoute: ApiAdminBotStatsRoute,
+  ApiOtpPhoneSendRoute: ApiOtpPhoneSendRoute,
+  ApiOtpPhoneVerifyRoute: ApiOtpPhoneVerifyRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -68,6 +68,7 @@ export interface Complaint {
   previewComments?: { userName: string; body: string; createdAgo: string }[];
   platformUsername?: string | null;
   contactPhoneDisplay?: string | null;
+  attachments?: { id: string; url: string; file_type: string | null; sensitive: boolean }[];
 }
 
 

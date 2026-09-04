@@ -179,6 +179,7 @@ export type DbComplaint = {
   platform_username?: string | null;
   contact_phone?: string | null;
   contact_phone_display?: string | null;
+  attachments?: { id: string; url: string; file_type: string | null; sensitive: boolean }[];
 };
 
 export function dbComplaintToUi(c: DbComplaint): Complaint {
@@ -218,6 +219,7 @@ export function dbComplaintToUi(c: DbComplaint): Complaint {
     })),
     platformUsername: c.platform_username ?? null,
     contactPhoneDisplay: c.contact_phone_display ?? null,
+    attachments: c.attachments ?? [],
   };
 }
 

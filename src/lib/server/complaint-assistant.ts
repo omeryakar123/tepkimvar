@@ -54,6 +54,72 @@ function extractAmount(text: string): string | null {
   return m[0].trim();
 }
 
+function buildDraftFromConversation(messages: AssistMessage[], brand: BrandHint | null): string {
+  const userTexts = messages.filter((m) => m.role === "user").map((m) => m.content.trim()).filter(Boolean);
+  if (userTexts.length === 0) return "";
+
+  const intro = brand
+    ? `${brand.name} platformunda yaşadığım sorun hakkında şikayetimi iletmek istiyorum.`
+    : "Yaşadığım sorun hakkında şikayetimi iletmek istiyorum.";
+
+  const details = userTexts.join(" ");
+  const amount = extractAmount(details);
+  const amountLine = amount ? ` Etkilenen tutar: ${amount}.` : "";
+
+  return `${intro}\n\n${userTexts.join("\n\n")}${amountLine ? `\n\n${amountLine.trim()}` : ""}`.trim();
+}
+
+function inferMissing(combined: string, brand: BrandHint | null, body: string): string[] {
+  const missing: string[] = [];
+  if (!brand) missing.push("marka");
+  if (!extractAmount(combined) && !/\d/.test(combined)) missing.push("tutar");
+  if (body.length < 60) missing.push("detay");
+  if (!/(tarih|gün|ay|hafta|dün|bugün|\d{1,2}[./]\d{1,2})/i.test(combined)) missing.push("tarih");
+  return missing;
+}
+
+function contextualReply(
+  messages: AssistMessage[],
+  brands: BrandHint[],
+  body: string,
+  brand: BrandHint | null,
+): string {
+  const userTexts = messages.filter((m) => m.role === "user").map((m) => m.content.trim());
+  const last = userTexts[userTexts.length - 1] ?? "";
+  const combined = userTexts.join(" ");
+  const missing = inferMissing(combined, brand, body);
+
+  if (userTexts.length <= 1 && last.length < 12) {
+    return "Merhaba! Hangi siteyle sorun yaşadınız ve ne oldu? Kısaca anlatın — ben metni sizin için düzenleyeceğim.";
+  }
+
+  if (!brand) {
+    if (/hangi|site|marka|firma/i.test(last)) {
+      return "Marka adını net yazarsanız şikayetin doğru firmaya ulaşır. Örn: Jojobet, Matbet…";
+    }
+    return "Anladım. Hangi bahis/casino sitesi olduğunu yazar mısınız?";
+  }
+
+  if (missing.includes("tutar") && missing.includes("tarih")) {
+    return `${brand.name} ile ilgili not ettim. Yaklaşık ne zaman oldu ve etkilenen tutar ne kadar? (Örn: 15.000 TL, geçen hafta)`;
+  }
+  if (missing.includes("tutar")) {
+    return "Teşekkürler. Etkilenen tutar ne kadar? (Yaklaşık da olur)";
+  }
+  if (missing.includes("tarih")) {
+    return "Sorun yaklaşık ne zaman başladı? (Tarih veya «geçen hafta» gibi)";
+  }
+  if (missing.includes("detay")) {
+    return "Biraz daha detay ekler misiniz? Yatırım/çekim mi, site ne yanıt verdi, hesabınıza erişebiliyor musunuz?";
+  }
+
+  if (body.length >= 80) {
+    return "Teşekkürler, yeterli bilgi topladım. Başka eklemek istediğiniz bir şey var mı?";
+  }
+
+  return "Anlattıklarınızı not aldım. Biraz daha detay verirseniz daha güçlü bir şikayet metni hazırlayabilirim.";
+}
+
 function ruleBasedAssist(
   messages: AssistMessage[],
   brands: BrandHint[],
@@ -64,50 +130,29 @@ function ruleBasedAssist(
   const combined = userTexts.join("\n");
   const brand = matchBrand(combined, brands);
 
-  const amount = extractAmount(combined);
-  const hasProblem = combined.length >= 15;
-  const hasBrand = Boolean(brand);
-  const hasAmount = Boolean(amount);
-
-  const paragraphs = userTexts.filter((t) => t.length > 2);
   let body = currentBody.trim();
-  if (!body && paragraphs.length > 0) {
-    body = paragraphs.join("\n\n");
+  if (!body || body.length < userTexts.join(" ").length) {
+    body = buildDraftFromConversation(messages, brand);
   }
 
   let title = currentTitle.trim();
-  if (!title && brand && hasProblem) {
-    title = `${brand.name} — ${paragraphs[paragraphs.length - 1]?.slice(0, 70) ?? "Şikayet"}`;
-  } else if (!title && hasProblem) {
-    title = paragraphs[paragraphs.length - 1]?.slice(0, 100) ?? "";
+  if (!title && brand) {
+    const snippet = userTexts[userTexts.length - 1]?.slice(0, 60) ?? "Şikayet";
+    title = `${brand.name} — ${snippet.replace(/\s+/g, " ")}`;
+  } else if (!title && body) {
+    title = body.split(/[.!?\n]/)[0]?.slice(0, 100) ?? "";
   }
 
-  const missingFields: string[] = [];
-  if (!hasBrand) missingFields.push("marka");
-  if (!hasAmount) missingFields.push("tutar");
-  if (body.length < 40) missingFields.push("detay");
+  const missingFields = inferMissing(combined, brand, body);
+  const reply = contextualReply(messages, brands, body, brand);
 
-  let reply: string;
-  if (!hasProblem) {
-    reply = "Merhaba! Hangi bahis/casino sitesiyle sorun yaşadınız ve tam olarak ne oldu? Kısaca anlatın.";
-  } else if (!hasBrand) {
-    reply =
-      "Anladım. Hangi site/marka olduğunu yazar mısınız? (Örn: Jojobet, Betconstruct vb.) Bu bilgi şikayetin doğru firmaya ulaşması için gerekli.";
-  } else if (!hasAmount) {
-    reply = `${brand!.name} ile ilgili olduğunu not ettim. Etkilenen tutar ne kadar? (Örn: 500.000 TL) Ayrıca yaklaşık tarih varsa ekleyin.`;
-  } else if (body.length < 80) {
-    reply =
-      "Teşekkürler. Sorunun ne zaman başladığı, yaptığınız işlemler (yatırım/çekim) ve siteye ulaşıp ulaşamadığınızı birkaç cümleyle ekler misiniz?";
-  } else {
-    reply =
-      "Teşekkürler, gerekli bilgileri aldım. Başka eklemek istediğiniz bir detay var mı?";
-  }
+  const readyToContinue =
+    body.length >= 80 && title.length >= 6 && Boolean(brand) && missingFields.length <= 1;
 
-  const readyToContinue = body.length >= 40 && title.length >= 6 && hasBrand;
   const draftQuality: ComplaintAssistResult["draftQuality"] =
-    body.length >= 120 && hasBrand && hasAmount
+    body.length >= 140 && brand && !missingFields.includes("tutar")
       ? "excellent"
-      : body.length >= 60
+      : body.length >= 70
         ? "good"
         : "draft";
 
@@ -124,36 +169,39 @@ function ruleBasedAssist(
   };
 }
 
-const SYSTEM_PROMPT = `Sen tepkimvar.com şikayet yazma asistanısın. Türkçe, profesyonel ve empatik konuş.
-Görevin: kullanıcının dağınık anlatımından moderasyona uygun, yayına hazır şikayet metni oluşturmak.
+const SYSTEM_PROMPT = `Sen tepkimvar.com şikayet yazma asistanısın. Türkçe, samimi ama profesyonel konuş.
+
+Görev: Kullanıcının serbest anlatımını dinle, bağlamı anla, eksik kritik bilgileri DOĞAL sorularla tamamla, arka planda yayına hazır şikayet metni oluştur.
+
+Kritik bilgiler: marka/site adı, sorunun özü, tutar (varsa), yaklaşık tarih, yatırım/çekim/bonus gibi işlem türü.
 
 Kurallar:
-- Bahis/casino platform şikayetlerine odaklan.
+- Sabit soru listesi okuma; sohbete göre TEK odaklı soru sor.
+- Kullanıcı zaten söylediğini tekrar sorma.
 - title: net, 6-120 karakter, marka adı geçsin.
-- body: 3-6 paragraf, kronolojik, somut (tutar, tarih, kullanıcı adı varsa), küfür/yalan ekleme.
-- Eksik kritik bilgi varsa nazikçe sor (marka, tutar, tarih, işlem türü).
-- readyToContinue: body>=80 karakter VE marka belli VE sorun net ise true.
+- body: 2-5 paragraf, kronolojik, birinci tekil, somut, küfür/uydurma ekleme.
+- Her turda body'yi güncelle — kullanıcının söylediklerini profesyonel dile çevir.
+- readyToContinue: marka belli + body>=80 karakter + sorun net ise true.
 - draftQuality: draft | good | excellent
-- brandName: metinden tespit ettiğin marka (listeden biri olmalı).
-- rating: kullanıcı memnun değilse 1-2, belirsizse null.
+- brandName: listeden eşleşen marka.
+- rating: memnuniyetsizlik 1-2, belirsizse null.
 
-JSON döndür:
-{ reply, title, body, brandName, rating, readyToContinue, draftQuality, missingFields }
+JSON:
+{ "reply", "title", "body", "brandName", "rating", "readyToContinue", "draftQuality", "missingFields" }`;
 
-readyToContinue true olduğunda reply kısa olsun; kullanıcıya başka detay eklemek isteyip istemediğini sor.`;
+const FINALIZE_PROMPT = `Sen tepkimvar.com şikayet yazma asistanısın. Sohbet bitti — nihai metni yaz.
 
-const FINALIZE_PROMPT = `Sen tepkimvar.com şikayet yazma asistanısın. Sohbet tamamlandı — son adımdasın.
-Görevin: kullanıcının anlattıklarından moderasyona uygun, profesyonel ve kronolojik nihai şikayet metni yazmak.
+Görev: Tüm sohbeti birleştirerek moderasyona uygun, profesyonel, kronolojik şikayet metni oluştur.
 
 Kurallar:
-- title: net, 6-120 karakter, marka adı geçsin.
-- body: 3-6 paragraf, somut (tutar, tarih, işlem türü), birinci tekil, küfür/yalan ekleme.
-- reply: kısa (1-2 cümle) — düzenlenmiş özeti sunduğunu ve onay beklediğini söyle.
-- readyToContinue: her zaman true.
-- draftQuality: good veya excellent.
+- title: net, marka adı geçsin (6-120 karakter).
+- body: 3-6 paragraf, birinci tekil, somut (tutar, tarih, işlem), akıcı Türkçe.
+- reply: 1-2 cümle — özeti sunduğunu, onay beklediğini söyle.
+- readyToContinue: true
+- draftQuality: good veya excellent
 
-JSON döndür:
-{ reply, title, body, brandName, rating, readyToContinue, draftQuality, missingFields }`;
+JSON:
+{ "reply", "title", "body", "brandName", "rating", "readyToContinue", "draftQuality", "missingFields" }`;
 
 function ruleBasedFinalize(
   messages: AssistMessage[],
@@ -162,12 +210,18 @@ function ruleBasedFinalize(
   currentBody: string,
 ): ComplaintAssistResult {
   const base = ruleBasedAssist(messages, brands, currentTitle, currentBody);
+  const polished = base.body.length >= 80 ? base.body : buildDraftFromConversation(messages, matchBrand(
+    messages.filter((m) => m.role === "user").map((m) => m.content).join("\n"),
+    brands,
+  ));
+
   return {
     ...base,
+    body: polished.slice(0, 5000),
     reply:
-      "Anlattıklarınızı düzenledim. Aşağıdaki şikayet özetini kontrol edin; onaylarsanız marka adımına geçeriz.",
+      "Anlattıklarınızı düzenledim. Aşağıdaki özeti kontrol edin; uygunsa onaylayarak marka adımına geçebilirsiniz.",
     readyToContinue: true,
-    draftQuality: base.body.length >= 80 ? "good" : base.draftQuality,
+    draftQuality: polished.length >= 100 ? "good" : base.draftQuality,
   };
 }
 
@@ -197,23 +251,29 @@ export async function assistComplaintDraft(input: {
   const brandList = brands.map((b) => b.name).slice(0, 80).join(", ");
   const systemPrompt = mode === "finalize" ? FINALIZE_PROMPT : SYSTEM_PROMPT;
 
+  const aiMessages: { role: "system" | "user" | "assistant"; content: string }[] = [
+    {
+      role: "system",
+      content: `${systemPrompt}\n\nMarkalar (eşleştir): ${brandList || "—"}`,
+    },
+    ...input.messages.map((m) => ({
+      role: m.role as "user" | "assistant",
+      content: m.content,
+    })),
+  ];
+
+  if (input.currentTitle?.trim() || input.currentBody?.trim()) {
+    aiMessages.push({
+      role: "user",
+      content: `[Sistem notu — mevcut taslak]\nBaşlık: ${input.currentTitle ?? ""}\nGövde: ${input.currentBody ?? ""}`,
+    });
+  }
+
   try {
     const raw = await chatCompleteJson<AiAssistJson>({
-      messages: [
-        { role: "system", content: systemPrompt },
-        {
-          role: "user",
-          content: `Markalar (eşleştir): ${brandList || "—"}
-
-Mevcut taslak başlık: ${input.currentTitle ?? ""}
-Mevcut taslak gövde: ${input.currentBody ?? ""}
-
-Sohbet:
-${input.messages.map((m) => `${m.role === "user" ? "Kullanıcı" : "Asistan"}: ${m.content}`).join("\n")}`,
-        },
-      ],
-      temperature: mode === "finalize" ? 0.5 : 0.65,
-      maxTokens: mode === "finalize" ? 1200 : 900,
+      messages: aiMessages,
+      temperature: mode === "finalize" ? 0.45 : 0.55,
+      maxTokens: mode === "finalize" ? 1400 : 1000,
     });
 
     const matched =

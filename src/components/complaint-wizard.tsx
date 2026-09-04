@@ -93,7 +93,6 @@ export function ComplaintWizard({
   const [rating, setRating] = useState(0);
 
   const [files, setFiles] = useState<AcceptedFile[]>([]);
-  const [mediaPrivacy, setMediaPrivacy] = useState<"public" | "brand_only" | "super_admin_only">("public");
   const [kvkk, setKvkk] = useState(false);
 
   const [submitting, setSubmitting] = useState(false);
@@ -102,6 +101,8 @@ export function ComplaintWizard({
   const [detectedBrandName, setDetectedBrandName] = useState<string | null>(null);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const chatScrollRef = useRef<HTMLDivElement>(null);
+  const shouldAutoScrollRef = useRef(true);
 
   const selectedBrand = useMemo(
     () => brands.find((b) => b.id === brandId) ?? null,
@@ -111,8 +112,11 @@ export function ComplaintWizard({
   const sidebarBrandLabel = selectedBrand?.name ?? detectedBrandName;
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, step]);
+    if (!shouldAutoScrollRef.current) return;
+    const el = chatScrollRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+  }, [messages, aiLoading, step1Phase]);
 
   useEffect(() => {
     let cancelled = false;
@@ -213,6 +217,7 @@ export function ComplaintWizard({
     const text = chatInput.trim();
     if (!text || aiLoading) return;
 
+    shouldAutoScrollRef.current = true;
     const nextMessages: ChatMessage[] = [...messages, { role: "user", text }];
     setMessages(nextMessages);
     setChatInput("");
@@ -336,7 +341,7 @@ export function ComplaintWizard({
           const fd = new FormData();
           fd.append("file", af.file);
           fd.append("folder", "complaint-evidence");
-          fd.append("visibility", mediaPrivacy);
+          fd.append("visibility", "super_admin_only");
 
           const upRes = await fetch("/api/upload", { method: "POST", credentials: "include", body: fd });
           const upJson = (await upRes.json().catch(() => ({}))) as {
@@ -393,12 +398,12 @@ export function ComplaintWizard({
         setSubmitting(false);
       }
     },
-    [files, mediaPrivacy, title, body, brandId, categoryId, platformUsername, rating, onSuccess],
+    [files, title, body, brandId, categoryId, platformUsername, rating, onSuccess],
   );
 
   return (
-    <div className="min-h-[calc(100dvh-4rem)] bg-surface">
-      <div className="mx-auto max-w-6xl px-3 sm:px-6 py-4 sm:py-6 lg:py-10">
+    <div className="min-h-[100dvh] bg-gradient-to-b from-surface via-surface to-brand-soft/20">
+      <div className="mx-auto max-w-6xl px-2 sm:px-6 py-3 sm:py-6 lg:py-10">
         {/* Mobil adım göstergesi */}
         <div className="lg:hidden mb-4 rounded-2xl bg-[oklch(0.22_0.03_262)] px-4 py-3">
           <div className="flex items-center justify-between gap-2 mb-2">
@@ -429,7 +434,7 @@ export function ComplaintWizard({
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-[300px_1fr] gap-0 min-h-[calc(100dvh-8rem)] lg:min-h-[640px] rounded-[20px] sm:rounded-[28px] overflow-hidden shadow-lift ring-1 ring-rule">
+        <div className="grid lg:grid-cols-[300px_1fr] gap-0 min-h-[calc(100dvh-5.5rem)] sm:min-h-[calc(100dvh-6rem)] lg:min-h-[640px] rounded-[18px] sm:rounded-[28px] overflow-hidden shadow-lift ring-1 ring-rule">
           {/* Sidebar — sadece masaüstü */}
           <aside className="hidden lg:flex bg-[oklch(0.22_0.03_262)] text-white p-6 lg:p-8 flex-col">
             <SiteLogoMark tone="on-dark" linked className="mb-8" />
@@ -480,7 +485,7 @@ export function ComplaintWizard({
           </aside>
 
           {/* Ana panel */}
-          <div className="bg-card flex flex-col min-h-0 lg:min-h-[520px]">
+          <div className="bg-card flex flex-col min-h-0 lg:min-h-[520px] h-[calc(100dvh-5.5rem)] sm:h-auto max-h-[100dvh] sm:max-h-none">
             <header className="hidden sm:flex items-center justify-between gap-4 px-5 sm:px-8 py-3 sm:py-4 border-b border-rule shrink-0">
               <SiteLogoTitle className="text-[15px] lg:hidden gap-0" />
               <div className="flex items-center gap-4 text-[13px] text-navy-mid ml-auto">
@@ -492,8 +497,8 @@ export function ComplaintWizard({
 
             <div
               className={cn(
-                "flex-1 min-h-0 overflow-y-auto",
-                step === 1 ? "flex flex-col px-3 sm:px-8 py-3 sm:py-6" : "px-3 sm:px-8 py-4 sm:py-6",
+                "flex-1 min-h-0",
+                step === 1 ? "flex flex-col overflow-hidden" : "overflow-y-auto px-3 sm:px-8 py-4 sm:py-6",
               )}
             >
               {loadingMeta ? (
@@ -510,6 +515,13 @@ export function ComplaintWizard({
                   title={title}
                   body={body}
                   chatEndRef={chatEndRef}
+                  chatScrollRef={chatScrollRef}
+                  onChatScroll={() => {
+                    const el = chatScrollRef.current;
+                    if (!el) return;
+                    shouldAutoScrollRef.current =
+                      el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+                  }}
                   aiLoading={aiLoading}
                   draftQuality={draftQuality}
                 />
@@ -533,8 +545,6 @@ export function ComplaintWizard({
                 <StepEvidence
                   files={files}
                   onFiles={setFiles}
-                  mediaPrivacy={mediaPrivacy}
-                  onMediaPrivacy={setMediaPrivacy}
                   kvkk={kvkk}
                   onKvkk={setKvkk}
                   submitting={submitting}
@@ -543,7 +553,12 @@ export function ComplaintWizard({
               )}
             </div>
 
-            <footer className="px-3 sm:px-8 py-3 sm:py-4 border-t border-rule flex items-center justify-between gap-3 bg-card/95 backdrop-blur-sm shrink-0 safe-area-pb">
+            <footer
+              className={cn(
+                "px-3 sm:px-8 py-3 sm:py-4 border-t border-rule flex items-center justify-between gap-3 bg-card/95 backdrop-blur-sm shrink-0 safe-area-pb",
+                step === 1 && step1Phase === "chat" && "hidden sm:flex",
+              )}
+            >
               {step > 1 ? (
                 <button
                   type="button"
@@ -606,6 +621,8 @@ function StepDetail({
   title,
   body,
   chatEndRef,
+  chatScrollRef,
+  onChatScroll,
   aiLoading,
   draftQuality,
 }: {
@@ -617,13 +634,15 @@ function StepDetail({
   title: string;
   body: string;
   chatEndRef: RefObject<HTMLDivElement | null>;
+  chatScrollRef: RefObject<HTMLDivElement | null>;
+  onChatScroll: () => void;
   aiLoading: boolean;
   draftQuality: AssistResponse["draftQuality"];
 }) {
   if (phase === "summary") {
     return (
-      <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full min-h-0">
-        <div className="flex-1 overflow-y-auto space-y-4 pb-4">
+      <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full min-h-0 px-3 sm:px-8 py-4 sm:py-6 overflow-y-auto">
+        <div className="space-y-4 pb-4">
           <div className="rounded-2xl ring-1 ring-brand/25 bg-brand-soft/30 p-4 sm:p-5">
             <div className="flex items-center gap-2 mb-3">
               <Sparkles className="size-4 text-brand shrink-0" />
@@ -653,8 +672,21 @@ function StepDetail({
   }
 
   return (
-    <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full min-h-0">
-      <div className="flex-1 min-h-[280px] sm:min-h-[320px] overflow-y-auto rounded-2xl ring-1 ring-rule bg-surface/40 p-3 sm:p-4 space-y-3">
+    <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full min-h-0 px-3 sm:px-8 py-3 sm:py-4">
+      <div className="shrink-0 mb-3 sm:mb-4">
+        <div className="inline-flex items-center gap-2 rounded-full bg-brand-soft px-3 py-1.5 text-[12px] font-semibold text-brand ring-1 ring-brand/15">
+          <Sparkles className="size-3.5" /> Yapay zeka asistanı
+        </div>
+        <p className="mt-2 text-[13px] text-navy-mid leading-relaxed">
+          Sorununuzu doğal bir dille anlatın; asistan metni sizin için düzenleyecek.
+        </p>
+      </div>
+
+      <div
+        ref={chatScrollRef}
+        onScroll={onChatScroll}
+        className="flex-1 min-h-0 overflow-y-auto overscroll-contain rounded-2xl ring-1 ring-rule bg-surface/50 p-3 sm:p-4 space-y-3 touch-pan-y"
+      >
         {messages.map((m, i) => (
           <div key={i} className={cn("flex gap-2", m.role === "user" ? "justify-end" : "justify-start")}>
             {m.role === "bot" && (
@@ -683,25 +715,37 @@ function StepDetail({
         <div ref={chatEndRef} />
       </div>
 
-      <div className="shrink-0 pt-3 pb-1 sticky bottom-0 bg-card">
-        <div className="rounded-full ring-1 ring-rule bg-card flex items-center gap-2 px-3 py-2 shadow-soft">
-          <input
+      <div className="shrink-0 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <label className="sr-only" htmlFor="complaint-chat-input">Mesajınız</label>
+        <div className="rounded-2xl ring-2 ring-brand/30 bg-white shadow-[0_4px_24px_oklch(0.76_0.15_162/0.12)] flex items-end gap-2 px-3 py-2.5">
+          <textarea
+            id="complaint-chat-input"
             value={chatInput}
             onChange={(e) => onChatInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), onChatSend())}
-            placeholder="Mesajınızı yazın…"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                onChatSend();
+              }
+            }}
+            placeholder="Örn: Jojobet'te 50.000 TL çekimim 3 gündür bekliyor…"
             disabled={aiLoading}
-            className="flex-1 bg-transparent text-[14px] focus:outline-none min-w-0 disabled:opacity-60 py-2"
+            rows={2}
+            className="flex-1 bg-transparent text-[15px] sm:text-[14px] text-ink placeholder:text-navy-mid/70 focus:outline-none min-w-0 disabled:opacity-60 py-1.5 resize-none leading-relaxed"
           />
           <button
             type="button"
             disabled={aiLoading || !chatInput.trim()}
             onClick={onChatSend}
-            className="size-10 sm:size-11 rounded-full bg-brand text-brand-foreground grid place-items-center shrink-0 hover:brightness-105 disabled:opacity-60"
+            aria-label="Gönder"
+            className="size-11 rounded-xl bg-brand text-brand-foreground grid place-items-center shrink-0 hover:brightness-105 disabled:opacity-50 mb-0.5"
           >
             <Send className="size-4" />
           </button>
         </div>
+        <p className="mt-2 text-[11px] text-navy-mid text-center hidden sm:block">
+          Enter ile gönder · Shift+Enter yeni satır
+        </p>
       </div>
     </div>
   );
@@ -841,8 +885,6 @@ function StepBrand({
 function StepEvidence({
   files,
   onFiles,
-  mediaPrivacy,
-  onMediaPrivacy,
   kvkk,
   onKvkk,
   submitting,
@@ -850,70 +892,49 @@ function StepEvidence({
 }: {
   files: AcceptedFile[];
   onFiles: (f: AcceptedFile[]) => void;
-  mediaPrivacy: "public" | "brand_only" | "super_admin_only";
-  onMediaPrivacy: (v: "public" | "brand_only" | "super_admin_only") => void;
   kvkk: boolean;
   onKvkk: (v: boolean) => void;
   submitting: boolean;
   selectedBrand: Brand | null;
 }) {
   return (
-    <div className="max-w-xl mx-auto space-y-6">
+    <div className="max-w-xl mx-auto space-y-6 px-3 sm:px-0 py-2 sm:py-0">
       <div>
-        <h2 className="font-display text-xl font-bold text-ink">Çözümü hızlandır</h2>
+        <h2 className="font-display text-xl font-bold text-ink">Kanıt ekleyin</h2>
         <p className="mt-1 text-[13px] text-navy-mid leading-relaxed">
           {selectedBrand ? (
             <>
-              <span className="font-semibold text-ink">{selectedBrand.name}</span> ile ilgili elinizde
-              olan ekran görüntüsü veya videoları yükleyin. Kanıtsız başvurular kabul edilmez.
+              <span className="font-semibold text-ink">{selectedBrand.name}</span> ile ilgili ekran
+              görüntüsü veya video yükleyin. Moderasyon sonrası kanıtlar herkese açık yayınlanır.
             </>
           ) : (
-            <>Sorunu kanıtlayan ekran görüntüsü veya video ekleyin.</>
+            <>Sorunu kanıtlayan ekran görüntüsü veya video ekleyin. Onay sonrası herkese açık olur.</>
           )}
         </p>
       </div>
 
-      <div className="rounded-2xl border-2 border-dashed border-brand/25 bg-brand-soft/20 p-4">
+      <div className="rounded-2xl border-2 border-dashed border-brand/30 bg-brand-soft/25 p-5 sm:p-6">
         <FileDropzone files={files} onChange={onFiles} disabled={submitting} required />
         {files.length === 0 && (
-          <div className="mt-3 flex justify-center">
-            <span className="inline-flex items-center gap-2 rounded-full bg-brand text-brand-foreground px-4 h-10 text-[13px] font-semibold pointer-events-none">
-              <ImagePlus className="size-4" /> Görsel Ekle
+          <div className="mt-4 flex flex-col items-center gap-2 text-center">
+            <span className="inline-flex items-center gap-2 rounded-full bg-brand text-brand-foreground px-5 h-11 text-[13px] font-semibold pointer-events-none">
+              <ImagePlus className="size-4" /> Görsel veya video ekle
             </span>
+            <p className="text-[12px] text-navy-mid max-w-xs">
+              Ekran görüntüsü, dekont veya video — en az bir görsel zorunlu
+            </p>
           </div>
         )}
       </div>
 
       {files.length > 0 && (
-        <div>
-          <div className="text-[12px] font-medium text-navy-mid mb-1.5">Medya gizliliği</div>
-          <div className="grid grid-cols-3 gap-2">
-            {(
-              [
-                { v: "public", label: "Herkese açık" },
-                { v: "brand_only", label: "Sadece firma" },
-                { v: "super_admin_only", label: "Sadece admin" },
-              ] as const
-            ).map((o) => (
-              <button
-                type="button"
-                key={o.v}
-                onClick={() => onMediaPrivacy(o.v)}
-                className={cn(
-                  "h-9 rounded-lg text-[12px] font-medium ring-1",
-                  mediaPrivacy === o.v
-                    ? "bg-brand text-brand-foreground ring-brand"
-                    : "ring-rule hover:bg-surface",
-                )}
-              >
-                {o.label}
-              </button>
-            ))}
-          </div>
+        <div className="rounded-xl bg-surface ring-1 ring-rule px-4 py-3 text-[12px] text-navy-mid leading-relaxed">
+          Kanıtlar moderasyon onayından sonra şikayet sayfasında herkese açık görünür. Kişisel
+          veriler moderasyon ekibi tarafından gizlenebilir.
         </div>
       )}
 
-      <label className="flex items-start gap-3 text-[13px] text-navy cursor-pointer rounded-xl ring-1 ring-rule p-4">
+      <label className="flex items-start gap-3 text-[13px] text-navy cursor-pointer rounded-xl ring-1 ring-rule p-4 bg-card">
         <input
           type="checkbox"
           checked={kvkk}

@@ -30,7 +30,8 @@ import { siteContactMailto } from "@/lib/contact";
 const EASE = [0.16, 1, 0.3, 1] as const;
 
 const BRAND_LOGOS = [
-  "matbet", "betist", "pinbahis", "bahsegel", "betsat", "restbet", "gobahis",
+  "jojobet", "holiganbet", "matbet", "padisahbet", "beygirbet", "evetabi",
+  "betist", "pinbahis", "bahsegel", "betsat", "restbet", "gobahis",
   "casinometropol", "betpark", "kingbetting", "betovis", "ganyanbet", "sonbahis",
   "livebahis", "medusabahis", "eyfelcasino", "betboo", "betebet", "efesbet",
   "rotabet", "suratbet", "sohobet", "casinoas", "casifix", "betcool", "betlivo",
@@ -70,7 +71,7 @@ export function TepkimvarSealPage({ stats }: Props) {
       <section className="relative overflow-hidden border-b border-rule site-cta-shell">
         <HeroBackground reduceMotion={!!reduceMotion} />
 
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-16 sm:py-24 grid lg:grid-cols-2 gap-12 lg:gap-16 items-center relative">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-12 sm:py-24 grid lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 items-center relative">
           <motion.div
             initial="hidden"
             animate="visible"
@@ -384,11 +385,18 @@ function LogoMarquee() {
             title={slug}
           >
             <img
-              src={`/brand-logos/${slug}.png`}
+              src={`/api/brand-logo/${slug}`}
               alt={slug}
               className="max-h-8 sm:max-h-9 w-auto object-contain pointer-events-none"
               loading="lazy"
               draggable={false}
+              onError={(e) => {
+                const img = e.currentTarget;
+                if (!img.dataset.fallback) {
+                  img.dataset.fallback = "1";
+                  img.src = `/brand-logos/${slug}.png`;
+                }
+              }}
             />
           </Link>
         ))}

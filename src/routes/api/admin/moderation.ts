@@ -7,7 +7,7 @@ import { recordStatusChange } from "@/lib/server/history";
 import { notifyBrandFollowers } from "@/lib/server/notify";
 import { HttpError, errorResponse, requireStaff } from "@/lib/server/guard";
 import { ensureDbPatches } from "@/lib/server/ensure-db-patches";
-import { assertComplaintHasVisualEvidence } from "@/lib/server/complaint-evidence";
+import { assertComplaintHasVisualEvidence, publishComplaintEvidence } from "@/lib/server/complaint-evidence";
 
 const KINDS = [
   "escalation",
@@ -121,6 +121,10 @@ export const Route = createFileRoute("/api/admin/moderation")({
                   updatedAt: new Date(),
                 })
                 .where(eq(schema.complaints.id, c.id));
+
+              if (state === "resolved") {
+                await publishComplaintEvidence(c.id);
+              }
 
               await recordStatusChange({
                 complaintId: c.id,

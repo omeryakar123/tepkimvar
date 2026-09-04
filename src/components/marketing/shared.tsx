@@ -5,7 +5,8 @@ import type { ReactNode } from "react";
 export const EASE = [0.16, 1, 0.3, 1] as const;
 
 export const BRAND_LOGOS = [
-  "matbet", "betist", "pinbahis", "bahsegel", "betsat", "restbet", "gobahis",
+  "jojobet", "holiganbet", "matbet", "padisahbet", "beygirbet", "evetabi",
+  "betist", "pinbahis", "bahsegel", "betsat", "restbet", "gobahis",
   "casinometropol", "betpark", "kingbetting", "betovis", "ganyanbet", "sonbahis",
   "livebahis", "medusabahis", "eyfelcasino", "betboo", "betebet", "efesbet",
   "rotabet", "suratbet", "sohobet", "casinoas", "casifix", "betcool", "betlivo",
@@ -74,11 +75,18 @@ export function LogoMarquee() {
             title={slug}
           >
             <img
-              src={`/brand-logos/${slug}.png`}
+              src={`/api/brand-logo/${slug}`}
               alt={slug}
               className="max-h-8 sm:max-h-9 w-auto object-contain pointer-events-none"
               loading="lazy"
               draggable={false}
+              onError={(e) => {
+                const img = e.currentTarget;
+                if (!img.dataset.fallback) {
+                  img.dataset.fallback = "1";
+                  img.src = `/brand-logos/${slug}.png`;
+                }
+              }}
             />
           </Link>
         ))}

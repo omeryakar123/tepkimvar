@@ -7,6 +7,7 @@ import { normalizePlatformUsername } from "@/lib/server/ai/prompts";
 import { isBrandMember, isStaff, optionalUser } from "@/lib/server/guard";
 import { supportedComplaintIds } from "@/lib/server/complaint-support";
 import { loadAuthorProfile } from "@/lib/server/author-profile";
+import { loadComplaintAttachments } from "@/lib/server/complaint-evidence";
 import { ensureDbPatches } from "@/lib/server/ensure-db-patches";
 
 // Public: tek şikayet. $id uuid, public_id veya short_id olabilir.
@@ -126,7 +127,27 @@ export const Route = createFileRoute("/api/complaints/$id")({
           (dc as typeof dc & { user_supported?: boolean }).user_supported = supported.has(dc.id);
         }
 
-        return Response.json(dc);
+        const attachments = await loadComplaintAttachments(row.c.id);
+        const canSeeRestricted =
+          isOwner || staff || (viewer && (await isBrandMember(viewer.id, row.c.brandId)));
+
+        const publicAttachments = attachments
+          .filter((a) => {
+            if (a.visibility === "public") return true;
+            if (canSeeRestricted) return true;
+            return false;
+          })
+          .map((a) => ({
+            id: a.id,
+            url: `/api/files/${a.storage_path}`,
+            file_type: a.file_type,
+            sensitive: a.sensitive,
+          }));
+
+        return Response.json({
+          ...dc,
+          attachments: publicAttachments,
+        });
       },
     },
   },
