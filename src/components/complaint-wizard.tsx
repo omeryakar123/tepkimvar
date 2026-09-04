@@ -717,7 +717,7 @@ function StepDetail({
 
       <div className="shrink-0 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         <label className="sr-only" htmlFor="complaint-chat-input">Mesajınız</label>
-        <div className="rounded-2xl ring-2 ring-brand/30 bg-white shadow-[0_4px_24px_oklch(0.76_0.15_162/0.12)] flex items-end gap-2 px-3 py-2.5">
+        <div className="rounded-2xl ring-2 ring-brand/25 bg-surface flex items-end gap-2 px-3 py-2.5 shadow-soft">
           <textarea
             id="complaint-chat-input"
             value={chatInput}
@@ -728,10 +728,11 @@ function StepDetail({
                 onChatSend();
               }
             }}
-            placeholder="Örn: Jojobet'te 50.000 TL çekimim 3 gündür bekliyor…"
+            placeholder="Mesajınızı yazın…"
             disabled={aiLoading}
             rows={2}
-            className="flex-1 bg-transparent text-[15px] sm:text-[14px] text-ink placeholder:text-navy-mid/70 focus:outline-none min-w-0 disabled:opacity-60 py-1.5 resize-none leading-relaxed"
+            className="flex-1 bg-transparent text-[15px] sm:text-[14px] text-navy-deep placeholder:text-navy-mid focus:outline-none min-w-0 disabled:opacity-60 py-1.5 resize-none leading-relaxed caret-brand"
+            style={{ WebkitTextFillColor: "currentColor" }}
           />
           <button
             type="button"
