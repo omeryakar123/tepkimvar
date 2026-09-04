@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Plus, Search, ShieldCheck, Crown } from "lucide-react";
+import { Plus, Search, ShieldCheck, Crown, Database } from "lucide-react";
 import { toast } from "sonner";
-import { apiGet, apiSend } from "@/lib/admin-api";
+import { apiGet, apiSend, apiSendJson } from "@/lib/admin-api";
 import { Modal } from "@/components/ui/modal";
 
 type Brand = { id: string; name: string; slug: string; logo_url: string | null; verified: boolean; premium: boolean; created_at: string };
@@ -17,6 +17,7 @@ function AdminBrandsPage() {
   const [cats, setCats] = useState<Category[]>([]);
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
+  const [seeding, setSeeding] = useState(false);
 
   async function load() {
     const data = await apiGet<{ items: Brand[] }>("/api/admin/brands");
@@ -40,6 +41,30 @@ function AdminBrandsPage() {
     if (await apiSend("/api/admin/brands", "DELETE", { id })) { toast.success("Silindi"); load(); }
   }
 
+  async function runBrandSeed() {
+    if (
+      !confirm(
+        "bilisim-brand-names.txt listesindeki eksik markalar eklenecek ve logolar güncellenecek. Devam?",
+      )
+    ) {
+      return;
+    }
+    setSeeding(true);
+    const res = await apiSendJson<{ ok: boolean; before: number; after: number; added: number; seed: { out: string } }>(
+      "/api/admin/brands-seed",
+      "POST",
+      {},
+    );
+    setSeeding(false);
+    if (!res) return;
+    if (res.ok) {
+      toast.success(`Marka seed tamam: ${res.before} → ${res.after} (+${res.added}). ${res.seed.out}`);
+      load();
+    } else {
+      toast.error("Marka seed kısmen başarısız — logları kontrol edin");
+    }
+  }
+
   return (
     <div className="px-6 lg:px-10 py-8 space-y-6">
       <div className="flex flex-wrap items-end gap-4 justify-between">
@@ -47,9 +72,20 @@ function AdminBrandsPage() {
           <div className="eyebrow text-navy-mid">Firma Yönetimi</div>
           <h1 className="mt-1 font-display text-3xl font-black tracking-tight text-ink">Firmalar</h1>
         </div>
-        <button onClick={() => setOpen(true)} className="inline-flex items-center gap-2 rounded-full bg-brand text-brand-foreground px-5 h-10 text-[13px] font-semibold hover:brightness-105">
-          <Plus className="size-4" /> Yeni Firma
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => void runBrandSeed()}
+            disabled={seeding}
+            className="inline-flex items-center gap-2 rounded-full ring-1 ring-rule bg-surface text-ink px-5 h-10 text-[13px] font-semibold hover:bg-surface/80 disabled:opacity-60"
+          >
+            <Database className="size-4" />
+            {seeding ? "Seed çalışıyor…" : "Toplu marka ekle"}
+          </button>
+          <button onClick={() => setOpen(true)} className="inline-flex items-center gap-2 rounded-full bg-brand text-brand-foreground px-5 h-10 text-[13px] font-semibold hover:brightness-105">
+            <Plus className="size-4" /> Yeni Firma
+          </button>
+        </div>
       </div>
 
       <div className="bg-card rounded-2xl ring-1 ring-rule">
