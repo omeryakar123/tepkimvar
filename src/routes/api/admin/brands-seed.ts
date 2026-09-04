@@ -1,25 +1,41 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { spawn } from "node:child_process";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { count } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { errorResponse, requireStaff } from "@/lib/server/guard";
+import { seedUserRequestedBrands } from "@/lib/server/seed-user-requested-brands";
 
-/** Admin: bilisim-brand-names.txt → DB seed + Telegram logolar + logo düzeltme */
-
+/** Opsiyonel: sunucuda scripts/ varsa logo senkronu dener; başarısız olursa seed yine geçerli sayılır. */
 function runScript(name: string, args: string[] = []) {
-  return new Promise<{ stdout: string; stderr: string; code: number }>((resolve) => {
-    const script = join(process.cwd(), "scripts", name);
-    const child = spawn("bun", [script, ...args], {
-      env: process.env,
-      cwd: process.cwd(),
-    });
-    let stdout = "";
-    let stderr = "";
-    child.stdout.on("data", (d) => (stdout += d.toString()));
-    child.stderr.on("data", (d) => (stderr += d.toString()));
-    child.on("close", (code) => resolve({ stdout, stderr, code: code ?? 1 }));
-  });
+  return new Promise<{ stdout: string; stderr: string; code: number; skipped?: boolean }>(
+    (resolve) => {
+      const script = join(process.cwd(), "scripts", name);
+      if (!existsSync(script)) {
+        resolve({
+          stdout: "",
+          stderr: `Script bulunamadı: ${script}`,
+          code: 0,
+          skipped: true,
+        });
+        return;
+      }
+
+      const child = spawn("bun", [script, ...args], {
+        env: process.env,
+        cwd: process.cwd(),
+      });
+      let stdout = "";
+      let stderr = "";
+      child.stdout.on("data", (d) => (stdout += d.toString()));
+      child.stderr.on("data", (d) => (stderr += d.toString()));
+      child.on("error", (err) => {
+        resolve({ stdout, stderr: err.message, code: 1 });
+      });
+      child.on("close", (code) => resolve({ stdout, stderr, code: code ?? 1 }));
+    },
+  );
 }
 
 export const Route = createFileRoute("/api/admin/brands-seed")({
@@ -34,26 +50,45 @@ export const Route = createFileRoute("/api/admin/brands-seed")({
 
           const [{ before }] = await db.select({ before: count() }).from(schema.brands);
 
-          const seed = await runScript("seed-user-requested-brands.mjs");
+          const seed = await seedUserRequestedBrands();
+
           const telegram = await runScript("sync-telegram-logos.mjs");
           const logos = await runScript("fix-brand-logos.mjs", ["--all", "--force"]);
 
           const [{ after }] = await db.select({ after: count() }).from(schema.brands);
 
-          const ok = seed.code === 0 && telegram.code === 0 && logos.code === 0;
+          const logoWarnings: string[] = [];
+          if (telegram.code !== 0 && !telegram.skipped) {
+            logoWarnings.push(`Telegram logo: ${telegram.stderr || telegram.stdout || "hata"}`);
+          }
+          if (logos.code !== 0 && !logos.skipped) {
+            logoWarnings.push(`Logo düzeltme: ${logos.stderr || logos.stdout || "hata"}`);
+          }
 
-          return Response.json(
-            {
-              ok,
-              before,
-              after,
-              added: after - before,
-              seed: { code: seed.code, out: seed.stdout.trim(), err: seed.stderr.trim() },
-              telegram: { code: telegram.code, out: telegram.stdout.trim(), err: telegram.stderr.trim() },
-              logos: { code: logos.code, out: logos.stdout.trim(), err: logos.stderr.trim() },
+          return Response.json({
+            ok: true,
+            before,
+            after,
+            added: after - before,
+            seed: {
+              listSize: seed.listSize,
+              added: seed.added,
+              skipped: seed.skipped,
+              addedNames: seed.addedNames,
+              skippedSlugs: seed.skippedSlugs,
             },
-            { status: ok ? 200 : 502 },
-          );
+            logos: {
+              telegramSkipped: Boolean(telegram.skipped),
+              logosSkipped: Boolean(logos.skipped),
+              warnings: logoWarnings,
+            },
+            message:
+              seed.added > 0
+                ? `${seed.added} marka eklendi, ${seed.skipped} zaten vardı.`
+                : seed.skipped > 0
+                  ? `Tüm markalar zaten kayıtlı (${seed.skipped} adet).`
+                  : "Liste boş — eklenecek marka yok.",
+          });
         } catch (e) {
           return errorResponse(e);
         }

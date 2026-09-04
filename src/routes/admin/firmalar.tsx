@@ -44,24 +44,40 @@ function AdminBrandsPage() {
   async function runBrandSeed() {
     if (
       !confirm(
-        "bilisim-brand-names.txt listesindeki eksik markalar değil — yalnızca kullanıcı listesinde olup sitede bulunmayan markalar eklenecek. Devam?",
+        "Sitede olmayan 86 marka eklenecek (zaten kayıtlı olanlar atlanır). Devam?",
       )
     ) {
       return;
     }
     setSeeding(true);
-    const res = await apiSendJson<{ ok: boolean; before: number; after: number; added: number; seed: { out: string } }>(
-      "/api/admin/brands-seed",
-      "POST",
-      {},
-    );
+    const res = await apiSendJson<{
+      ok: boolean;
+      before: number;
+      after: number;
+      added: number;
+      message?: string;
+      seed: { added: number; skipped: number; addedNames: string[] };
+      logos?: { warnings?: string[] };
+    }>("/api/admin/brands-seed", "POST", {});
     setSeeding(false);
     if (!res) return;
     if (res.ok) {
-      toast.success(`Marka seed tamam: ${res.before} → ${res.after} (+${res.added}). ${res.seed.out}`);
+      const names =
+        res.seed.addedNames.length > 0
+          ? res.seed.addedNames.slice(0, 8).join(", ") +
+            (res.seed.addedNames.length > 8 ? ` +${res.seed.addedNames.length - 8} daha` : "")
+          : "";
+      toast.success(
+        `${res.message ?? "Tamam"} (${res.before} → ${res.after})${names ? `: ${names}` : ""}`,
+      );
+      if (res.logos?.warnings?.length) {
+        toast.message("Logo senkronu kısmen atlandı", {
+          description: res.logos.warnings.join(" · "),
+        });
+      }
       load();
     } else {
-      toast.error("Marka seed kısmen başarısız — logları kontrol edin");
+      toast.error("Marka seed başarısız");
     }
   }
 
