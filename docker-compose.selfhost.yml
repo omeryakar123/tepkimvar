@@ -23,7 +23,7 @@ services:
       DATABASE_URL: "postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/postgres"
       BETTER_AUTH_SECRET: "${BETTER_AUTH_SECRET}"
       BETTER_AUTH_URL: "https://${DOMAIN}"
-      TRUSTED_ORIGINS: "https://${DOMAIN}"
+      TRUSTED_ORIGINS: "https://${DOMAIN},https://www.${DOMAIN}"
       SITE_URL: "https://${DOMAIN}"
       VITE_SITE_URL: "https://${DOMAIN}"
       INTERNAL_API_URL: "http://localhost:3000"
