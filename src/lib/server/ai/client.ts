@@ -81,7 +81,7 @@ function looksLikeOpenRouterKey(key: string): boolean {
 }
 
 function resolveApiKey(): string {
-  return env("AI_API_KEY") || env("FAL_KEY");
+  return env("AI_API_KEY") || env("OPENAI_API_KEY") || env("FAL_KEY");
 }
 
 function resolveProvider(apiKey: string): AiProvider {

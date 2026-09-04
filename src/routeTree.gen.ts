@@ -52,6 +52,7 @@ import { Route as ApiBrandApplicationRouteImport } from './routes/api/brand-appl
 import { Route as ApiBlogRouteImport } from './routes/api/blog'
 import { Route as ApiAuditRouteImport } from './routes/api/audit'
 import { Route as AdminSikayetlerRouteImport } from './routes/admin/sikayetler'
+import { Route as AdminSikayetAsistaniRouteImport } from './routes/admin/sikayet-asistani'
 import { Route as AdminPremiumRouteImport } from './routes/admin/premium'
 import { Route as AdminModerasyonRouteImport } from './routes/admin/moderasyon'
 import { Route as AdminMedyaRouteImport } from './routes/admin/medya'
@@ -115,6 +116,7 @@ import { Route as ApiAdminMediaRouteImport } from './routes/api/admin/media'
 import { Route as ApiAdminEscalationsRouteImport } from './routes/api/admin/escalations'
 import { Route as ApiAdminComplaintsRouteImport } from './routes/api/admin/complaints'
 import { Route as ApiAdminComplaintAttachmentsRouteImport } from './routes/api/admin/complaint-attachments'
+import { Route as ApiAdminComplaintAssistantRouteImport } from './routes/api/admin/complaint-assistant'
 import { Route as ApiAdminCmsRouteImport } from './routes/api/admin/cms'
 import { Route as ApiAdminCategoriesRouteImport } from './routes/api/admin/categories'
 import { Route as ApiAdminBrandsRouteImport } from './routes/api/admin/brands'
@@ -361,6 +363,11 @@ const ApiAuditRoute = ApiAuditRouteImport.update({
 const AdminSikayetlerRoute = AdminSikayetlerRouteImport.update({
   id: '/sikayetler',
   path: '/sikayetler',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSikayetAsistaniRoute = AdminSikayetAsistaniRouteImport.update({
+  id: '/sikayet-asistani',
+  path: '/sikayet-asistani',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminPremiumRoute = AdminPremiumRouteImport.update({
@@ -679,6 +686,12 @@ const ApiAdminComplaintAttachmentsRoute =
     path: '/api/admin/complaint-attachments',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiAdminComplaintAssistantRoute =
+  ApiAdminComplaintAssistantRouteImport.update({
+    id: '/api/admin/complaint-assistant',
+    path: '/api/admin/complaint-assistant',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiAdminCmsRoute = ApiAdminCmsRouteImport.update({
   id: '/api/admin/cms',
   path: '/api/admin/cms',
@@ -882,6 +895,7 @@ export interface FileRoutesByFullPath {
   '/admin/medya': typeof AdminMedyaRoute
   '/admin/moderasyon': typeof AdminModerasyonRoute
   '/admin/premium': typeof AdminPremiumRoute
+  '/admin/sikayet-asistani': typeof AdminSikayetAsistaniRoute
   '/admin/sikayetler': typeof AdminSikayetlerRoute
   '/api/audit': typeof ApiAuditRoute
   '/api/blog': typeof ApiBlogRoute
@@ -942,6 +956,7 @@ export interface FileRoutesByFullPath {
   '/api/admin/brands': typeof ApiAdminBrandsRouteWithChildren
   '/api/admin/categories': typeof ApiAdminCategoriesRoute
   '/api/admin/cms': typeof ApiAdminCmsRoute
+  '/api/admin/complaint-assistant': typeof ApiAdminComplaintAssistantRoute
   '/api/admin/complaint-attachments': typeof ApiAdminComplaintAttachmentsRoute
   '/api/admin/complaints': typeof ApiAdminComplaintsRoute
   '/api/admin/escalations': typeof ApiAdminEscalationsRoute
@@ -1019,6 +1034,7 @@ export interface FileRoutesByTo {
   '/admin/medya': typeof AdminMedyaRoute
   '/admin/moderasyon': typeof AdminModerasyonRoute
   '/admin/premium': typeof AdminPremiumRoute
+  '/admin/sikayet-asistani': typeof AdminSikayetAsistaniRoute
   '/admin/sikayetler': typeof AdminSikayetlerRoute
   '/api/audit': typeof ApiAuditRoute
   '/api/blog': typeof ApiBlogRoute
@@ -1080,6 +1096,7 @@ export interface FileRoutesByTo {
   '/api/admin/brands': typeof ApiAdminBrandsRouteWithChildren
   '/api/admin/categories': typeof ApiAdminCategoriesRoute
   '/api/admin/cms': typeof ApiAdminCmsRoute
+  '/api/admin/complaint-assistant': typeof ApiAdminComplaintAssistantRoute
   '/api/admin/complaint-attachments': typeof ApiAdminComplaintAttachmentsRoute
   '/api/admin/complaints': typeof ApiAdminComplaintsRoute
   '/api/admin/escalations': typeof ApiAdminEscalationsRoute
@@ -1161,6 +1178,7 @@ export interface FileRoutesById {
   '/admin/medya': typeof AdminMedyaRoute
   '/admin/moderasyon': typeof AdminModerasyonRoute
   '/admin/premium': typeof AdminPremiumRoute
+  '/admin/sikayet-asistani': typeof AdminSikayetAsistaniRoute
   '/admin/sikayetler': typeof AdminSikayetlerRoute
   '/api/audit': typeof ApiAuditRoute
   '/api/blog': typeof ApiBlogRoute
@@ -1222,6 +1240,7 @@ export interface FileRoutesById {
   '/api/admin/brands': typeof ApiAdminBrandsRouteWithChildren
   '/api/admin/categories': typeof ApiAdminCategoriesRoute
   '/api/admin/cms': typeof ApiAdminCmsRoute
+  '/api/admin/complaint-assistant': typeof ApiAdminComplaintAssistantRoute
   '/api/admin/complaint-attachments': typeof ApiAdminComplaintAttachmentsRoute
   '/api/admin/complaints': typeof ApiAdminComplaintsRoute
   '/api/admin/escalations': typeof ApiAdminEscalationsRoute
@@ -1304,6 +1323,7 @@ export interface FileRouteTypes {
     | '/admin/medya'
     | '/admin/moderasyon'
     | '/admin/premium'
+    | '/admin/sikayet-asistani'
     | '/admin/sikayetler'
     | '/api/audit'
     | '/api/blog'
@@ -1364,6 +1384,7 @@ export interface FileRouteTypes {
     | '/api/admin/brands'
     | '/api/admin/categories'
     | '/api/admin/cms'
+    | '/api/admin/complaint-assistant'
     | '/api/admin/complaint-attachments'
     | '/api/admin/complaints'
     | '/api/admin/escalations'
@@ -1441,6 +1462,7 @@ export interface FileRouteTypes {
     | '/admin/medya'
     | '/admin/moderasyon'
     | '/admin/premium'
+    | '/admin/sikayet-asistani'
     | '/admin/sikayetler'
     | '/api/audit'
     | '/api/blog'
@@ -1502,6 +1524,7 @@ export interface FileRouteTypes {
     | '/api/admin/brands'
     | '/api/admin/categories'
     | '/api/admin/cms'
+    | '/api/admin/complaint-assistant'
     | '/api/admin/complaint-attachments'
     | '/api/admin/complaints'
     | '/api/admin/escalations'
@@ -1582,6 +1605,7 @@ export interface FileRouteTypes {
     | '/admin/medya'
     | '/admin/moderasyon'
     | '/admin/premium'
+    | '/admin/sikayet-asistani'
     | '/admin/sikayetler'
     | '/api/audit'
     | '/api/blog'
@@ -1643,6 +1667,7 @@ export interface FileRouteTypes {
     | '/api/admin/brands'
     | '/api/admin/categories'
     | '/api/admin/cms'
+    | '/api/admin/complaint-assistant'
     | '/api/admin/complaint-attachments'
     | '/api/admin/complaints'
     | '/api/admin/escalations'
@@ -1739,6 +1764,7 @@ export interface RootRouteChildren {
   ApiAdminBrandsRoute: typeof ApiAdminBrandsRouteWithChildren
   ApiAdminCategoriesRoute: typeof ApiAdminCategoriesRoute
   ApiAdminCmsRoute: typeof ApiAdminCmsRoute
+  ApiAdminComplaintAssistantRoute: typeof ApiAdminComplaintAssistantRoute
   ApiAdminComplaintAttachmentsRoute: typeof ApiAdminComplaintAttachmentsRoute
   ApiAdminComplaintsRoute: typeof ApiAdminComplaintsRoute
   ApiAdminEscalationsRoute: typeof ApiAdminEscalationsRoute
@@ -2077,6 +2103,13 @@ declare module '@tanstack/react-router' {
       path: '/sikayetler'
       fullPath: '/admin/sikayetler'
       preLoaderRoute: typeof AdminSikayetlerRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/sikayet-asistani': {
+      id: '/admin/sikayet-asistani'
+      path: '/sikayet-asistani'
+      fullPath: '/admin/sikayet-asistani'
+      preLoaderRoute: typeof AdminSikayetAsistaniRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/premium': {
@@ -2520,6 +2553,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAdminComplaintAttachmentsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/admin/complaint-assistant': {
+      id: '/api/admin/complaint-assistant'
+      path: '/api/admin/complaint-assistant'
+      fullPath: '/api/admin/complaint-assistant'
+      preLoaderRoute: typeof ApiAdminComplaintAssistantRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/admin/cms': {
       id: '/api/admin/cms'
       path: '/api/admin/cms'
@@ -2824,6 +2864,7 @@ interface AdminRouteChildren {
   AdminMedyaRoute: typeof AdminMedyaRoute
   AdminModerasyonRoute: typeof AdminModerasyonRoute
   AdminPremiumRoute: typeof AdminPremiumRoute
+  AdminSikayetAsistaniRoute: typeof AdminSikayetAsistaniRoute
   AdminSikayetlerRoute: typeof AdminSikayetlerRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminFirmaIdRoute: typeof AdminFirmaIdRoute
@@ -2843,6 +2884,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminMedyaRoute: AdminMedyaRoute,
   AdminModerasyonRoute: AdminModerasyonRoute,
   AdminPremiumRoute: AdminPremiumRoute,
+  AdminSikayetAsistaniRoute: AdminSikayetAsistaniRoute,
   AdminSikayetlerRoute: AdminSikayetlerRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminFirmaIdRoute: AdminFirmaIdRoute,
@@ -3019,6 +3061,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAdminBrandsRoute: ApiAdminBrandsRouteWithChildren,
   ApiAdminCategoriesRoute: ApiAdminCategoriesRoute,
   ApiAdminCmsRoute: ApiAdminCmsRoute,
+  ApiAdminComplaintAssistantRoute: ApiAdminComplaintAssistantRoute,
   ApiAdminComplaintAttachmentsRoute: ApiAdminComplaintAttachmentsRoute,
   ApiAdminComplaintsRoute: ApiAdminComplaintsRoute,
   ApiAdminEscalationsRoute: ApiAdminEscalationsRoute,

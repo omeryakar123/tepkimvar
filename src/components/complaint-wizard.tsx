@@ -80,12 +80,8 @@ export function ComplaintWizard({
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [chatInput, setChatInput] = useState("");
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      role: "bot",
-      text: "Merhaba, hazırsanız başlayalım. Hangi firmayla sorun yaşadınız ve tam olarak ne oldu?",
-    },
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [greetingLoaded, setGreetingLoaded] = useState(false);
 
   const [brandId, setBrandId] = useState(initialBrandId);
   const [categoryId, setCategoryId] = useState("");
@@ -102,7 +98,9 @@ export function ComplaintWizard({
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const chatScrollRef = useRef<HTMLDivElement>(null);
+  const chatInputRef = useRef<HTMLTextAreaElement>(null);
   const shouldAutoScrollRef = useRef(true);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   const selectedBrand = useMemo(
     () => brands.find((b) => b.id === brandId) ?? null,
@@ -112,11 +110,41 @@ export function ComplaintWizard({
   const sidebarBrandLabel = selectedBrand?.name ?? detectedBrandName;
 
   useEffect(() => {
-    if (!shouldAutoScrollRef.current) return;
+    if (step !== 1 || step1Phase !== "chat") return;
     const el = chatScrollRef.current;
-    if (!el) return;
-    el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
-  }, [messages, aiLoading, step1Phase]);
+    if (!el || !shouldAutoScrollRef.current) return;
+    requestAnimationFrame(() => {
+      el.scrollTop = el.scrollHeight;
+    });
+  }, [messages, aiLoading, step, step1Phase]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/complaints/assist")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j: { greeting?: string } | null) => {
+        if (cancelled) return;
+        const text =
+          j?.greeting?.trim() ||
+          "Merhaba. Hangi site veya markayla sorun yaşadınız? Kısaca anlatın.";
+        setMessages([{ role: "bot", text }]);
+        setGreetingLoaded(true);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setMessages([
+            {
+              role: "bot",
+              text: "Merhaba. Hangi site veya markayla sorun yaşadınız? Kısaca anlatın.",
+            },
+          ]);
+          setGreetingLoaded(true);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -221,6 +249,10 @@ export function ComplaintWizard({
     const nextMessages: ChatMessage[] = [...messages, { role: "user", text }];
     setMessages(nextMessages);
     setChatInput("");
+
+    requestAnimationFrame(() => {
+      chatInputRef.current?.focus({ preventScroll: true });
+    });
 
     if (step1Phase === "summary" && /^(onay|onaylıyorum|onayliyorum|evet|tamam|kabul|uygun)/i.test(text)) {
       if (validateStep1()) setStep(2);
@@ -402,7 +434,7 @@ export function ComplaintWizard({
   );
 
   return (
-    <div className="min-h-[100dvh] bg-gradient-to-b from-surface via-surface to-brand-soft/20">
+    <div className="min-h-[100dvh] bg-gradient-to-b from-surface via-surface to-brand-soft/20 overscroll-none">
       <div className="mx-auto max-w-6xl px-2 sm:px-6 py-3 sm:py-6 lg:py-10">
         {/* Mobil adım göstergesi */}
         <div className="lg:hidden mb-4 rounded-2xl bg-[oklch(0.22_0.03_262)] px-4 py-3">
@@ -485,7 +517,10 @@ export function ComplaintWizard({
           </aside>
 
           {/* Ana panel */}
-          <div className="bg-card flex flex-col min-h-0 lg:min-h-[520px] h-[calc(100dvh-5.5rem)] sm:h-auto max-h-[100dvh] sm:max-h-none">
+          <div
+            ref={panelRef}
+            className="bg-card flex flex-col min-h-0 lg:min-h-[520px] h-[calc(100dvh-5.5rem)] sm:h-auto max-h-[100dvh] sm:max-h-none overflow-hidden"
+          >
             <header className="hidden sm:flex items-center justify-between gap-4 px-5 sm:px-8 py-3 sm:py-4 border-b border-rule shrink-0">
               <SiteLogoTitle className="text-[15px] lg:hidden gap-0" />
               <div className="flex items-center gap-4 text-[13px] text-navy-mid ml-auto">
@@ -501,7 +536,7 @@ export function ComplaintWizard({
                 step === 1 ? "flex flex-col overflow-hidden" : "overflow-y-auto px-3 sm:px-8 py-4 sm:py-6",
               )}
             >
-              {loadingMeta ? (
+              {loadingMeta || !greetingLoaded ? (
                 <div className="grid place-items-center h-48 text-navy-mid">
                   <Loader2 className="size-6 animate-spin" />
                 </div>
@@ -516,6 +551,7 @@ export function ComplaintWizard({
                   body={body}
                   chatEndRef={chatEndRef}
                   chatScrollRef={chatScrollRef}
+                  chatInputRef={chatInputRef}
                   onChatScroll={() => {
                     const el = chatScrollRef.current;
                     if (!el) return;
@@ -581,12 +617,6 @@ export function ComplaintWizard({
                 <div />
               )}
 
-              {step === 1 && step1Phase === "chat" ? (
-                <p className="text-[11px] sm:text-[12px] text-navy-mid text-center flex-1 mx-2 hidden sm:block">
-                  Yapay zeka asistanıyla sohbet edin
-                </p>
-              ) : null}
-
               {step === 1 && step1Phase === "chat" ? null : (
                 <button
                   type="button"
@@ -622,6 +652,7 @@ function StepDetail({
   body,
   chatEndRef,
   chatScrollRef,
+  chatInputRef,
   onChatScroll,
   aiLoading,
   draftQuality,
@@ -635,6 +666,7 @@ function StepDetail({
   body: string;
   chatEndRef: RefObject<HTMLDivElement | null>;
   chatScrollRef: RefObject<HTMLDivElement | null>;
+  chatInputRef: RefObject<HTMLTextAreaElement | null>;
   onChatScroll: () => void;
   aiLoading: boolean;
   draftQuality: AssistResponse["draftQuality"];
@@ -715,10 +747,11 @@ function StepDetail({
         <div ref={chatEndRef} />
       </div>
 
-      <div className="shrink-0 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+      <div className="shrink-0 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] bg-card border-t border-rule/60 -mx-3 sm:-mx-8 px-3 sm:px-8">
         <label className="sr-only" htmlFor="complaint-chat-input">Mesajınız</label>
-        <div className="rounded-2xl ring-2 ring-brand/25 bg-surface flex items-end gap-2 px-3 py-2.5 shadow-soft">
+        <div className="rounded-2xl border-2 border-brand bg-white shadow-[0_8px_32px_rgba(15,23,42,0.14)] flex items-end gap-2 px-3 py-2.5">
           <textarea
+            ref={chatInputRef}
             id="complaint-chat-input"
             value={chatInput}
             onChange={(e) => onChatInput(e.target.value)}
@@ -731,8 +764,8 @@ function StepDetail({
             placeholder="Mesajınızı yazın…"
             disabled={aiLoading}
             rows={2}
-            className="flex-1 bg-transparent text-[15px] sm:text-[14px] text-navy-deep placeholder:text-navy-mid focus:outline-none min-w-0 disabled:opacity-60 py-1.5 resize-none leading-relaxed caret-brand"
-            style={{ WebkitTextFillColor: "currentColor" }}
+            className="flex-1 bg-white text-[15px] sm:text-[14px] text-[#1a2332] placeholder:text-[#64748b] focus:outline-none min-w-0 disabled:opacity-60 py-1.5 resize-none leading-relaxed caret-brand"
+            style={{ WebkitTextFillColor: "#1a2332" }}
           />
           <button
             type="button"
@@ -744,9 +777,6 @@ function StepDetail({
             <Send className="size-4" />
           </button>
         </div>
-        <p className="mt-2 text-[11px] text-navy-mid text-center hidden sm:block">
-          Enter ile gönder · Shift+Enter yeni satır
-        </p>
       </div>
     </div>
   );

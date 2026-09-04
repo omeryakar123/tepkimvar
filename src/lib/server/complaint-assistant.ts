@@ -1,4 +1,8 @@
 import { chatCompleteJson, isAiConfigured } from "@/lib/server/ai/client";
+import {
+  loadComplaintAssistantConfig,
+  type ComplaintAssistantConfig,
+} from "@/lib/server/complaint-assistant-config";
 
 export type AssistMessage = { role: "user" | "assistant"; content: string };
 
@@ -14,6 +18,7 @@ export type ComplaintAssistResult = {
   readyToContinue: boolean;
   draftQuality: "draft" | "good" | "excellent";
   missingFields: string[];
+  aiUsed: boolean;
 };
 
 type AiAssistJson = {
@@ -48,6 +53,16 @@ function matchBrand(text: string, brands: BrandHint[]): BrandHint | null {
   return best;
 }
 
+/** Son kullanıcı mesajlarındaki markayı önceliklendirir (marka değişimini yakalar). */
+function matchBrandFromMessages(messages: AssistMessage[], brands: BrandHint[]): BrandHint | null {
+  const userTexts = messages.filter((m) => m.role === "user").map((m) => m.content.trim()).filter(Boolean);
+  for (let i = userTexts.length - 1; i >= 0; i--) {
+    const hit = matchBrand(userTexts[i], brands);
+    if (hit) return hit;
+  }
+  return matchBrand(userTexts.join("\n"), brands);
+}
+
 function extractAmount(text: string): string | null {
   const m = text.match(/(\d[\d.,\s]*)\s*(tl|try|lira|bin|k)?/i);
   if (!m) return null;
@@ -58,15 +73,15 @@ function buildDraftFromConversation(messages: AssistMessage[], brand: BrandHint 
   const userTexts = messages.filter((m) => m.role === "user").map((m) => m.content.trim()).filter(Boolean);
   if (userTexts.length === 0) return "";
 
+  const substantive = userTexts.filter((t) => t.length > 3 && !/^(merhaba|selam|hey|hi|hello)$/i.test(t));
   const intro = brand
     ? `${brand.name} platformunda yaşadığım sorun hakkında şikayetimi iletmek istiyorum.`
     : "Yaşadığım sorun hakkında şikayetimi iletmek istiyorum.";
 
-  const details = userTexts.join(" ");
-  const amount = extractAmount(details);
-  const amountLine = amount ? ` Etkilenen tutar: ${amount}.` : "";
+  const amount = extractAmount(substantive.join(" "));
+  const amountLine = amount ? `\n\nEtkilenen tutar: ${amount}.` : "";
 
-  return `${intro}\n\n${userTexts.join("\n\n")}${amountLine ? `\n\n${amountLine.trim()}` : ""}`.trim();
+  return `${intro}\n\n${substantive.join("\n\n")}${amountLine}`.trim();
 }
 
 function inferMissing(combined: string, brand: BrandHint | null, body: string): string[] {
@@ -80,7 +95,6 @@ function inferMissing(combined: string, brand: BrandHint | null, body: string): 
 
 function contextualReply(
   messages: AssistMessage[],
-  brands: BrandHint[],
   body: string,
   brand: BrandHint | null,
 ): string {
@@ -89,35 +103,44 @@ function contextualReply(
   const combined = userTexts.join(" ");
   const missing = inferMissing(combined, brand, body);
 
-  if (userTexts.length <= 1 && last.length < 12) {
-    return "Merhaba! Hangi siteyle sorun yaşadınız ve ne oldu? Kısaca anlatın — ben metni sizin için düzenleyeceğim.";
+  if (/^(merhaba|selam|hey|hi|hello|günaydın|iyi akşamlar)/i.test(last) && last.length < 30) {
+    return "Merhaba. Hangi site veya markayla sorun yaşadınız? Kısaca anlatın.";
   }
 
   if (!brand) {
-    if (/hangi|site|marka|firma/i.test(last)) {
-      return "Marka adını net yazarsanız şikayetin doğru firmaya ulaşır. Örn: Jojobet, Matbet…";
-    }
     return "Anladım. Hangi bahis/casino sitesi olduğunu yazar mısınız?";
   }
 
-  if (missing.includes("tutar") && missing.includes("tarih")) {
-    return `${brand.name} ile ilgili not ettim. Yaklaşık ne zaman oldu ve etkilenen tutar ne kadar? (Örn: 15.000 TL, geçen hafta)`;
+  if (last.length <= 20 && matchBrand(last, [brand]) && missing.includes("detay")) {
+    return `${brand.name} ile ilgili not aldım. Yaşadığınız sorunu birkaç cümleyle anlatır mısınız?`;
+  }
+
+  if (missing.includes("detay")) {
+    return "Sorunun ne olduğunu biraz daha anlatır mısınız? (Yatırım/çekim, site ne dedi, hesaba erişim vb.)";
   }
   if (missing.includes("tutar")) {
-    return "Teşekkürler. Etkilenen tutar ne kadar? (Yaklaşık da olur)";
+    return "Etkilenen tutar yaklaşık ne kadar?";
   }
   if (missing.includes("tarih")) {
-    return "Sorun yaklaşık ne zaman başladı? (Tarih veya «geçen hafta» gibi)";
-  }
-  if (missing.includes("detay")) {
-    return "Biraz daha detay ekler misiniz? Yatırım/çekim mi, site ne yanıt verdi, hesabınıza erişebiliyor musunuz?";
+    return "Sorun yaklaşık ne zaman başladı?";
   }
 
   if (body.length >= 80) {
-    return "Teşekkürler, yeterli bilgi topladım. Başka eklemek istediğiniz bir şey var mı?";
+    return "Teşekkürler. Başka eklemek istediğiniz bir detay var mı?";
   }
 
-  return "Anlattıklarınızı not aldım. Biraz daha detay verirseniz daha güçlü bir şikayet metni hazırlayabilirim.";
+  return "Anlattıklarınızı not aldım. Biraz daha detay verirseniz metni güçlendirebilirim.";
+}
+
+function sanitizeReply(raw: string, title: string, brand: BrandHint | null, fallback: string): string {
+  const reply = raw.trim();
+  if (!reply || reply.length < 15) return fallback;
+  if (reply === title.trim()) return fallback;
+  if (brand && normalize(reply) === normalize(brand.name)) return fallback;
+  if (reply.length < 40 && !reply.includes("?") && !reply.includes(".") && !reply.includes(",")) {
+    return fallback;
+  }
+  return reply;
 }
 
 function ruleBasedAssist(
@@ -128,7 +151,7 @@ function ruleBasedAssist(
 ): ComplaintAssistResult {
   const userTexts = messages.filter((m) => m.role === "user").map((m) => m.content.trim());
   const combined = userTexts.join("\n");
-  const brand = matchBrand(combined, brands);
+  const brand = matchBrandFromMessages(messages, brands);
 
   let body = currentBody.trim();
   if (!body || body.length < userTexts.join(" ").length) {
@@ -136,15 +159,15 @@ function ruleBasedAssist(
   }
 
   let title = currentTitle.trim();
-  if (!title && brand) {
-    const snippet = userTexts[userTexts.length - 1]?.slice(0, 60) ?? "Şikayet";
-    title = `${brand.name} — ${snippet.replace(/\s+/g, " ")}`;
+  if (!title && brand && body.length > 20) {
+    const firstLine = body.split(/[.!?\n]/)[0]?.trim() ?? "";
+    title = firstLine.length >= 6 ? firstLine.slice(0, 120) : `${brand.name} — Şikayet`;
   } else if (!title && body) {
     title = body.split(/[.!?\n]/)[0]?.slice(0, 100) ?? "";
   }
 
   const missingFields = inferMissing(combined, brand, body);
-  const reply = contextualReply(messages, brands, body, brand);
+  const reply = contextualReply(messages, body, brand);
 
   const readyToContinue =
     body.length >= 80 && title.length >= 6 && Boolean(brand) && missingFields.length <= 1;
@@ -166,42 +189,9 @@ function ruleBasedAssist(
     readyToContinue,
     draftQuality,
     missingFields,
+    aiUsed: false,
   };
 }
-
-const SYSTEM_PROMPT = `Sen tepkimvar.com şikayet yazma asistanısın. Türkçe, samimi ama profesyonel konuş.
-
-Görev: Kullanıcının serbest anlatımını dinle, bağlamı anla, eksik kritik bilgileri DOĞAL sorularla tamamla, arka planda yayına hazır şikayet metni oluştur.
-
-Kritik bilgiler: marka/site adı, sorunun özü, tutar (varsa), yaklaşık tarih, yatırım/çekim/bonus gibi işlem türü.
-
-Kurallar:
-- Sabit soru listesi okuma; sohbete göre TEK odaklı soru sor.
-- Kullanıcı zaten söylediğini tekrar sorma.
-- title: net, 6-120 karakter, marka adı geçsin.
-- body: 2-5 paragraf, kronolojik, birinci tekil, somut, küfür/uydurma ekleme.
-- Her turda body'yi güncelle — kullanıcının söylediklerini profesyonel dile çevir.
-- readyToContinue: marka belli + body>=80 karakter + sorun net ise true.
-- draftQuality: draft | good | excellent
-- brandName: listeden eşleşen marka.
-- rating: memnuniyetsizlik 1-2, belirsizse null.
-
-JSON:
-{ "reply", "title", "body", "brandName", "rating", "readyToContinue", "draftQuality", "missingFields" }`;
-
-const FINALIZE_PROMPT = `Sen tepkimvar.com şikayet yazma asistanısın. Sohbet bitti — nihai metni yaz.
-
-Görev: Tüm sohbeti birleştirerek moderasyona uygun, profesyonel, kronolojik şikayet metni oluştur.
-
-Kurallar:
-- title: net, marka adı geçsin (6-120 karakter).
-- body: 3-6 paragraf, birinci tekil, somut (tutar, tarih, işlem), akıcı Türkçe.
-- reply: 1-2 cümle — özeti sunduğunu, onay beklediğini söyle.
-- readyToContinue: true
-- draftQuality: good veya excellent
-
-JSON:
-{ "reply", "title", "body", "brandName", "rating", "readyToContinue", "draftQuality", "missingFields" }`;
 
 function ruleBasedFinalize(
   messages: AssistMessage[],
@@ -210,19 +200,25 @@ function ruleBasedFinalize(
   currentBody: string,
 ): ComplaintAssistResult {
   const base = ruleBasedAssist(messages, brands, currentTitle, currentBody);
-  const polished = base.body.length >= 80 ? base.body : buildDraftFromConversation(messages, matchBrand(
-    messages.filter((m) => m.role === "user").map((m) => m.content).join("\n"),
-    brands,
-  ));
+  const brand = matchBrandFromMessages(messages, brands);
+  const polished =
+    base.body.length >= 80 ? base.body : buildDraftFromConversation(messages, brand);
 
   return {
     ...base,
     body: polished.slice(0, 5000),
     reply:
-      "Anlattıklarınızı düzenledim. Aşağıdaki özeti kontrol edin; uygunsa onaylayarak marka adımına geçebilirsiniz.",
+      "Anlattıklarınızı düzenledim. Özeti kontrol edin; uygunsa onaylayarak devam edebilirsiniz.",
     readyToContinue: true,
     draftQuality: polished.length >= 100 ? "good" : base.draftQuality,
+    aiUsed: false,
   };
+}
+
+function buildSystemPrompt(config: ComplaintAssistantConfig, mode: "chat" | "finalize", brandList: string): string {
+  const base = mode === "finalize" ? config.finalizePrompt : config.systemPrompt;
+  const extra = config.customInstructions.trim();
+  return `${base}${extra ? `\n\nEk talimatlar:\n${extra}` : ""}\n\nMarkalar (eşleştir): ${brandList || "—"}`;
 }
 
 export async function assistComplaintDraft(input: {
@@ -236,9 +232,10 @@ export async function assistComplaintDraft(input: {
   const userTexts = input.messages.filter((m) => m.role === "user").map((m) => m.content);
   const combined = userTexts.join("\n");
   const mode = input.mode ?? "chat";
+  const config = await loadComplaintAssistantConfig();
 
-  if (!isAiConfigured() || combined.trim().length < 3) {
-    return mode === "finalize"
+  const fallback = () =>
+    mode === "finalize"
       ? ruleBasedFinalize(input.messages, brands, input.currentTitle ?? "", input.currentBody ?? "")
       : ruleBasedAssist(
           input.messages,
@@ -246,49 +243,42 @@ export async function assistComplaintDraft(input: {
           input.currentTitle ?? "",
           input.currentBody ?? "",
         );
+
+  if (!isAiConfigured() || combined.trim().length < 2) {
+    return fallback();
   }
 
   const brandList = brands.map((b) => b.name).slice(0, 80).join(", ");
-  const systemPrompt = mode === "finalize" ? FINALIZE_PROMPT : SYSTEM_PROMPT;
 
   const aiMessages: { role: "system" | "user" | "assistant"; content: string }[] = [
-    {
-      role: "system",
-      content: `${systemPrompt}\n\nMarkalar (eşleştir): ${brandList || "—"}`,
-    },
+    { role: "system", content: buildSystemPrompt(config, mode, brandList) },
     ...input.messages.map((m) => ({
       role: m.role as "user" | "assistant",
       content: m.content,
     })),
   ];
 
-  if (input.currentTitle?.trim() || input.currentBody?.trim()) {
-    aiMessages.push({
-      role: "user",
-      content: `[Sistem notu — mevcut taslak]\nBaşlık: ${input.currentTitle ?? ""}\nGövde: ${input.currentBody ?? ""}`,
-    });
-  }
-
   try {
     const raw = await chatCompleteJson<AiAssistJson>({
       messages: aiMessages,
-      temperature: mode === "finalize" ? 0.45 : 0.55,
-      maxTokens: mode === "finalize" ? 1400 : 1000,
+      temperature: mode === "finalize" ? Math.min(config.temperature, 0.5) : config.temperature,
+      maxTokens: config.maxTokens,
     });
 
     const matched =
       brands.find((b) => normalize(b.name) === normalize(raw.brandName ?? "")) ??
       matchBrand(raw.brandName ?? combined, brands) ??
-      matchBrand(combined, brands);
+      matchBrandFromMessages(input.messages, brands);
 
     const title = (raw.title ?? input.currentTitle ?? "").trim().slice(0, 200);
     const body = (raw.body ?? input.currentBody ?? combined).trim().slice(0, 5000);
-    const reply = (raw.reply ?? "Anlattıklarınızı not aldım.").trim();
+    const fb = contextualReply(input.messages, body, matched);
+    const reply = sanitizeReply(raw.reply ?? "", title, matched, fb);
 
     const ready =
       mode === "finalize" ||
       Boolean(raw.readyToContinue) ||
-      (body.length >= 80 && title.length >= 6 && Boolean(matched));
+      (body.length >= 100 && title.length >= 6 && Boolean(matched));
 
     const quality = (["draft", "good", "excellent"] as const).includes(
       raw.draftQuality as ComplaintAssistResult["draftQuality"],
@@ -315,15 +305,14 @@ export async function assistComplaintDraft(input: {
       readyToContinue: ready,
       draftQuality: quality,
       missingFields: Array.isArray(raw.missingFields) ? raw.missingFields.map(String) : [],
+      aiUsed: true,
     };
   } catch {
-    return mode === "finalize"
-      ? ruleBasedFinalize(input.messages, brands, input.currentTitle ?? "", input.currentBody ?? combined)
-      : ruleBasedAssist(
-          input.messages,
-          brands,
-          input.currentTitle ?? "",
-          input.currentBody ?? combined,
-        );
+    return fallback();
   }
+}
+
+export async function getComplaintAssistantGreeting(): Promise<string> {
+  const config = await loadComplaintAssistantConfig();
+  return config.greeting;
 }

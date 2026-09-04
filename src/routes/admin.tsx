@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, Link, useNavigate, redirect, useLocation } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, Building2, MessageSquare, Users, FileText, ImageIcon, Layers, Settings, LogOut, ShieldCheck, ShieldAlert, BadgeCheck, AlertTriangle, Crown, Tags, Bot, Menu, X } from "lucide-react";
+import { LayoutDashboard, Building2, MessageSquare, Users, FileText, ImageIcon, Layers, Settings, LogOut, ShieldCheck, ShieldAlert, BadgeCheck, AlertTriangle, Crown, Tags, Bot, Menu, X, Sparkles } from "lucide-react";
 import { useAuth, type AppRole } from "@/hooks/use-auth";
 import { fetchMe } from "@/lib/me";
 import { AdminModerationAlert } from "@/components/admin-moderation-alert";
@@ -22,6 +22,7 @@ const NAV = [
   { to: "/admin/firmalar", icon: Building2, label: "Firmalar" },
   { to: "/admin/kategoriler", icon: Tags, label: "Kategoriler" },
   { to: "/admin/sikayetler", icon: MessageSquare, label: "Şikayetler" },
+  { to: "/admin/sikayet-asistani", icon: Sparkles, label: "Şikayet Asistanı" },
   { to: "/admin/bot", icon: Bot, label: "Complaint Bot" },
   { to: "/admin/kullanicilar", icon: Users, label: "Kullanıcılar" },
   { to: "/admin/moderasyon", icon: ShieldAlert, label: "Moderasyon" },

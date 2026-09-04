@@ -1,10 +1,28 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { errorResponse, rateLimit, requireUser, clientIp } from "@/lib/server/guard";
-import { assistComplaintDraft, type AssistMessage } from "@/lib/server/complaint-assistant";
+import {
+  assistComplaintDraft,
+  getComplaintAssistantGreeting,
+  type AssistMessage,
+} from "@/lib/server/complaint-assistant";
+import { aiProviderLabel, isAiConfigured } from "@/lib/server/ai/client";
 
 export const Route = createFileRoute("/api/complaints/assist")({
   server: {
     handlers: {
+      GET: async () => {
+        try {
+          const greeting = await getComplaintAssistantGreeting();
+          return Response.json({
+            greeting,
+            aiConfigured: isAiConfigured(),
+            aiProvider: aiProviderLabel(),
+          });
+        } catch (e) {
+          return errorResponse(e);
+        }
+      },
+
       POST: async ({ request }) => {
         try {
           const user = await requireUser(request);

@@ -55,6 +55,12 @@ COOLIFY_TOKEN='1|...' node scripts/coolify-set-sms-env.mjs --restart
 COOLIFY_TOKEN='1|...' node scripts/coolify-set-sms-env.mjs --deploy
 ```
 
+**AI / şikayet asistanı + Complaint Bot (fal.ai):**
+```bash
+COOLIFY_TOKEN='1|...' node scripts/coolify-set-ai-env.mjs --restart
+```
+Değerler `.env.selfhost` içindeki `AI_*` satırlarından okunur.
+
 > **Not:** `VITE_*` değişkenleri build sırasında gömülür. Coolify'da bunları
 > "Build Variable" olarak da işaretle (yalnızca runtime değil).
 
