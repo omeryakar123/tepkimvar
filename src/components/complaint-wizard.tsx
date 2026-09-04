@@ -16,6 +16,7 @@ import { Combobox } from "@/components/combobox";
 import { FileDropzone, hasRequiredVisualEvidence, type AcceptedFile } from "@/components/file-dropzone";
 import { SiteLogoMark, SiteLogoTitle } from "@/components/site-logo-mark";
 import { looksLikeFakePlatformUsername } from "@/lib/platform-username";
+import { EMPTY_COMPLAINT_STATE, type ComplaintState } from "@/lib/complaint-intake-state";
 import { cn } from "@/lib/utils";
 
 type Brand = { id: string; name: string };
@@ -36,6 +37,7 @@ type AssistResponse = {
   readyToContinue: boolean;
   draftQuality: "draft" | "good" | "excellent";
   missingFields: string[];
+  state: ComplaintState;
 };
 
 const STEPS: { n: WizardStep; label: string; short: string }[] = [
@@ -95,6 +97,7 @@ export function ComplaintWizard({
   const [aiLoading, setAiLoading] = useState(false);
   const [draftQuality, setDraftQuality] = useState<AssistResponse["draftQuality"]>("draft");
   const [detectedBrandName, setDetectedBrandName] = useState<string | null>(null);
+  const [complaintState, setComplaintState] = useState<ComplaintState>(EMPTY_COMPLAINT_STATE);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const chatScrollRef = useRef<HTMLDivElement>(null);
@@ -194,6 +197,7 @@ export function ComplaintWizard({
         body: JSON.stringify({
           messages: apiMessages,
           brands,
+          complaintState,
           currentTitle: title,
           currentBody: body,
           mode: options?.mode ?? "chat",
@@ -209,6 +213,7 @@ export function ComplaintWizard({
       if (json.suggestedBrandName) setDetectedBrandName(json.suggestedBrandName);
       if (json.suggestedRating && rating < 1) setRating(json.suggestedRating);
       setDraftQuality(json.draftQuality ?? "draft");
+      if (json.state) setComplaintState(json.state);
 
       if (options?.mode === "finalize") {
         setStep1Phase("summary");

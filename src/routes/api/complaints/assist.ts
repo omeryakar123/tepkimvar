@@ -5,6 +5,7 @@ import {
   getComplaintAssistantGreeting,
   type AssistMessage,
 } from "@/lib/server/complaint-assistant";
+import { normalizeComplaintState } from "@/lib/complaint-intake-state";
 import { aiProviderLabel, isAiConfigured } from "@/lib/server/ai/client";
 
 export const Route = createFileRoute("/api/complaints/assist")({
@@ -32,6 +33,7 @@ export const Route = createFileRoute("/api/complaints/assist")({
           const body = (await request.json()) as {
             messages?: AssistMessage[];
             brands?: { id: string; name: string }[];
+            complaintState?: Record<string, unknown>;
             currentTitle?: string;
             currentBody?: string;
             mode?: "chat" | "finalize";
@@ -63,6 +65,7 @@ export const Route = createFileRoute("/api/complaints/assist")({
           const result = await assistComplaintDraft({
             messages,
             brands,
+            complaintState: normalizeComplaintState(body.complaintState),
             currentTitle: body.currentTitle,
             currentBody: body.currentBody,
             mode,

@@ -11,6 +11,7 @@ import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { fetchTelegramLogo } from "./lib/telegram-logo.mjs";
+import { DOMAIN_OVERRIDES } from "./brand-domain-overrides.mjs";
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dir, "..");
@@ -27,33 +28,6 @@ const BAD = [
   "googleusercontent.com/a/default",
 ];
 const GAMBLING_RE = /bet|bahis|casino|slot|poker|rulet|kumar|gambling/i;
-
-const DOMAIN_OVERRIDES = {
-  jojobet: "jojobet.com",
-  matbet: "matbet.com",
-  mavibet: "mavibet.com",
-  holiganbet: "holiganbet.com",
-  casibom: "casibom.com",
-  meritking: "mrking.com",
-  mrking: "mrking.com",
-  grandpashabet: "grandpashabet.com",
-  marsbahis: "marsbahis.com",
-  kazansana: "kazansana.com",
-  bovbet: "bovbet.com",
-  bahsine: "bahsine.com",
-  betnano: "betnano.com",
-  exobet: "exobet.org",
-  playbet: "playbet.io",
-  tekelbet: "tekelbet.net",
-  trendyol: "trendyol.com",
-  hepsiburada: "hepsiburada.com",
-  turkcell: "turkcell.com.tr",
-  vodafone: "vodafone.com.tr",
-  "turk-telekom": "turktelekom.com.tr",
-  migros: "migros.com.tr",
-  thy: "turkishairlines.com",
-  arcelik: "arcelik.com.tr",
-};
 
 const SUPERBONUS = new Set([
   "kazansana", "evetabi", "betnano", "bovbet", "bahsine", "hadibet", "natobet", "exobet",

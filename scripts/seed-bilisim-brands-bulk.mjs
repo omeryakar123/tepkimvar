@@ -6,6 +6,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import postgres from "postgres";
+import { DOMAIN_OVERRIDES } from "./brand-domain-overrides.mjs";
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 const sql = postgres(process.env.DATABASE_URL!, { max: 3 });
@@ -25,21 +26,6 @@ const slugify = (s) =>
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
-
-const DOMAIN_OVERRIDES = {
-  "21-com": "21.com",
-  "1xbet": "1xbet.com",
-  mostbet: "mostbet.com",
-  grandpashabet: "grandpashabet.com",
-  playbet: "playbet.io",
-  "sans-casino": "sanscasino.com",
-  "lord-palace-casino": "lordpalacecasino.com",
-  istanbulbahis: "istanbulbahis.com",
-  jojobet: "jojobet.com",
-  matbet: "matbet.com",
-  mavibet: "mavibet.com",
-  holiganbet: "holiganbet.com",
-};
 
 const LOGO_OVERRIDES = {
   matbet: "/brand-logos/matbet.png",
