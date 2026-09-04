@@ -24,6 +24,7 @@ type Brand = { id: string; name: string };
 type Category = { id: string; name: string };
 
 type WizardStep = 1 | 2 | 3;
+type Step1Phase = "chat" | "summary";
 
 type ChatMessage = { role: "bot" | "user"; text: string };
 
@@ -39,11 +40,23 @@ type AssistResponse = {
   missingFields: string[];
 };
 
-const STEPS: { n: WizardStep; label: string }[] = [
-  { n: 1, label: "Şikayet Detayı" },
-  { n: 2, label: "Marka" },
-  { n: 3, label: "Belge" },
+const STEPS: { n: WizardStep; label: string; short: string }[] = [
+  { n: 1, label: "Şikayet Detayı", short: "Detay" },
+  { n: 2, label: "Marka", short: "Marka" },
+  { n: 3, label: "Belge", short: "Belge" },
 ];
+
+const MORE_PROMPT =
+  "Başka eklemek istediğiniz bir detay var mı? Yoksa «Hayır» yazarak düzenlenmiş özeti hazırlayabilirim.";
+
+function isDecliningMore(text: string): boolean {
+  const t = text.toLowerCase().trim().replace(/[.!?,]/g, "");
+  if (t.length > 100) return false;
+  return (
+    /^(hayır|hayir|yok|tamam|devam|onay|onaylıyorum|onayliyorum|bu kadar|yeter|ok|olur|istemiyorum|gerek yok|teşekkürler|tesekkurler|hayır teşekkür|hayir tesekkur)/.test(t) ||
+    /eklemek istemiyorum|başka (bir )?şey yok|baska (bir )?sey yok|^(hayır|hayir) .*(yok|gerek)/.test(t)
+  );
+}
 
 export type ComplaintWizardResult = {
   id: string;
@@ -60,6 +73,8 @@ export function ComplaintWizard({
   onSuccess: (result: ComplaintWizardResult) => void;
 }) {
   const [step, setStep] = useState<WizardStep>(1);
+  const [step1Phase, setStep1Phase] = useState<Step1Phase>("chat");
+  const [awaitingMoreConfirmation, setAwaitingMoreConfirmation] = useState(false);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [cats, setCats] = useState<Category[]>([]);
   const [loadingMeta, setLoadingMeta] = useState(true);
@@ -88,7 +103,6 @@ export function ComplaintWizard({
   const [otpOpen, setOtpOpen] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [draftQuality, setDraftQuality] = useState<AssistResponse["draftQuality"]>("draft");
-  const [readyToContinue, setReadyToContinue] = useState(false);
   const [detectedBrandName, setDetectedBrandName] = useState<string | null>(null);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -97,14 +111,6 @@ export function ComplaintWizard({
     () => brands.find((b) => b.id === brandId) ?? null,
     [brands, brandId],
   );
-
-  const bodyQuality = useMemo(() => {
-    if (draftQuality === "excellent") return { label: "Harika görünüyor", tone: "good" as const };
-    if (draftQuality === "good") return { label: "İyi gidiyor", tone: "ok" as const };
-    const len = body.trim().length;
-    if (len >= 40) return { label: "Biraz daha detay ekleyin", tone: "warn" as const };
-    return { label: "En az 20 karakter", tone: "muted" as const };
-  }, [body, draftQuality]);
 
   const sidebarBrandLabel = selectedBrand?.name ?? detectedBrandName;
 
@@ -142,7 +148,10 @@ export function ComplaintWizard({
     if (initialBrandId) setBrandId(initialBrandId);
   }, [initialBrandId]);
 
-  async function runAssist(nextMessages: ChatMessage[]) {
+  async function runAssist(
+    nextMessages: ChatMessage[],
+    options?: { mode?: "chat" | "finalize" },
+  ) {
     setAiLoading(true);
     try {
       const apiMessages = nextMessages.map((m) => ({
@@ -159,6 +168,7 @@ export function ComplaintWizard({
           brands,
           currentTitle: title,
           currentBody: body,
+          mode: options?.mode ?? "chat",
         }),
       });
 
@@ -171,16 +181,31 @@ export function ComplaintWizard({
       if (json.suggestedBrandName) setDetectedBrandName(json.suggestedBrandName);
       if (json.suggestedRating && rating < 1) setRating(json.suggestedRating);
       setDraftQuality(json.draftQuality ?? "draft");
-      setReadyToContinue(Boolean(json.readyToContinue));
 
-      setMessages((prev) => [...prev, { role: "bot", text: json.reply }]);
+      if (options?.mode === "finalize") {
+        setStep1Phase("summary");
+        setAwaitingMoreConfirmation(false);
+        setMessages((prev) => [...prev, { role: "bot", text: json.reply }]);
+        return;
+      }
+
+      if (json.readyToContinue && !awaitingMoreConfirmation) {
+        setAwaitingMoreConfirmation(true);
+        setMessages((prev) => [
+          ...prev,
+          { role: "bot", text: json.reply },
+          { role: "bot", text: MORE_PROMPT },
+        ]);
+      } else {
+        setMessages((prev) => [...prev, { role: "bot", text: json.reply }]);
+      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Asistan hatası");
       setMessages((prev) => [
         ...prev,
         {
           role: "bot",
-          text: "Bağlantı sorunu yaşadım. Lütfen sorununuzu biraz daha detaylı yazın veya metin kutusundan düzenleyin.",
+          text: "Bağlantı sorunu yaşadım. Lütfen sorununuzu biraz daha detaylı yazın.",
         },
       ]);
     } finally {
@@ -191,19 +216,43 @@ export function ComplaintWizard({
   function handleChatSend() {
     const text = chatInput.trim();
     if (!text || aiLoading) return;
+
     const nextMessages: ChatMessage[] = [...messages, { role: "user", text }];
     setMessages(nextMessages);
     setChatInput("");
+
+    if (step1Phase === "summary" && /^(onay|onaylıyorum|onayliyorum|evet|tamam|kabul|uygun)/i.test(text)) {
+      if (validateStep1()) setStep(2);
+      return;
+    }
+
+    if (awaitingMoreConfirmation && isDecliningMore(text)) {
+      void runAssist(nextMessages, { mode: "finalize" });
+      return;
+    }
+
+    if (awaitingMoreConfirmation) {
+      setAwaitingMoreConfirmation(false);
+    }
+
     void runAssist(nextMessages);
   }
 
-  async function polishDraft() {
-    if (messages.length <= 1 && !body.trim()) {
-      toast.info("Önce sorununuzu birkaç cümleyle anlatın.");
-      return;
-    }
-    await runAssist(messages);
-    toast.success("Taslak güncellendi");
+  function approveSummary() {
+    if (!validateStep1()) return;
+    setStep(2);
+  }
+
+  function backToChat() {
+    setStep1Phase("chat");
+    setAwaitingMoreConfirmation(false);
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: "bot",
+        text: "Tamam, eklemek veya değiştirmek istediğiniz bir şey varsa yazabilirsiniz.",
+      },
+    ]);
   }
 
   function validateStep1(): boolean {
@@ -259,7 +308,10 @@ export function ComplaintWizard({
   }
 
   function goNext() {
-    if (step === 1 && !validateStep1()) return;
+    if (step === 1) {
+      if (step1Phase !== "summary") return;
+      if (!validateStep1()) return;
+    }
     if (step === 2 && !validateStep2()) return;
     if (step === 3) {
       if (!validateStep3()) return;
@@ -359,12 +411,42 @@ export function ComplaintWizard({
   }
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-surface">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 py-6 lg:py-10">
-        <div className="grid lg:grid-cols-[300px_1fr] gap-0 lg:gap-0 min-h-[640px] rounded-[28px] overflow-hidden shadow-lift ring-1 ring-rule">
-          {/* Sidebar */}
-          <aside className="bg-[oklch(0.22_0.03_262)] text-white p-6 lg:p-8 flex flex-col">
-            <SiteLogoMark size={32} tone="on-dark" linked className="mb-8" />
+    <div className="min-h-[calc(100dvh-4rem)] bg-surface">
+      <div className="mx-auto max-w-6xl px-3 sm:px-6 py-4 sm:py-6 lg:py-10">
+        {/* Mobil adım göstergesi */}
+        <div className="lg:hidden mb-4 rounded-2xl bg-[oklch(0.22_0.03_262)] px-4 py-3">
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <SiteLogoMark tone="on-dark" linked />
+            <span className="text-[12px] font-semibold text-white/70">
+              Adım {step}/3
+            </span>
+          </div>
+          <div className="flex gap-2">
+            {STEPS.map(({ n }) => {
+              const done = step > n;
+              const active = step === n;
+              return (
+                <div
+                  key={n}
+                  className={cn(
+                    "flex-1 rounded-full h-1.5 transition",
+                    done && "bg-brand",
+                    active && !done && "bg-white",
+                    !done && !active && "bg-white/20",
+                  )}
+                />
+              );
+            })}
+          </div>
+          <p className="mt-2 text-[13px] font-semibold text-white">
+            {STEPS.find((s) => s.n === step)?.label}
+          </p>
+        </div>
+
+        <div className="grid lg:grid-cols-[300px_1fr] gap-0 min-h-[calc(100dvh-8rem)] lg:min-h-[640px] rounded-[20px] sm:rounded-[28px] overflow-hidden shadow-lift ring-1 ring-rule">
+          {/* Sidebar — sadece masaüstü */}
+          <aside className="hidden lg:flex bg-[oklch(0.22_0.03_262)] text-white p-6 lg:p-8 flex-col">
+            <SiteLogoMark tone="on-dark" linked className="mb-8" />
 
             <div className="size-14 rounded-2xl bg-brand/90 grid place-items-center mb-5">
               <PenLine className="size-7 text-white" />
@@ -406,42 +488,44 @@ export function ComplaintWizard({
               })}
             </ol>
 
-            <p className="mt-6 text-[11px] text-white/40 leading-relaxed hidden lg:block">
+            <p className="mt-6 text-[11px] text-white/40 leading-relaxed">
               Şikayetiniz moderasyon onayından sonra yayına alınır. Kanıt dosyası zorunludur.
             </p>
           </aside>
 
-          {/* Main panel */}
-          <div className="bg-card flex flex-col min-h-[520px]">
-            <header className="flex items-center justify-between gap-4 px-5 sm:px-8 py-4 border-b border-rule">
-              <SiteLogoTitle className="text-[15px] lg:hidden" />
-              <div className="hidden sm:flex items-center gap-4 text-[13px] text-navy-mid ml-auto">
+          {/* Ana panel */}
+          <div className="bg-card flex flex-col min-h-0 lg:min-h-[520px]">
+            <header className="hidden sm:flex items-center justify-between gap-4 px-5 sm:px-8 py-3 sm:py-4 border-b border-rule shrink-0">
+              <SiteLogoTitle className="text-[15px] lg:hidden gap-0" />
+              <div className="flex items-center gap-4 text-[13px] text-navy-mid ml-auto">
                 <Link to="/sikayetler" className="hover:text-brand">Şikayetler</Link>
                 <span className="text-rule">|</span>
                 <Link to="/markalar" className="hover:text-brand">Markalar</Link>
               </div>
             </header>
 
-            <div className="flex-1 overflow-y-auto px-5 sm:px-8 py-6">
+            <div
+              className={cn(
+                "flex-1 min-h-0 overflow-y-auto",
+                step === 1 ? "flex flex-col px-3 sm:px-8 py-3 sm:py-6" : "px-3 sm:px-8 py-4 sm:py-6",
+              )}
+            >
               {loadingMeta ? (
                 <div className="grid place-items-center h-48 text-navy-mid">
                   <Loader2 className="size-6 animate-spin" />
                 </div>
               ) : step === 1 ? (
                 <StepDetail
+                  phase={step1Phase}
                   messages={messages}
                   chatInput={chatInput}
                   onChatInput={setChatInput}
                   onChatSend={handleChatSend}
                   title={title}
-                  onTitle={setTitle}
                   body={body}
-                  onBody={setBody}
-                  bodyQuality={bodyQuality}
                   chatEndRef={chatEndRef}
                   aiLoading={aiLoading}
-                  onPolish={polishDraft}
-                  readyToContinue={readyToContinue}
+                  draftQuality={draftQuality}
                 />
               ) : step === 2 ? (
                 <StepBrand
@@ -473,33 +557,52 @@ export function ComplaintWizard({
               )}
             </div>
 
-            <footer className="px-5 sm:px-8 py-4 border-t border-rule flex items-center justify-between gap-3 bg-card/80 backdrop-blur-sm">
+            <footer className="px-3 sm:px-8 py-3 sm:py-4 border-t border-rule flex items-center justify-between gap-3 bg-card/95 backdrop-blur-sm shrink-0 safe-area-pb">
               {step > 1 ? (
                 <button
                   type="button"
                   onClick={goBack}
                   disabled={submitting}
-                  className="inline-flex items-center gap-2 h-11 px-5 rounded-full ring-1 ring-rule text-[13px] font-semibold text-navy hover:bg-surface disabled:opacity-50"
+                  className="inline-flex items-center gap-2 h-10 sm:h-11 px-4 sm:px-5 rounded-full ring-1 ring-rule text-[13px] font-semibold text-navy hover:bg-surface disabled:opacity-50"
                 >
-                  <ArrowLeft className="size-4" /> Geri Dön
+                  <ArrowLeft className="size-4" /> Geri
+                </button>
+              ) : step1Phase === "summary" ? (
+                <button
+                  type="button"
+                  onClick={backToChat}
+                  disabled={submitting || aiLoading}
+                  className="inline-flex items-center gap-2 h-10 sm:h-11 px-4 sm:px-5 rounded-full ring-1 ring-rule text-[13px] font-semibold text-navy hover:bg-surface disabled:opacity-50"
+                >
+                  <ArrowLeft className="size-4" /> Düzenle
                 </button>
               ) : (
                 <div />
               )}
 
-              <button
-                type="button"
-                onClick={goNext}
-                disabled={submitting}
-                className="inline-flex items-center gap-2 h-11 px-6 rounded-full bg-brand text-brand-foreground text-[14px] font-semibold hover:brightness-105 disabled:opacity-60 ml-auto"
-              >
-                {submitting && <Loader2 className="size-4 animate-spin" />}
-                {step === 3 ? (
-                  <>Gönder <Send className="size-4" /></>
-                ) : (
-                  <>Devam Et <ArrowRight className="size-4" /></>
-                )}
-              </button>
+              {step === 1 && step1Phase === "chat" ? (
+                <p className="text-[11px] sm:text-[12px] text-navy-mid text-center flex-1 mx-2 hidden sm:block">
+                  Yapay zeka asistanıyla sohbet edin
+                </p>
+              ) : null}
+
+              {step === 1 && step1Phase === "chat" ? null : (
+                <button
+                  type="button"
+                  onClick={step === 1 ? approveSummary : goNext}
+                  disabled={submitting || (step === 1 && aiLoading)}
+                  className="inline-flex items-center gap-2 h-10 sm:h-11 px-5 sm:px-6 rounded-full bg-brand text-brand-foreground text-[13px] sm:text-[14px] font-semibold hover:brightness-105 disabled:opacity-60 ml-auto shrink-0"
+                >
+                  {submitting && <Loader2 className="size-4 animate-spin" />}
+                  {step === 3 ? (
+                    <>Gönder <Send className="size-4" /></>
+                  ) : step === 1 ? (
+                    <>Onaylıyorum <Check className="size-4" /></>
+                  ) : (
+                    <>Devam Et <ArrowRight className="size-4" /></>
+                  )}
+                </button>
+              )}
             </footer>
           </div>
         </div>
@@ -516,38 +619,63 @@ export function ComplaintWizard({
 }
 
 function StepDetail({
+  phase,
   messages,
   chatInput,
   onChatInput,
   onChatSend,
   title,
-  onTitle,
   body,
-  onBody,
-  bodyQuality,
   chatEndRef,
   aiLoading,
-  onPolish,
-  readyToContinue,
+  draftQuality,
 }: {
+  phase: Step1Phase;
   messages: ChatMessage[];
   chatInput: string;
   onChatInput: (v: string) => void;
   onChatSend: () => void;
   title: string;
-  onTitle: (v: string) => void;
   body: string;
-  onBody: (v: string) => void;
-  bodyQuality: { label: string; tone: "good" | "ok" | "warn" | "muted" };
   chatEndRef: RefObject<HTMLDivElement | null>;
   aiLoading: boolean;
-  onPolish: () => void;
-  readyToContinue: boolean;
+  draftQuality: AssistResponse["draftQuality"];
 }) {
+  if (phase === "summary") {
+    return (
+      <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full min-h-0">
+        <div className="flex-1 overflow-y-auto space-y-4 pb-4">
+          <div className="rounded-2xl ring-1 ring-brand/25 bg-brand-soft/30 p-4 sm:p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <Sparkles className="size-4 text-brand shrink-0" />
+              <p className="text-[12px] font-semibold uppercase tracking-wider text-brand">
+                Düzenlenmiş şikayet özeti
+              </p>
+            </div>
+            <h3 className="font-display text-[17px] sm:text-[18px] font-bold text-ink leading-snug">
+              {title || "Başlık hazırlanıyor…"}
+            </h3>
+            <p className="mt-3 text-[14px] text-navy leading-relaxed whitespace-pre-wrap">
+              {body || "Metin hazırlanıyor…"}
+            </p>
+            {draftQuality === "excellent" && (
+              <p className="mt-3 text-[12px] text-brand font-medium">
+                Detaylı ve yayına hazır bir özet.
+              </p>
+            )}
+          </div>
+
+          <p className="text-[13px] text-navy-mid text-center px-2">
+            Özet uygunsa «Onaylıyorum» ile marka adımına geçin veya «Düzenle» ile sohbete dönün.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-2xl mx-auto space-y-5">
-      {/* Sohbet */}
-      <div className="rounded-2xl ring-1 ring-rule bg-surface/40 p-4 space-y-3 max-h-[240px] overflow-y-auto">
+    <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full min-h-0">
+      <div className="flex-1 min-h-[280px] sm:min-h-[320px] overflow-y-auto rounded-2xl ring-1 ring-rule bg-surface/40 p-3 sm:p-4 space-y-3">
         {messages.map((m, i) => (
           <div key={i} className={cn("flex gap-2", m.role === "user" ? "justify-end" : "justify-start")}>
             {m.role === "bot" && (
@@ -557,7 +685,7 @@ function StepDetail({
             )}
             <div
               className={cn(
-                "max-w-[82%] rounded-2xl px-4 py-2.5 text-[14px] leading-relaxed",
+                "max-w-[88%] sm:max-w-[82%] rounded-2xl px-3.5 sm:px-4 py-2.5 text-[14px] leading-relaxed",
                 m.role === "bot"
                   ? "bg-card text-navy ring-1 ring-rule"
                   : "bg-brand text-brand-foreground",
@@ -570,89 +698,30 @@ function StepDetail({
         {aiLoading && (
           <div className="flex items-center gap-2 text-[13px] text-navy-mid pl-10">
             <Loader2 className="size-4 animate-spin text-brand" />
-            Şikayetiniz hazırlanıyor…
+            Yanıt hazırlanıyor…
           </div>
         )}
         <div ref={chatEndRef} />
       </div>
 
-      {/* Giriş çubuğu */}
-      <div className="rounded-full ring-1 ring-rule bg-card flex items-center gap-2 px-3 py-2 shadow-soft">
-        <input
-          value={chatInput}
-          onChange={(e) => onChatInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), onChatSend())}
-          placeholder="Cevabınızı buraya yazın…"
-          disabled={aiLoading}
-          className="flex-1 bg-transparent text-[14px] focus:outline-none min-w-0 disabled:opacity-60"
-        />
-        <button
-          type="button"
-          disabled={aiLoading}
-          onClick={onChatSend}
-          className="size-10 rounded-full bg-brand text-brand-foreground grid place-items-center shrink-0 hover:brightness-105 disabled:opacity-60"
-        >
-          <Send className="size-4" />
-        </button>
-      </div>
-
-      {/* Taslak editör — Şikayetvar tarzı */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between gap-3">
+      <div className="shrink-0 pt-3 pb-1 sticky bottom-0 bg-card">
+        <div className="rounded-full ring-1 ring-rule bg-card flex items-center gap-2 px-3 py-2 shadow-soft">
+          <input
+            value={chatInput}
+            onChange={(e) => onChatInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), onChatSend())}
+            placeholder="Mesajınızı yazın…"
+            disabled={aiLoading}
+            className="flex-1 bg-transparent text-[14px] focus:outline-none min-w-0 disabled:opacity-60 py-2"
+          />
           <button
             type="button"
-            onClick={onPolish}
-            disabled={aiLoading}
-            className="text-[12px] font-semibold text-brand hover:underline disabled:opacity-50"
+            disabled={aiLoading || !chatInput.trim()}
+            onClick={onChatSend}
+            className="size-10 sm:size-11 rounded-full bg-brand text-brand-foreground grid place-items-center shrink-0 hover:brightness-105 disabled:opacity-60"
           >
-            Nasıl Yazılır? — Yapay zeka ile düzenle
+            <Send className="size-4" />
           </button>
-          {readyToContinue && (
-            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-brand bg-brand-soft px-2 py-0.5 rounded-full">
-              <Check className="size-3" /> Yayına hazır
-            </span>
-          )}
-        </div>
-
-        <div className="rounded-[20px] ring-1 ring-rule bg-card shadow-soft overflow-hidden">
-          <div className="px-4 sm:px-5 pt-4 pb-2 border-b border-rule/60">
-            <label className="text-[11px] font-semibold uppercase tracking-wider text-navy-mid">Başlık</label>
-            <input
-              value={title}
-              onChange={(e) => onTitle(e.target.value)}
-              placeholder="Örn: Jojobet hesabımdaki 500.000 TL'ye erişemiyorum"
-              className="mt-1 w-full h-10 bg-transparent text-[15px] font-semibold text-ink focus:outline-none placeholder:text-navy-mid/50"
-            />
-          </div>
-          <div className="px-4 sm:px-5 py-4">
-            <label className="text-[11px] font-semibold uppercase tracking-wider text-navy-mid">Şikayet detayı</label>
-            <textarea
-              rows={9}
-              value={body}
-              onChange={(e) => onBody(e.target.value)}
-              placeholder="Yaşadıklarınızı detaylıca anlatın. Tarih, tutar, kullanıcı adınız ve yaptığınız işlemleri ekleyin…"
-              className="mt-2 w-full bg-transparent text-[14px] leading-relaxed text-navy focus:outline-none resize-y min-h-[180px] placeholder:text-navy-mid/50"
-            />
-          </div>
-          <div className="px-4 sm:px-5 py-3 border-t border-rule/60 flex items-center justify-between bg-surface/30">
-            <span className="text-[11px] text-navy-mid">
-              {body.trim().length} karakter · moderasyon öncesi taslak
-            </span>
-            <div className="flex items-center gap-1.5 text-[12px]">
-              {bodyQuality.tone === "good" && <Sparkles className="size-3.5 text-brand" />}
-              <span
-                className={cn(
-                  "font-semibold",
-                  bodyQuality.tone === "good" && "text-brand",
-                  bodyQuality.tone === "ok" && "text-navy",
-                  bodyQuality.tone === "warn" && "text-warning",
-                  bodyQuality.tone === "muted" && "text-navy-mid",
-                )}
-              >
-                {bodyQuality.label}
-              </span>
-            </div>
-          </div>
         </div>
       </div>
     </div>

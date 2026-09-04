@@ -16,6 +16,7 @@ export const Route = createFileRoute("/api/complaints/assist")({
             brands?: { id: string; name: string }[];
             currentTitle?: string;
             currentBody?: string;
+            mode?: "chat" | "finalize";
           };
 
           const messages = Array.isArray(body.messages)
@@ -39,11 +40,14 @@ export const Route = createFileRoute("/api/complaints/assist")({
                 .slice(0, 300)
             : [];
 
+          const mode = body.mode === "finalize" ? "finalize" : "chat";
+
           const result = await assistComplaintDraft({
             messages,
             brands,
             currentTitle: body.currentTitle,
             currentBody: body.currentBody,
+            mode,
           });
 
           return Response.json(result);

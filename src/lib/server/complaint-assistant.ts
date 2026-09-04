@@ -100,7 +100,7 @@ function ruleBasedAssist(
       "Teşekkürler. Sorunun ne zaman başladığı, yaptığınız işlemler (yatırım/çekim) ve siteye ulaşıp ulaşamadığınızı birkaç cümleyle ekler misiniz?";
   } else {
     reply =
-      "Harika — şikayet taslağınız hazır. Metni aşağıda düzenleyebilir veya «Devam Et» ile marka adımına geçebilirsiniz.";
+      "Teşekkürler, gerekli bilgileri aldım. Başka eklemek istediğiniz bir detay var mı?";
   }
 
   const readyToContinue = body.length >= 40 && title.length >= 6 && hasBrand;
@@ -138,33 +138,69 @@ Kurallar:
 - rating: kullanıcı memnun değilse 1-2, belirsizse null.
 
 JSON döndür:
+{ reply, title, body, brandName, rating, readyToContinue, draftQuality, missingFields }
+
+readyToContinue true olduğunda reply kısa olsun; kullanıcıya başka detay eklemek isteyip istemediğini sor.`;
+
+const FINALIZE_PROMPT = `Sen tepkimvar.com şikayet yazma asistanısın. Sohbet tamamlandı — son adımdasın.
+Görevin: kullanıcının anlattıklarından moderasyona uygun, profesyonel ve kronolojik nihai şikayet metni yazmak.
+
+Kurallar:
+- title: net, 6-120 karakter, marka adı geçsin.
+- body: 3-6 paragraf, somut (tutar, tarih, işlem türü), birinci tekil, küfür/yalan ekleme.
+- reply: kısa (1-2 cümle) — düzenlenmiş özeti sunduğunu ve onay beklediğini söyle.
+- readyToContinue: her zaman true.
+- draftQuality: good veya excellent.
+
+JSON döndür:
 { reply, title, body, brandName, rating, readyToContinue, draftQuality, missingFields }`;
+
+function ruleBasedFinalize(
+  messages: AssistMessage[],
+  brands: BrandHint[],
+  currentTitle: string,
+  currentBody: string,
+): ComplaintAssistResult {
+  const base = ruleBasedAssist(messages, brands, currentTitle, currentBody);
+  return {
+    ...base,
+    reply:
+      "Anlattıklarınızı düzenledim. Aşağıdaki şikayet özetini kontrol edin; onaylarsanız marka adımına geçeriz.",
+    readyToContinue: true,
+    draftQuality: base.body.length >= 80 ? "good" : base.draftQuality,
+  };
+}
 
 export async function assistComplaintDraft(input: {
   messages: AssistMessage[];
   brands: BrandHint[];
   currentTitle?: string;
   currentBody?: string;
+  mode?: "chat" | "finalize";
 }): Promise<ComplaintAssistResult> {
   const brands = input.brands.slice(0, 200);
   const userTexts = input.messages.filter((m) => m.role === "user").map((m) => m.content);
   const combined = userTexts.join("\n");
+  const mode = input.mode ?? "chat";
 
   if (!isAiConfigured() || combined.trim().length < 3) {
-    return ruleBasedAssist(
-      input.messages,
-      brands,
-      input.currentTitle ?? "",
-      input.currentBody ?? "",
-    );
+    return mode === "finalize"
+      ? ruleBasedFinalize(input.messages, brands, input.currentTitle ?? "", input.currentBody ?? "")
+      : ruleBasedAssist(
+          input.messages,
+          brands,
+          input.currentTitle ?? "",
+          input.currentBody ?? "",
+        );
   }
 
   const brandList = brands.map((b) => b.name).slice(0, 80).join(", ");
+  const systemPrompt = mode === "finalize" ? FINALIZE_PROMPT : SYSTEM_PROMPT;
 
   try {
     const raw = await chatCompleteJson<AiAssistJson>({
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: systemPrompt },
         {
           role: "user",
           content: `Markalar (eşleştir): ${brandList || "—"}
@@ -176,8 +212,8 @@ Sohbet:
 ${input.messages.map((m) => `${m.role === "user" ? "Kullanıcı" : "Asistan"}: ${m.content}`).join("\n")}`,
         },
       ],
-      temperature: 0.65,
-      maxTokens: 900,
+      temperature: mode === "finalize" ? 0.5 : 0.65,
+      maxTokens: mode === "finalize" ? 1200 : 900,
     });
 
     const matched =
@@ -190,6 +226,7 @@ ${input.messages.map((m) => `${m.role === "user" ? "Kullanıcı" : "Asistan"}: $
     const reply = (raw.reply ?? "Anlattıklarınızı not aldım.").trim();
 
     const ready =
+      mode === "finalize" ||
       Boolean(raw.readyToContinue) ||
       (body.length >= 80 && title.length >= 6 && Boolean(matched));
 
@@ -220,11 +257,13 @@ ${input.messages.map((m) => `${m.role === "user" ? "Kullanıcı" : "Asistan"}: $
       missingFields: Array.isArray(raw.missingFields) ? raw.missingFields.map(String) : [],
     };
   } catch {
-    return ruleBasedAssist(
-      input.messages,
-      brands,
-      input.currentTitle ?? "",
-      input.currentBody ?? combined,
-    );
+    return mode === "finalize"
+      ? ruleBasedFinalize(input.messages, brands, input.currentTitle ?? "", input.currentBody ?? combined)
+      : ruleBasedAssist(
+          input.messages,
+          brands,
+          input.currentTitle ?? "",
+          input.currentBody ?? combined,
+        );
   }
 }
