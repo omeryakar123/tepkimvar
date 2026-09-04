@@ -4,10 +4,8 @@ import {
   ArrowLeft,
   ArrowRight,
   Check,
-  FileText,
   ImagePlus,
   Loader2,
-  Mic,
   PenLine,
   Send,
   Sparkles,
@@ -28,6 +26,18 @@ type Category = { id: string; name: string };
 type WizardStep = 1 | 2 | 3;
 
 type ChatMessage = { role: "bot" | "user"; text: string };
+
+type AssistResponse = {
+  reply: string;
+  title: string;
+  body: string;
+  suggestedBrandName: string | null;
+  suggestedBrandId: string | null;
+  suggestedRating: number | null;
+  readyToContinue: boolean;
+  draftQuality: "draft" | "good" | "excellent";
+  missingFields: string[];
+};
 
 const STEPS: { n: WizardStep; label: string }[] = [
   { n: 1, label: "Şikayet Detayı" },
@@ -76,6 +86,10 @@ export function ComplaintWizard({
 
   const [submitting, setSubmitting] = useState(false);
   const [otpOpen, setOtpOpen] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [draftQuality, setDraftQuality] = useState<AssistResponse["draftQuality"]>("draft");
+  const [readyToContinue, setReadyToContinue] = useState(false);
+  const [detectedBrandName, setDetectedBrandName] = useState<string | null>(null);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -85,12 +99,14 @@ export function ComplaintWizard({
   );
 
   const bodyQuality = useMemo(() => {
+    if (draftQuality === "excellent") return { label: "Harika görünüyor", tone: "good" as const };
+    if (draftQuality === "good") return { label: "İyi gidiyor", tone: "ok" as const };
     const len = body.trim().length;
-    if (len >= 120) return { label: "Harika görünüyor", tone: "good" as const };
-    if (len >= 40) return { label: "İyi gidiyor", tone: "ok" as const };
-    if (len >= 20) return { label: "Biraz daha detay ekleyin", tone: "warn" as const };
+    if (len >= 40) return { label: "Biraz daha detay ekleyin", tone: "warn" as const };
     return { label: "En az 20 karakter", tone: "muted" as const };
-  }, [body]);
+  }, [body, draftQuality]);
+
+  const sidebarBrandLabel = selectedBrand?.name ?? detectedBrandName;
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -126,40 +142,68 @@ export function ComplaintWizard({
     if (initialBrandId) setBrandId(initialBrandId);
   }, [initialBrandId]);
 
-  function pushUserMessage(text: string) {
-    setMessages((prev) => [...prev, { role: "user", text }]);
-  }
+  async function runAssist(nextMessages: ChatMessage[]) {
+    setAiLoading(true);
+    try {
+      const apiMessages = nextMessages.map((m) => ({
+        role: m.role === "bot" ? ("assistant" as const) : ("user" as const),
+        content: m.text,
+      }));
 
-  function handleChatSend() {
-    const text = chatInput.trim();
-    if (!text) return;
-    pushUserMessage(text);
-    setChatInput("");
+      const res = await fetch("/api/complaints/assist", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: apiMessages,
+          brands,
+          currentTitle: title,
+          currentBody: body,
+        }),
+      });
 
-    if (!body.trim()) {
-      setBody(text);
+      const json = (await res.json().catch(() => ({}))) as AssistResponse & { error?: string };
+      if (!res.ok) throw new Error(json.error ?? "Asistan yanıt veremedi");
+
+      if (json.title?.trim()) setTitle(json.title.trim());
+      if (json.body?.trim()) setBody(json.body.trim());
+      if (json.suggestedBrandId) setBrandId(json.suggestedBrandId);
+      if (json.suggestedBrandName) setDetectedBrandName(json.suggestedBrandName);
+      if (json.suggestedRating && rating < 1) setRating(json.suggestedRating);
+      setDraftQuality(json.draftQuality ?? "draft");
+      setReadyToContinue(Boolean(json.readyToContinue));
+
+      setMessages((prev) => [...prev, { role: "bot", text: json.reply }]);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Asistan hatası");
       setMessages((prev) => [
         ...prev,
         {
           role: "bot",
-          text: "Anladım. Sorunu biraz daha detaylandırır mısınız? Tarih, tutar veya sipariş numarası gibi bilgiler çözümü hızlandırır.",
+          text: "Bağlantı sorunu yaşadım. Lütfen sorununuzu biraz daha detaylı yazın veya metin kutusundan düzenleyin.",
         },
       ]);
+    } finally {
+      setAiLoading(false);
+    }
+  }
+
+  function handleChatSend() {
+    const text = chatInput.trim();
+    if (!text || aiLoading) return;
+    const nextMessages: ChatMessage[] = [...messages, { role: "user", text }];
+    setMessages(nextMessages);
+    setChatInput("");
+    void runAssist(nextMessages);
+  }
+
+  async function polishDraft() {
+    if (messages.length <= 1 && !body.trim()) {
+      toast.info("Önce sorununuzu birkaç cümleyle anlatın.");
       return;
     }
-
-    const merged = `${body.trim()}\n\n${text}`;
-    setBody(merged);
-    if (!title.trim() && text.length >= 6) {
-      setTitle(text.slice(0, 120));
-    }
-    setMessages((prev) => [
-      ...prev,
-      {
-        role: "bot",
-        text: "Teşekkürler. İsterseniz ek detay yazabilir veya sağ alttaki «Devam Et» ile marka adımına geçebilirsiniz.",
-      },
-    ]);
+    await runAssist(messages);
+    toast.success("Taslak güncellendi");
   }
 
   function validateStep1(): boolean {
@@ -326,8 +370,8 @@ export function ComplaintWizard({
               <PenLine className="size-7 text-white" />
             </div>
 
-            {selectedBrand && step > 1 ? (
-              <p className="text-[13px] text-white/70 mb-1">{selectedBrand.name} ile ilgili</p>
+            {sidebarBrandLabel ? (
+              <p className="text-[13px] text-white/70 mb-1">{sidebarBrandLabel} ile ilgili</p>
             ) : null}
             <h1 className="font-display text-2xl lg:text-[1.65rem] font-black tracking-tight leading-tight">
               Şikayet Oluştur
@@ -395,6 +439,9 @@ export function ComplaintWizard({
                   onBody={setBody}
                   bodyQuality={bodyQuality}
                   chatEndRef={chatEndRef}
+                  aiLoading={aiLoading}
+                  onPolish={polishDraft}
+                  readyToContinue={readyToContinue}
                 />
               ) : step === 2 ? (
                 <StepBrand
@@ -408,6 +455,9 @@ export function ComplaintWizard({
                   onPlatformUsername={setPlatformUsername}
                   rating={rating}
                   onRating={setRating}
+                  title={title}
+                  body={body}
+                  detectedBrandName={detectedBrandName}
                 />
               ) : (
                 <StepEvidence
@@ -476,6 +526,9 @@ function StepDetail({
   onBody,
   bodyQuality,
   chatEndRef,
+  aiLoading,
+  onPolish,
+  readyToContinue,
 }: {
   messages: ChatMessage[];
   chatInput: string;
@@ -487,19 +540,26 @@ function StepDetail({
   onBody: (v: string) => void;
   bodyQuality: { label: string; tone: "good" | "ok" | "warn" | "muted" };
   chatEndRef: RefObject<HTMLDivElement | null>;
+  aiLoading: boolean;
+  onPolish: () => void;
+  readyToContinue: boolean;
 }) {
-  const [expanded, setExpanded] = useState(false);
-
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <div className="space-y-4 max-h-[280px] overflow-y-auto pr-1">
+    <div className="max-w-2xl mx-auto space-y-5">
+      {/* Sohbet */}
+      <div className="rounded-2xl ring-1 ring-rule bg-surface/40 p-4 space-y-3 max-h-[240px] overflow-y-auto">
         {messages.map((m, i) => (
-          <div key={i} className={cn("flex", m.role === "user" ? "justify-end" : "justify-start")}>
+          <div key={i} className={cn("flex gap-2", m.role === "user" ? "justify-end" : "justify-start")}>
+            {m.role === "bot" && (
+              <div className="size-8 rounded-full bg-brand/15 grid place-items-center shrink-0 mt-0.5">
+                <Sparkles className="size-4 text-brand" />
+              </div>
+            )}
             <div
               className={cn(
-                "max-w-[85%] rounded-2xl px-4 py-3 text-[14px] leading-relaxed",
+                "max-w-[82%] rounded-2xl px-4 py-2.5 text-[14px] leading-relaxed",
                 m.role === "bot"
-                  ? "bg-surface text-navy ring-1 ring-rule"
+                  ? "bg-card text-navy ring-1 ring-rule"
                   : "bg-brand text-brand-foreground",
               )}
             >
@@ -507,63 +567,78 @@ function StepDetail({
             </div>
           </div>
         ))}
+        {aiLoading && (
+          <div className="flex items-center gap-2 text-[13px] text-navy-mid pl-10">
+            <Loader2 className="size-4 animate-spin text-brand" />
+            Şikayetiniz hazırlanıyor…
+          </div>
+        )}
         <div ref={chatEndRef} />
       </div>
 
+      {/* Giriş çubuğu */}
       <div className="rounded-full ring-1 ring-rule bg-card flex items-center gap-2 px-3 py-2 shadow-soft">
-        <button type="button" className="size-9 rounded-full hover:bg-surface grid place-items-center text-navy-mid shrink-0">
-          <FileText className="size-4" />
-        </button>
         <input
           value={chatInput}
           onChange={(e) => onChatInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), onChatSend())}
           placeholder="Cevabınızı buraya yazın…"
-          className="flex-1 bg-transparent text-[14px] focus:outline-none min-w-0"
+          disabled={aiLoading}
+          className="flex-1 bg-transparent text-[14px] focus:outline-none min-w-0 disabled:opacity-60"
         />
-        <button type="button" className="size-9 rounded-full hover:bg-surface grid place-items-center text-navy-mid shrink-0">
-          <Mic className="size-4" />
-        </button>
         <button
           type="button"
+          disabled={aiLoading}
           onClick={onChatSend}
-          className="size-10 rounded-full bg-brand text-brand-foreground grid place-items-center shrink-0 hover:brightness-105"
+          className="size-10 rounded-full bg-brand text-brand-foreground grid place-items-center shrink-0 hover:brightness-105 disabled:opacity-60"
         >
           <Send className="size-4" />
         </button>
       </div>
 
-      <div className="pt-2">
-        <button
-          type="button"
-          onClick={() => setExpanded((v) => !v)}
-          className="text-[12px] font-semibold text-brand hover:underline"
-        >
-          {expanded ? "Sohbet modunu kullan" : "Metin olarak düzenle — Nasıl Yazılır?"}
-        </button>
+      {/* Taslak editör — Şikayetvar tarzı */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={onPolish}
+            disabled={aiLoading}
+            className="text-[12px] font-semibold text-brand hover:underline disabled:opacity-50"
+          >
+            Nasıl Yazılır? — Yapay zeka ile düzenle
+          </button>
+          {readyToContinue && (
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-brand bg-brand-soft px-2 py-0.5 rounded-full">
+              <Check className="size-3" /> Yayına hazır
+            </span>
+          )}
+        </div>
 
-        {(expanded || body.length > 0) && (
-          <div className="mt-4 rounded-2xl ring-1 ring-rule p-4 sm:p-5 space-y-4 bg-surface/50">
-            <div>
-              <label className="text-[12px] font-medium text-navy-mid">Başlık</label>
-              <input
-                value={title}
-                onChange={(e) => onTitle(e.target.value)}
-                placeholder="Kısa ve net bir başlık"
-                className="mt-1 w-full h-11 rounded-xl ring-1 ring-rule px-3 text-sm bg-card focus:outline-none focus:ring-2 focus:ring-brand/40"
-              />
-            </div>
-            <div>
-              <label className="text-[12px] font-medium text-navy-mid">Şikayet detayı</label>
-              <textarea
-                rows={8}
-                value={body}
-                onChange={(e) => onBody(e.target.value)}
-                placeholder="Yaşadıklarınızı detaylıca anlatın…"
-                className="mt-1 w-full rounded-xl ring-1 ring-rule p-3 text-sm bg-card focus:outline-none focus:ring-2 focus:ring-brand/40 resize-y min-h-[160px]"
-              />
-            </div>
-            <div className="flex items-center justify-end gap-1.5 text-[12px]">
+        <div className="rounded-[20px] ring-1 ring-rule bg-card shadow-soft overflow-hidden">
+          <div className="px-4 sm:px-5 pt-4 pb-2 border-b border-rule/60">
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-navy-mid">Başlık</label>
+            <input
+              value={title}
+              onChange={(e) => onTitle(e.target.value)}
+              placeholder="Örn: Jojobet hesabımdaki 500.000 TL'ye erişemiyorum"
+              className="mt-1 w-full h-10 bg-transparent text-[15px] font-semibold text-ink focus:outline-none placeholder:text-navy-mid/50"
+            />
+          </div>
+          <div className="px-4 sm:px-5 py-4">
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-navy-mid">Şikayet detayı</label>
+            <textarea
+              rows={9}
+              value={body}
+              onChange={(e) => onBody(e.target.value)}
+              placeholder="Yaşadıklarınızı detaylıca anlatın. Tarih, tutar, kullanıcı adınız ve yaptığınız işlemleri ekleyin…"
+              className="mt-2 w-full bg-transparent text-[14px] leading-relaxed text-navy focus:outline-none resize-y min-h-[180px] placeholder:text-navy-mid/50"
+            />
+          </div>
+          <div className="px-4 sm:px-5 py-3 border-t border-rule/60 flex items-center justify-between bg-surface/30">
+            <span className="text-[11px] text-navy-mid">
+              {body.trim().length} karakter · moderasyon öncesi taslak
+            </span>
+            <div className="flex items-center gap-1.5 text-[12px]">
               {bodyQuality.tone === "good" && <Sparkles className="size-3.5 text-brand" />}
               <span
                 className={cn(
@@ -578,7 +653,7 @@ function StepDetail({
               </span>
             </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
@@ -595,6 +670,9 @@ function StepBrand({
   onPlatformUsername,
   rating,
   onRating,
+  title,
+  body,
+  detectedBrandName,
 }: {
   brands: Brand[];
   cats: Category[];
@@ -606,77 +684,106 @@ function StepBrand({
   onPlatformUsername: (v: string) => void;
   rating: number;
   onRating: (n: number) => void;
+  title: string;
+  body: string;
+  detectedBrandName: string | null;
 }) {
+  const selected = brands.find((b) => b.id === brandId);
+
   return (
-    <div className="max-w-xl mx-auto space-y-5">
+    <div className="max-w-xl mx-auto space-y-6">
+      {/* Şikayet özeti kartı */}
+      {title.trim() && (
+        <div className="rounded-2xl ring-1 ring-brand/20 bg-brand-soft/30 p-4 sm:p-5">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-brand mb-2">Şikayet özeti</p>
+          <h3 className="font-display text-[16px] font-bold text-ink leading-snug">{title}</h3>
+          {body.trim() && (
+            <p className="mt-2 text-[13px] text-navy line-clamp-4 leading-relaxed whitespace-pre-wrap">{body}</p>
+          )}
+        </div>
+      )}
+
       <div>
-        <h2 className="font-display text-xl font-bold text-ink">Hangi markayla sorun yaşadınız?</h2>
-        <p className="mt-1 text-[13px] text-navy-mid">
-          Firma seçimi marka panelinde şikayetinizin doğru yere ulaşmasını sağlar.
+        <h2 className="font-display text-xl font-bold text-ink">
+          {selected?.name ?? detectedBrandName ?? "Marka"} bilgileri
+        </h2>
+        <p className="mt-1 text-[13px] text-navy-mid leading-relaxed">
+          Şikayetinizin doğru firmaya ulaşması için markayı onaylayın ve platform bilgilerinizi girin.
         </p>
       </div>
 
-      <div>
-        <label className="text-[12px] font-medium text-navy-mid">Firma</label>
-        <div className="mt-1">
-          <Combobox
-            options={brands.map((b) => ({ value: b.id, label: b.name }))}
-            value={brandId}
-            onChange={onBrandId}
-            placeholder="Şikayet ettiğiniz firmayı seçin"
-            searchPlaceholder="Firma ara…"
-            emptyText="Firma bulunamadı."
+      <div className="rounded-2xl ring-1 ring-rule bg-surface/40 p-4 sm:p-5 space-y-4">
+        <div>
+          <label className="text-[12px] font-medium text-navy-mid">Firma</label>
+          <div className="mt-1.5">
+            <Combobox
+              options={brands.map((b) => ({ value: b.id, label: b.name }))}
+              value={brandId}
+              onChange={onBrandId}
+              placeholder="Şikayet ettiğiniz firmayı seçin"
+              searchPlaceholder="Firma ara…"
+              emptyText="Firma bulunamadı."
+            />
+          </div>
+          {detectedBrandName && !brandId && (
+            <p className="mt-1.5 text-[12px] text-brand">
+              AI önerisi: <button type="button" className="font-semibold underline" onClick={() => {
+                const m = brands.find((b) => b.name.toLowerCase() === detectedBrandName.toLowerCase());
+                if (m) onBrandId(m.id);
+              }}>{detectedBrandName}</button>
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="text-[12px] font-medium text-navy-mid">Kategori</label>
+          <div className="mt-1.5">
+            <Combobox
+              options={cats.map((c) => ({ value: c.id, label: c.name }))}
+              value={categoryId}
+              onChange={onCategoryId}
+              placeholder="Kategori seçin"
+              searchPlaceholder="Kategori ara…"
+              emptyText="Kategori bulunamadı."
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="text-[12px] font-medium text-navy-mid">
+            Platform kullanıcı adınız <span className="text-danger">*</span>
+          </label>
+          <input
+            value={platformUsername}
+            onChange={(e) => onPlatformUsername(e.target.value)}
+            placeholder="Bahis/casino sitesindeki kullanıcı adınız"
+            className="mt-1.5 w-full h-11 rounded-xl ring-1 ring-rule px-3 text-sm bg-card focus:outline-none focus:ring-2 focus:ring-brand/40"
           />
         </div>
-      </div>
 
-      <div>
-        <label className="text-[12px] font-medium text-navy-mid">Kategori</label>
-        <div className="mt-1">
-          <Combobox
-            options={cats.map((c) => ({ value: c.id, label: c.name }))}
-            value={categoryId}
-            onChange={onCategoryId}
-            placeholder="Kategori seçin"
-            searchPlaceholder="Kategori ara…"
-            emptyText="Kategori bulunamadı."
-          />
-        </div>
-      </div>
-
-      <div>
-        <label className="text-[12px] font-medium text-navy-mid">
-          Platform kullanıcı adınız <span className="text-danger">*</span>
-        </label>
-        <input
-          value={platformUsername}
-          onChange={(e) => onPlatformUsername(e.target.value)}
-          placeholder="Bahis/casino sitesindeki kullanıcı adınız"
-          className="mt-1 w-full h-11 rounded-xl ring-1 ring-rule px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40"
-        />
-      </div>
-
-      <div>
-        <label className="text-[12px] font-medium text-navy-mid">
-          Deneyim puanınız <span className="text-danger">*</span>
-        </label>
-        <div className="mt-2 flex gap-1">
-          {[1, 2, 3, 4, 5].map((n) => (
-            <button
-              key={n}
-              type="button"
-              onClick={() => onRating(n)}
-              className="p-1 rounded hover:bg-surface transition"
-              aria-label={`${n} yıldız`}
-            >
-              <Star
-                className={cn(
-                  "size-9",
-                  n <= rating ? "fill-amber-400 text-amber-400" : "text-navy-mid/40",
-                )}
-              />
-            </button>
-          ))}
+        <div>
+          <label className="text-[12px] font-medium text-navy-mid">
+            Deneyim puanınız <span className="text-danger">*</span>
+          </label>
+          <p className="text-[11px] text-navy-mid mt-0.5">1 = çok kötü, 5 = kabul edilebilir</p>
+          <div className="mt-2 flex gap-1">
+            {[1, 2, 3, 4, 5].map((n) => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => onRating(n)}
+                className="p-1 rounded hover:bg-surface transition"
+                aria-label={`${n} yıldız`}
+              >
+                <Star
+                  className={cn(
+                    "size-9",
+                    n <= rating ? "fill-amber-400 text-amber-400" : "text-navy-mid/40",
+                  )}
+                />
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </div>
