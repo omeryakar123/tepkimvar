@@ -38,10 +38,11 @@ services:
       EMAIL_FROM: "${EMAIL_FROM:-tepkimvar <noreply@${DOMAIN}>}"
       GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID:-}"
       GOOGLE_CLIENT_SECRET: "${GOOGLE_CLIENT_SECRET:-}"
-      SMS_API_URL: "${SMS_API_URL:-https://api.sempico.solutions}"
+      SMS_API_URL: "${SMS_API_URL:-https://restapi.sempico.solutions}"
       SMS_API_KEY: "${SMS_API_KEY:-}"
       SMS_API_TOKEN: "${SMS_API_TOKEN:-}"
       SMS_FROM: "${SMS_FROM:-VSMS}"
+      SMS_SENDER_ID: "${SMS_SENDER_ID:-}"
       # --env-file yalnızca compose interpolasyonu içindir; konteynere
       # geçmeyen değişkenler process.env'de görünmez (bot şablona düşer).
       AI_API_KEY: "${AI_API_KEY:-${FAL_KEY:-}}"

@@ -156,6 +156,9 @@ export async function sendComplaintPhoneOtp(
   const code = generateOtpCode();
   const expiresAt = new Date(Date.now() + PHONE_OTP_TTL_MS);
 
+  // SMS başarısızsa OTP kaydı oluşturma
+  await sendSmsOtp(phone, code);
+
   const url = process.env.DATABASE_URL;
   if (!url) throw new HttpError(500, "Veritabanı yapılandırması eksik");
   const pg = postgres(url, { max: 1 });
@@ -168,7 +171,6 @@ export async function sendComplaintPhoneOtp(
     await pg.end({ timeout: 5 }).catch(() => {});
   }
 
-  await sendSmsOtp(phone, code);
   return { phone };
 }
 

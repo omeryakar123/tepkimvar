@@ -37,6 +37,24 @@ S3_REGION=us-east-1
 RESEND_API_KEY=<Resend anahtarı>     # gerçek e-posta doğrulaması için
 ```
 
+**SMS / Telefon OTP (Sempico — şikayet gönderimi için zorunlu):**
+```
+SMS_API_URL=https://restapi.sempico.solutions
+SMS_API_TOKEN=<Sempico REST API token>
+SMS_API_KEY=<aynı token (opsiyonel yedek)>
+SMS_FROM=VSMS
+SMS_SENDER_ID=              # opsiyonel: legacy API sayısal sender ID
+```
+Runtime değişkenleridir — **Restart** yeter, rebuild gerekmez (env için).
+Kod güncellemesi (`src/lib/server/sms.ts`) için **Deploy** gerekir.
+
+**Otomatik (API token ile):**
+```bash
+COOLIFY_TOKEN='1|...' node scripts/coolify-set-sms-env.mjs --restart
+# git push sonrası kod deploy:
+COOLIFY_TOKEN='1|...' node scripts/coolify-set-sms-env.mjs --deploy
+```
+
 > **Not:** `VITE_*` değişkenleri build sırasında gömülür. Coolify'da bunları
 > "Build Variable" olarak da işaretle (yalnızca runtime değil).
 
