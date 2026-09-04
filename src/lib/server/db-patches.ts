@@ -33,6 +33,27 @@ const PATCHES = [
   )`,
   `CREATE INDEX IF NOT EXISTS brand_follows_brand_id_idx ON brand_follows (brand_id)`,
   `CREATE INDEX IF NOT EXISTS brand_follows_user_id_idx ON brand_follows (user_id)`,
+  `CREATE TABLE IF NOT EXISTS phone_otps (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id uuid REFERENCES "user"(id) ON DELETE SET NULL,
+    phone text NOT NULL,
+    otp_hash text NOT NULL,
+    attempts int NOT NULL DEFAULT 0,
+    ip_address text,
+    expires_at timestamptz NOT NULL,
+    used_at timestamptz,
+    created_at timestamptz NOT NULL DEFAULT now()
+  )`,
+  `CREATE TABLE IF NOT EXISTS phone_verifications (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id uuid NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+    phone text NOT NULL,
+    verified_at timestamptz NOT NULL DEFAULT now(),
+    expires_at timestamptz NOT NULL,
+    used_at timestamptz
+  )`,
+  `CREATE INDEX IF NOT EXISTS phone_otps_phone_created_idx ON phone_otps (phone, created_at DESC)`,
+  `CREATE INDEX IF NOT EXISTS phone_verifications_user_phone_idx ON phone_verifications (user_id, phone)`,
 ];
 
 export async function applyDbPatches(sql: postgres.Sql): Promise<string[]> {

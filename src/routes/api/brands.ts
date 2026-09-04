@@ -22,6 +22,7 @@ export const Route = createFileRoute("/api/brands")({
         const categorySlug = p.get("categorySlug") ?? undefined;
         const categoryIdParam = p.get("categoryId") ?? undefined;
         const search = p.get("search") ?? undefined;
+        const slugParam = p.get("slug") ?? undefined;
         const sortBy = p.get("sortBy") ?? undefined;
         const limitParam = p.get("limit");
         const pageParam = p.get("page");
@@ -40,6 +41,7 @@ export const Route = createFileRoute("/api/brands")({
           if (!categoryId) return Response.json({ items: [], total: 0 });
         }
         if (categoryId) conditions.push(eq(schema.brands.categoryId, categoryId));
+        if (slugParam) conditions.push(eq(schema.brands.slug, slugParam));
         if (search) conditions.push(ilike(schema.brands.name, `%${search}%`));
         if (sortBy === "resolution") conditions.push(gt(schema.brands.totalComplaints, 0));
         // Footer/filtre linkleri için: yalnızca doğrulanmış ya da premium markalar.

@@ -12,6 +12,7 @@ import { complaintRankOrder, complaintRecentOrder, complaintTrendingOrder } from
 import { supportedComplaintIds } from "@/lib/server/complaint-support";
 import { loadAuthorProfiles } from "@/lib/server/author-profile";
 import { linkComplaintEvidence } from "@/lib/server/complaint-evidence";
+import { consumePhoneVerification } from "@/lib/server/phone-otp";
 import { UI_DURUM_TO_DB } from "@/lib/complaint-status";
 
 function isValidTrPhone(stored: string | null | undefined): boolean {
@@ -188,6 +189,7 @@ export const Route = createFileRoute("/api/complaints")({
             platformUsername?: string;
             rating?: number;
             attachmentIds?: string[];
+            phoneVerificationId?: string;
           };
 
           const title = (b.title ?? "").trim();
@@ -205,6 +207,10 @@ export const Route = createFileRoute("/api/complaints")({
           if (!rating) throw new HttpError(400, "Lütfen 1–5 arası puan verin");
           if (!isValidTrPhone(b.contactPhone))
             throw new HttpError(400, "Geçerli bir cep telefonu numarası zorunludur");
+          if (!b.phoneVerificationId?.trim()) {
+            throw new HttpError(400, "Telefon doğrulaması zorunludur. SMS kodunu onaylayın.");
+          }
+          await consumePhoneVerification(user.id, b.phoneVerificationId.trim(), b.contactPhone!);
 
           const attachmentIds = Array.isArray(b.attachmentIds) ? b.attachmentIds : [];
           if (attachmentIds.length === 0) {
