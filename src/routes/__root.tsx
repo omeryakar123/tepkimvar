@@ -12,6 +12,7 @@ import { Toaster } from "sonner";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { SITE_URL } from "@/lib/seo";
+import { GA_MEASUREMENT_ID, googleAnalyticsInitScript } from "@/lib/google-analytics";
 import { themeInitScript } from "@/lib/theme";
 import { AuthProvider } from "../hooks/use-auth";
 import { PageViewTracker } from "@/components/page-view-tracker";
@@ -152,6 +153,9 @@ function RootShell({ children }: { children: ReactNode }) {
       <head>
         {/* React'ten ÖNCE çalışır: koyu temada açılışta beyaz parlamayı önler. */}
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        {/* Google Analytics (gtag.js) */}
+        <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`} />
+        <script dangerouslySetInnerHTML={{ __html: googleAnalyticsInitScript }} />
         <HeadContent />
       </head>
       <body>
