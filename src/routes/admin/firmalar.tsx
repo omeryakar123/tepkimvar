@@ -44,7 +44,7 @@ function AdminBrandsPage() {
   async function runBrandSeed() {
     if (
       !confirm(
-        "bilisim-brand-names.txt listesindeki eksik markalar eklenecek ve logolar güncellenecek. Devam?",
+        "bilisim-brand-names.txt listesindeki eksik markalar değil — yalnızca kullanıcı listesinde olup sitede bulunmayan markalar eklenecek. Devam?",
       )
     ) {
       return;

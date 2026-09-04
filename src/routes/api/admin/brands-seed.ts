@@ -34,7 +34,7 @@ export const Route = createFileRoute("/api/admin/brands-seed")({
 
           const [{ before }] = await db.select({ before: count() }).from(schema.brands);
 
-          const seed = await runScript("seed-bilisim-brands-bulk.mjs");
+          const seed = await runScript("seed-user-requested-brands.mjs");
           const telegram = await runScript("sync-telegram-logos.mjs");
           const logos = await runScript("fix-brand-logos.mjs", ["--all", "--force"]);
 
