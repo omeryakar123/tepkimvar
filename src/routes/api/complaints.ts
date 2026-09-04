@@ -11,6 +11,7 @@ import { looksLikeFakePlatformUsername } from "@/lib/platform-username";
 import { complaintRankOrder, complaintRecentOrder, complaintTrendingOrder } from "@/lib/server/complaint-sort";
 import { supportedComplaintIds } from "@/lib/server/complaint-support";
 import { loadAuthorProfiles } from "@/lib/server/author-profile";
+import { linkComplaintEvidence } from "@/lib/server/complaint-evidence";
 import { UI_DURUM_TO_DB } from "@/lib/complaint-status";
 
 function isValidTrPhone(stored: string | null | undefined): boolean {
@@ -186,6 +187,7 @@ export const Route = createFileRoute("/api/complaints")({
             contactPhone?: string | null;
             platformUsername?: string;
             rating?: number;
+            attachmentIds?: string[];
           };
 
           const title = (b.title ?? "").trim();
@@ -203,6 +205,11 @@ export const Route = createFileRoute("/api/complaints")({
           if (!rating) throw new HttpError(400, "Lütfen 1–5 arası puan verin");
           if (!isValidTrPhone(b.contactPhone))
             throw new HttpError(400, "Geçerli bir cep telefonu numarası zorunludur");
+
+          const attachmentIds = Array.isArray(b.attachmentIds) ? b.attachmentIds : [];
+          if (attachmentIds.length === 0) {
+            throw new HttpError(400, "En az bir ekran görüntüsü veya video kanıtı zorunludur");
+          }
 
           const [brand] = await db
             .select({ id: schema.brands.id })
@@ -241,6 +248,13 @@ export const Route = createFileRoute("/api/complaints")({
               shortId: code.toLowerCase(),
             })
             .returning({ id: schema.complaints.id, publicId: schema.complaints.publicId });
+
+          try {
+            await linkComplaintEvidence(user.id, created.id, attachmentIds);
+          } catch (linkErr) {
+            await db.delete(schema.complaints).where(eq(schema.complaints.id, created.id));
+            throw linkErr;
+          }
 
           await recordStatusChange({
             complaintId: created.id,

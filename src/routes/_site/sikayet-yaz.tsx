@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { PhoneInput } from "@/components/phone-input";
 import { toE164Tr } from "@/lib/phone";
 import { looksLikeFakePlatformUsername } from "@/lib/platform-username";
-import { FileDropzone, type AcceptedFile } from "@/components/file-dropzone";
+import { FileDropzone, hasRequiredVisualEvidence, type AcceptedFile } from "@/components/file-dropzone";
 import { Combobox } from "@/components/combobox";
 import { seoHead } from "@/lib/seo";
 import { ComplaintShareModal } from "@/components/complaint-share-modal";
@@ -88,11 +88,47 @@ function WriteComplaintPage() {
     if (title.trim().length < 6) return toast.error("Başlık en az 6 karakter olmalı.");
     if (body.trim().length < 20) return toast.error("Şikayet detayı en az 20 karakter olmalı.");
     if (!kvkk) return toast.error("KVKK onayı zorunludur.");
+    if (files.length === 0) return toast.error("En az bir kanıt dosyası (ekran görüntüsü veya video) zorunludur.");
+    if (!hasRequiredVisualEvidence(files))
+      return toast.error("En az bir ekran görüntüsü veya video yüklemelisiniz. Yalnızca PDF yeterli değildir.");
     const e164 = toE164Tr(phone);
     if (!e164) return toast.error("Geçerli bir cep telefonu numarası zorunludur.");
 
     setSubmitting(true);
     try {
+      const attachmentIds: string[] = [];
+      const uploadedFiles = [...files];
+
+      for (let i = 0; i < uploadedFiles.length; i++) {
+        const af = uploadedFiles[i];
+        af.progress = 15;
+        af.error = undefined;
+        setFiles([...uploadedFiles]);
+
+        const fd = new FormData();
+        fd.append("file", af.file);
+        fd.append("folder", "complaint-evidence");
+        fd.append("visibility", mediaPrivacy);
+
+        const upRes = await fetch("/api/upload", { method: "POST", credentials: "include", body: fd });
+        const upJson = (await upRes.json().catch(() => ({}))) as {
+          attachmentId?: string;
+          error?: string;
+        };
+
+        if (!upRes.ok || !upJson.attachmentId) {
+          af.error = upJson.error ?? "yüklenemedi";
+          af.progress = 0;
+          setFiles([...uploadedFiles]);
+          throw new Error(`${af.file.name}: ${af.error}`);
+        }
+
+        af.attachmentId = upJson.attachmentId;
+        attachmentIds.push(upJson.attachmentId);
+        af.progress = 100;
+        setFiles([...uploadedFiles]);
+      }
+
       const res = await fetch("/api/complaints", {
         method: "POST",
         credentials: "include",
@@ -105,6 +141,7 @@ function WriteComplaintPage() {
           contactPhone: e164,
           platformUsername: platformUsername.trim(),
           rating,
+          attachmentIds,
         }),
       });
       const json = (await res.json()) as {
@@ -119,27 +156,6 @@ function WriteComplaintPage() {
       setCreatedSlug(json.publicId ?? json.id);
       setCreatedTitle(title.trim());
       setIssues(json.issues ?? []);
-
-      for (let i = 0; i < files.length; i++) {
-        const af = files[i];
-        const isImg = af.file.type.startsWith("image/");
-        af.progress = 30;
-        setFiles([...files]);
-        const fd = new FormData();
-        fd.append("file", af.file);
-        fd.append("folder", isImg ? "complaint-images" : "complaint-files");
-        fd.append("complaintId", json.id);
-        fd.append("visibility", mediaPrivacy);
-        const upRes = await fetch("/api/upload", { method: "POST", credentials: "include", body: fd });
-        if (!upRes.ok) {
-          const uj = (await upRes.json().catch(() => ({}))) as { error?: string };
-          toast.error(`${af.file.name}: ${uj.error ?? "yüklenemedi"}`);
-          continue;
-        }
-        af.progress = 100;
-        setFiles([...files]);
-      }
-
       setShareOpen(true);
     } catch (e2) {
       toast.error(e2 instanceof Error ? e2.message : "Şikayet oluşturulamadı.");
@@ -178,7 +194,8 @@ function WriteComplaintPage() {
           Sesini duyur, çözümü takip et.
         </h1>
         <p className="mt-2 text-[14.5px] text-navy max-w-xl">
-          Şikayetin moderasyon onayından geçer; onay sonrası firmaya iletilir ve yayınlanır.
+          Şikayetiniz yalnızca <b className="text-ink">ekran görüntüsü veya video kanıtı</b> ile birlikte
+          moderasyona alınır. Kanıtsız başvurular sistem tarafından kabul edilmez.
         </p>
 
         {!authLoading && !user && (
@@ -197,11 +214,14 @@ function WriteComplaintPage() {
 
         <form onSubmit={submit} className="mt-8 bg-card rounded-2xl ring-1 ring-rule p-6 space-y-5">
           <div className="rounded-xl bg-brand-soft/60 ring-1 ring-brand/15 p-4 text-[13px] text-navy leading-relaxed">
-            <p className="font-semibold text-ink">Önemli bilgilendirme</p>
-            <p className="mt-1.5">
-              Lütfen şikayetinizde <b>platform kullanıcı adınızı</b> ve <b>cep telefonunuzu</b> eksiksiz belirtin.
-              Telefon numaranız yalnızca admin ve ilgili firma tarafından görülür; diğer ziyaretçiler yıldızlı olarak görür.
-            </p>
+            <p className="font-semibold text-ink">Kanıt zorunluluğu</p>
+            <ul className="mt-2 space-y-1.5 list-disc pl-4">
+              <li>
+                <b>Ekran görüntüsü veya video</b> yüklemeniz zorunludur (sohbet, işlem geçmişi, hata ekranı vb.).
+              </li>
+              <li>Platform kullanıcı adınız ve cep telefonunuz eksiksiz olmalıdır.</li>
+              <li>Telefon numaranız yalnızca admin ve ilgili firma tarafından görülür.</li>
+            </ul>
           </div>
 
           <div>
@@ -300,9 +320,14 @@ function WriteComplaintPage() {
           </div>
 
           <div>
-            <label className="text-[12px] font-medium text-navy-mid">Görsel, video veya PDF ekle</label>
-            <div className="mt-1">
-              <FileDropzone files={files} onChange={setFiles} disabled={submitting} />
+            <label className="text-[12px] font-medium text-navy-mid">
+              Kanıt dosyaları <span className="text-danger">*</span>
+            </label>
+            <p className="mt-1 text-[12px] text-navy-mid leading-relaxed">
+              Sorunu kanıtlayan ekran görüntüsü veya video ekleyin. PDF yalnızca ek belge olarak kullanılabilir.
+            </p>
+            <div className="mt-2">
+              <FileDropzone files={files} onChange={setFiles} disabled={submitting} required />
             </div>
             {files.length > 0 && (
               <div className="mt-3">
@@ -347,11 +372,14 @@ function WriteComplaintPage() {
           </div>
 
           <button
-            disabled={submitting || !user}
+            disabled={submitting || !user || !hasRequiredVisualEvidence(files)}
             className="inline-flex items-center justify-center gap-2 rounded-full bg-brand text-brand-foreground px-6 h-11 text-[14px] font-semibold hover:brightness-105 disabled:opacity-60"
           >
             {submitting && <Loader2 className="size-4 animate-spin" />} Şikayeti Gönder
           </button>
+          {!hasRequiredVisualEvidence(files) && files.length > 0 && (
+            <p className="text-[12px] text-warning">Göndermek için en az bir görsel veya video ekleyin.</p>
+          )}
         </form>
       </main>
     </div>

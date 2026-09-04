@@ -108,16 +108,11 @@ export function SiteLogoHeader({ badge }: { badge?: string }) {
   );
 }
 
-/** Navbar — logo + isteğe bağlı kısa etiket (marka yazısı yerine). */
-export function SiteLogoNav({ compact = false }: { compact?: boolean }) {
+/** Navbar — yalnızca logo. */
+export function SiteLogoNav({ size = 34 }: { size?: number }) {
   return (
-    <Link to="/" className="inline-flex items-center gap-2 shrink-0" aria-label="Ana sayfa">
-      <SiteLogoMark size={compact ? 32 : 36} tone="on-light" />
-      {!compact && (
-        <span className="hidden sm:inline font-display font-bold text-[15px] text-ink tracking-tight">
-          Rehber &amp; Şikayet
-        </span>
-      )}
+    <Link to="/" className="inline-flex shrink-0" aria-label="Ana sayfa">
+      <SiteLogoMark size={size} tone="on-light" />
     </Link>
   );
 }

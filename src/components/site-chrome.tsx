@@ -5,6 +5,7 @@ import { useAuth, highestRoleRedirect } from "@/hooks/use-auth";
 import { GlobalSearchTrigger } from "@/components/global-search";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { NotificationBell } from "@/components/notification-bell";
+import { SiteLogoMark, SiteLogoNav } from "@/components/site-logo-mark";
 
 export function SiteNav() {
   const { user, roles, signOut } = useAuth();
@@ -34,11 +35,7 @@ export function SiteNav() {
     <>
       <header className="sticky top-0 z-40 bg-paper/90 backdrop-blur border-b border-rule overflow-x-clip">
         <div className="mx-auto max-w-7xl px-3 sm:px-6 h-16 flex items-center gap-2 sm:gap-3 min-w-0">
-          <Link to="/" className="flex items-center shrink-0">
-            <span className="font-display font-black text-[18px] sm:text-[22px] tracking-tight text-ink leading-none">
-              tepkimvar<span className="text-brand">.</span>
-            </span>
-          </Link>
+          <SiteLogoNav size={34} />
 
           <nav className="hidden xl:flex items-center gap-3 2xl:gap-5 shrink-0 text-[13px] 2xl:text-[14px] font-medium text-navy whitespace-nowrap">
             {navLinks.map((l) => (
@@ -232,8 +229,8 @@ export function SiteFooter() {
     <footer className="mt-0 bg-media text-media-foreground/80 border-t border-white/10">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 py-14">
         <div className="flex items-center justify-between mb-10">
-          <Link to="/" className="font-display font-black text-[22px] tracking-tight text-paper dark:text-ink">
-            tepkimvar<span className="text-brand">.</span>
+          <Link to="/" className="inline-flex items-center gap-2.5" aria-label="Ana sayfa">
+            <SiteLogoMark size={36} tone="default" />
           </Link>
           <div className="hidden md:flex items-center gap-4 text-[13px]">
             {topLinks.map(([t, to]) => (

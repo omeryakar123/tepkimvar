@@ -7,6 +7,7 @@ import { recordStatusChange } from "@/lib/server/history";
 import { notifyBrandFollowers } from "@/lib/server/notify";
 import { HttpError, errorResponse, requireStaff } from "@/lib/server/guard";
 import { ensureDbPatches } from "@/lib/server/ensure-db-patches";
+import { assertComplaintHasVisualEvidence } from "@/lib/server/complaint-evidence";
 
 const KINDS = [
   "escalation",
@@ -109,6 +110,9 @@ export const Route = createFileRoute("/api/admin/moderation")({
 
             if (c) {
               const nextStatus = state === "resolved" ? "approved" : "rejected";
+              if (state === "resolved") {
+                await assertComplaintHasVisualEvidence(c.id);
+              }
               await db
                 .update(schema.complaints)
                 .set({

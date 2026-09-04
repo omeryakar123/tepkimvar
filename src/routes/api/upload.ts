@@ -47,7 +47,9 @@ export const Route = createFileRoute("/api/upload")({
 
           // Sahiplik kuralları
           let prefix: string;
-          if (folder === "complaint-images" || folder === "complaint-files") {
+          if (folder === "complaint-evidence") {
+            prefix = `complaint-evidence/${user.id}`;
+          } else if (folder === "complaint-images" || folder === "complaint-files") {
             if (!complaintId || !UUID_RE.test(complaintId))
               throw new HttpError(400, "Şikayet belirtilmeli");
             const [c] = await db
@@ -100,7 +102,26 @@ export const Route = createFileRoute("/api/upload")({
           await putObject(key, buf, contentType);
 
           // Şikayet eklerini kayda geç
-          if (complaintId) {
+          let attachmentId: string | null = null;
+
+          if (folder === "complaint-evidence") {
+            const vis = ["public", "brand_only", "super_admin_only"].includes(visibility)
+              ? (visibility as "public" | "brand_only" | "super_admin_only")
+              : "public";
+            const [row] = await db
+              .insert(schema.complaintAttachments)
+              .values({
+                complaintId: null,
+                replyId: null,
+                uploaderId: user.id,
+                storagePath: key,
+                fileType: contentType,
+                fileSize: file.size,
+                visibility: vis,
+              })
+              .returning({ id: schema.complaintAttachments.id });
+            attachmentId = row?.id ?? null;
+          } else if (complaintId) {
             const vis = ["public", "brand_only", "super_admin_only"].includes(visibility)
               ? (visibility as "public" | "brand_only" | "super_admin_only")
               : "public";
@@ -131,7 +152,7 @@ export const Route = createFileRoute("/api/upload")({
             });
           }
 
-          return Response.json({ key, url: `/api/files/${key}` }, { status: 201 });
+          return Response.json({ key, url: `/api/files/${key}`, attachmentId }, { status: 201 });
         } catch (e) {
           return errorResponse(e);
         }

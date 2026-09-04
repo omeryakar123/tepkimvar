@@ -1,14 +1,27 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { Send, Paperclip, CheckCircle2, AlertTriangle, Star } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
+import {
+  Send,
+  Paperclip,
+  AlertTriangle,
+  Star,
+  User,
+  Phone,
+  AtSign,
+  History,
+  ExternalLink,
+  Loader2,
+} from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { EscalateModal } from "@/components/escalate-modal";
 import { Pagination } from "@/components/pagination";
 import { PAGE_SIZE } from "@/lib/data";
+import { dbStatusToUi, statusLabel } from "@/lib/complaint-status";
 import type { BrandMembership } from "@/routes/brand";
 
 type Status = "pending" | "approved" | "in_review" | "answered" | "resolved" | "rejected" | "spam" | "user_replied" | "super_admin_review" | "escalated" | "archived";
+
 type Complaint = {
   id: string;
   title: string;
@@ -16,8 +29,39 @@ type Complaint = {
   status: Status;
   created_at: string;
   short_id: string | null;
+  public_id: string | null;
   brand_response: string | null;
   rating: number | null;
+  platform_username: string | null;
+  contact_phone: string | null;
+  contact_phone_display: string | null;
+  author_name: string | null;
+  site_username: string | null;
+  is_anonymous: boolean;
+  other_complaints_count: number;
+};
+
+type OtherComplaint = {
+  id: string;
+  title: string;
+  status: Status;
+  created_at: string;
+  short_id: string | null;
+  public_id: string | null;
+  rating: number | null;
+};
+
+type Attachment = {
+  id: string;
+  url: string;
+  file_type: string;
+  visibility: string;
+  created_at: string;
+};
+
+type ComplaintDetail = {
+  other_complaints: OtherComplaint[];
+  attachments: Attachment[];
 };
 
 export const Route = createFileRoute("/brand/sikayetler")({
@@ -36,6 +80,8 @@ function BrandComplaintsPage() {
 
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [detail, setDetail] = useState<ComplaintDetail | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -67,6 +113,34 @@ function BrandComplaintsPage() {
       cancelled = true;
     };
   }, [brandId, page]);
+
+  useEffect(() => {
+    if (!brandId || !active) {
+      setDetail(null);
+      return;
+    }
+    let cancelled = false;
+    setDetailLoading(true);
+    const qs = new URLSearchParams({ brandId, id: active.id });
+    fetch(`/api/brand/complaints?${qs}`, { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j: { other_complaints?: OtherComplaint[]; attachments?: Attachment[] } | null) => {
+        if (cancelled) return;
+        setDetail({
+          other_complaints: j?.other_complaints ?? [],
+          attachments: j?.attachments ?? [],
+        });
+      })
+      .catch(() => {
+        if (!cancelled) setDetail(null);
+      })
+      .finally(() => {
+        if (!cancelled) setDetailLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [brandId, active?.id]);
 
 
   async function setStatus(id: string, s: Status) {
@@ -139,6 +213,9 @@ function BrandComplaintsPage() {
                   <span className="text-[11px] text-navy-mid">{new Date(c.created_at).toLocaleDateString("tr-TR")}</span>
                 </div>
                 <div className="mt-1 text-[14px] font-semibold text-ink line-clamp-2">{c.title}</div>
+                {c.author_name ? (
+                  <div className="mt-0.5 text-[11px] text-navy-mid truncate">{c.author_name}</div>
+                ) : null}
               </button>
             </li>
           ))}
@@ -178,6 +255,125 @@ function BrandComplaintsPage() {
                   <p className="text-[14px] text-navy whitespace-pre-wrap">{active.brand_response}</p>
                 </div>
               ) : null}
+
+              <div className="mt-6 rounded-xl bg-surface ring-1 ring-rule p-4">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-navy-mid mb-3">
+                  Şikayetçi bilgileri
+                </p>
+                <dl className="grid sm:grid-cols-2 gap-x-6 gap-y-3 text-[13px]">
+                  <InfoRow
+                    icon={<User className="size-3.5" />}
+                    label="Ad Soyad"
+                    value={active.author_name ?? "—"}
+                  />
+                  <InfoRow
+                    icon={<Phone className="size-3.5" />}
+                    label="Telefon"
+                    value={active.contact_phone_display ?? active.contact_phone ?? "—"}
+                  />
+                  <InfoRow
+                    icon={<AtSign className="size-3.5" />}
+                    label="Site kullanıcı adı"
+                    value={
+                      active.site_username
+                        ? `@${active.site_username}`
+                        : active.is_anonymous
+                          ? "Anonim"
+                          : "—"
+                    }
+                  />
+                  <InfoRow
+                    icon={<AtSign className="size-3.5" />}
+                    label="Platform kullanıcı adı"
+                    value={active.platform_username ? `@${active.platform_username}` : "—"}
+                  />
+                </dl>
+                {active.is_anonymous ? (
+                  <p className="mt-3 text-[11px] text-navy-mid">
+                    Bu şikayet anonim olarak yayınlanmış; iletişim bilgileri yalnızca firma panelinde görünür.
+                  </p>
+                ) : null}
+              </div>
+
+              {detailLoading ? (
+                <div className="mt-4 flex items-center gap-2 text-[13px] text-navy-mid">
+                  <Loader2 className="size-4 animate-spin" />
+                  Ek bilgiler yükleniyor…
+                </div>
+              ) : null}
+
+              {detail && detail.attachments.length > 0 ? (
+                <div className="mt-4 rounded-xl bg-surface ring-1 ring-rule p-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-navy-mid mb-3">
+                    Kanıt dosyaları ({detail.attachments.length})
+                  </p>
+                  <ul className="flex flex-wrap gap-2">
+                    {detail.attachments.map((a) => (
+                      <li key={a.id}>
+                        <a
+                          href={a.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 rounded-lg ring-1 ring-rule px-3 py-1.5 text-[12px] font-medium text-brand hover:bg-brand-soft/40"
+                        >
+                          <Paperclip className="size-3.5" />
+                          {a.file_type.startsWith("image/") ? "Görsel" : a.file_type.startsWith("video/") ? "Video" : "Dosya"}
+                          <ExternalLink className="size-3" />
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+
+              {detail && detail.other_complaints.length > 0 ? (
+                <div className="mt-4 rounded-xl bg-surface ring-1 ring-rule p-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-navy-mid mb-3 flex items-center gap-1.5">
+                    <History className="size-3.5" />
+                    Bu kullanıcının diğer şikayetleri ({detail.other_complaints.length})
+                  </p>
+                  <ul className="divide-y divide-rule">
+                    {detail.other_complaints.map((oc) => (
+                      <li key={oc.id} className="py-2.5 first:pt-0 last:pb-0">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <Link
+                              to="/sikayet/$id"
+                              params={{ id: oc.public_id ?? oc.id }}
+                              className="text-[13px] font-semibold text-ink hover:text-brand line-clamp-1"
+                            >
+                              {oc.title}
+                            </Link>
+                            <div className="mt-0.5 flex items-center gap-2 text-[11px] text-navy-mid">
+                              <span>{new Date(oc.created_at).toLocaleDateString("tr-TR")}</span>
+                              <span>·</span>
+                              <span>{statusLabel[dbStatusToUi(oc.status)]}</span>
+                              {oc.rating != null && oc.rating > 0 ? (
+                                <>
+                                  <span>·</span>
+                                  <span>{oc.rating}/5</span>
+                                </>
+                              ) : null}
+                            </div>
+                          </div>
+                          <Link
+                            to="/sikayet/$id"
+                            params={{ id: oc.public_id ?? oc.id }}
+                            className="shrink-0 text-brand hover:text-brand/80"
+                            title="Şikayeti görüntüle"
+                          >
+                            <ExternalLink className="size-4" />
+                          </Link>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : detail && !detailLoading && active.other_complaints_count === 0 ? (
+                <p className="mt-4 text-[12px] text-navy-mid">
+                  Bu kullanıcının firmanıza yönelik başka şikayeti bulunmuyor.
+                </p>
+              ) : null}
             </div>
             <div className="p-6 flex-1 flex flex-col gap-3">
               <textarea value={reply} onChange={(e) => setReply(e.target.value)} rows={6} placeholder="Yanıtınızı yazın…" className="w-full rounded-lg ring-1 ring-rule p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40" />
@@ -209,6 +405,26 @@ function BrandComplaintsPage() {
       {active && brandId && (
         <EscalateModal open={escOpen} onClose={() => setEscOpen(false)} complaintId={active.id} brandId={brandId} onDone={() => setStatus(active.id, "escalated")} />
       )}
+    </div>
+  );
+}
+
+function InfoRow({
+  icon,
+  label,
+  value,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div>
+      <dt className="flex items-center gap-1.5 text-navy-mid text-[11px] font-medium mb-0.5">
+        {icon}
+        {label}
+      </dt>
+      <dd className="text-ink font-semibold break-all">{value}</dd>
     </div>
   );
 }

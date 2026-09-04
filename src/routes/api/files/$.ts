@@ -38,23 +38,30 @@ export const Route = createFileRoute("/api/files/$")({
             .where(eq(schema.complaintAttachments.storagePath, key))
             .limit(1);
 
-          if (att && att.visibility !== "public") {
+          if (att) {
             const user = await optionalUser(request);
-            if (!user) return new Response("Not found", { status: 404 });
 
-            let allowed = att.uploaderId === user.id || (await isStaff(user.id));
+            // Henüz şikayete bağlanmamış kanıt — yalnızca yükleyen veya personel.
+            if (!att.complaintId) {
+              if (!user || (att.uploaderId !== user.id && !(await isStaff(user.id)))) {
+                return new Response("Not found", { status: 404 });
+              }
+            } else if (att.visibility !== "public") {
+              if (!user) return new Response("Not found", { status: 404 });
 
-            if (!allowed && att.visibility === "brand_only" && att.complaintId) {
-              const [c] = await db
-                .select({ brandId: schema.complaints.brandId })
-                .from(schema.complaints)
-                .where(eq(schema.complaints.id, att.complaintId))
-                .limit(1);
-              if (c) allowed = await isBrandMember(user.id, c.brandId);
+              let allowed = att.uploaderId === user.id || (await isStaff(user.id));
+
+              if (!allowed && att.visibility === "brand_only") {
+                const [c] = await db
+                  .select({ brandId: schema.complaints.brandId })
+                  .from(schema.complaints)
+                  .where(eq(schema.complaints.id, att.complaintId))
+                  .limit(1);
+                if (c) allowed = await isBrandMember(user.id, c.brandId);
+              }
+
+              if (!allowed) return new Response("Not found", { status: 404 });
             }
-            // super_admin_only: yalnızca yükleyen + personel (yukarıda kapsandı)
-
-            if (!allowed) return new Response("Not found", { status: 404 });
           }
 
           const obj = await getObject(key);

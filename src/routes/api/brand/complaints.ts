@@ -1,8 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { and, desc, eq, notInArray, sql, type SQL } from "drizzle-orm";
+import { and, desc, eq, ne, notInArray, sql, inArray, type SQL } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { recordStatusChange } from "@/lib/server/history";
 import { notifyComplaintOwner } from "@/lib/server/notify";
+import { loadAuthorProfile } from "@/lib/server/author-profile";
+import { displayPhone } from "@/lib/phone-mask";
+import { normalizePlatformUsername } from "@/lib/server/ai/prompts";
 import {
   HttpError,
   errorResponse,
@@ -48,6 +51,132 @@ const BRAND_STATUSES: readonly Status[] = [
 
 const DEFAULT_PAGE_SIZE = 12;
 
+const BRAND_VISIBLE_STATUSES = notInArray(schema.complaints.status, [
+  "pending",
+  "rejected",
+  "spam",
+] as const);
+
+type ComplaintRow = {
+  id: string;
+  title: string;
+  body: string;
+  status: Status;
+  created_at: Date;
+  short_id: string | null;
+  brand_response: string | null;
+  rating: number | null;
+  platform_username: string | null;
+  contact_phone: string | null;
+  user_id: string;
+  is_anonymous: boolean;
+  anon_name: string | null;
+  public_id: string | null;
+};
+
+async function shapeBrandComplaint(
+  row: ComplaintRow,
+  opts?: { otherCount?: number },
+) {
+  let authorName: string | null = null;
+  let siteUsername: string | null = null;
+
+  if (row.is_anonymous) {
+    authorName = row.anon_name?.trim() || "Anonim kullanıcı";
+  } else {
+    const profile = await loadAuthorProfile(row.user_id);
+    authorName = profile?.full_name ?? null;
+    siteUsername = profile?.username ?? null;
+  }
+
+  return {
+    id: row.id,
+    title: row.title,
+    body: row.body,
+    status: row.status,
+    created_at: row.created_at,
+    short_id: row.short_id,
+    public_id: row.public_id,
+    brand_response: row.brand_response,
+    rating: row.rating,
+    platform_username: row.platform_username
+      ? normalizePlatformUsername(row.platform_username)
+      : null,
+    contact_phone: row.contact_phone,
+    contact_phone_display: displayPhone(row.contact_phone, "full"),
+    author_name: authorName,
+    site_username: siteUsername,
+    is_anonymous: row.is_anonymous,
+    other_complaints_count: opts?.otherCount ?? 0,
+  };
+}
+
+async function loadOtherComplaintsForBrand(
+  brandId: string,
+  userId: string,
+  excludeId: string,
+) {
+  const rows = await db
+    .select({
+      id: schema.complaints.id,
+      title: schema.complaints.title,
+      status: schema.complaints.status,
+      created_at: schema.complaints.createdAt,
+      short_id: schema.complaints.shortId,
+      public_id: schema.complaints.publicId,
+      rating: schema.complaints.rating,
+    })
+    .from(schema.complaints)
+    .where(
+      and(
+        eq(schema.complaints.brandId, brandId),
+        eq(schema.complaints.userId, userId),
+        ne(schema.complaints.id, excludeId),
+        eq(schema.complaints.hidden, false),
+        BRAND_VISIBLE_STATUSES,
+      ),
+    )
+    .orderBy(desc(schema.complaints.createdAt))
+    .limit(15);
+
+  return rows.map((r) => ({
+    id: r.id,
+    title: r.title,
+    status: r.status,
+    created_at: r.created_at,
+    short_id: r.short_id,
+    public_id: r.public_id,
+    rating: r.rating,
+  }));
+}
+
+async function loadComplaintAttachments(complaintId: string) {
+  const rows = await db
+    .select({
+      id: schema.complaintAttachments.id,
+      storage_path: schema.complaintAttachments.storagePath,
+      file_type: schema.complaintAttachments.fileType,
+      visibility: schema.complaintAttachments.visibility,
+      created_at: schema.complaintAttachments.createdAt,
+    })
+    .from(schema.complaintAttachments)
+    .where(
+      and(
+        eq(schema.complaintAttachments.complaintId, complaintId),
+        inArray(schema.complaintAttachments.visibility, ["public", "brand_only"]),
+      ),
+    )
+    .orderBy(desc(schema.complaintAttachments.createdAt));
+
+  return rows.map((r) => ({
+    id: r.id,
+    url: `/api/files/${r.storage_path}`,
+    file_type: r.file_type,
+    visibility: r.visibility,
+    created_at: r.created_at,
+  }));
+}
+
 /** Şikayeti bul + üzerindeki markaya erişimi doğrula. brandId İSTEMCİDEN ALINMAZ. */
 async function loadComplaintWithAccess(userId: string, complaintId: string) {
   if (!UUID_RE.test(complaintId))
@@ -85,17 +214,65 @@ export const Route = createFileRoute("/api/brand/complaints")({
             throw new HttpError(400, "Firma belirtilmeli");
           await requireBrandAccess(user.id, brandId);
 
+          const detailId = p.get("id");
+          if (detailId) {
+            if (!UUID_RE.test(detailId)) throw new HttpError(400, "Geçersiz şikayet");
+            await loadComplaintWithAccess(user.id, detailId);
+
+            const [row] = await db
+              .select({
+                id: schema.complaints.id,
+                title: schema.complaints.title,
+                body: schema.complaints.body,
+                status: schema.complaints.status,
+                created_at: schema.complaints.createdAt,
+                short_id: schema.complaints.shortId,
+                brand_response: schema.complaints.brandResponse,
+                rating: schema.complaints.rating,
+                platform_username: schema.complaints.platformUsername,
+                contact_phone: schema.complaints.contactPhone,
+                user_id: schema.complaints.userId,
+                is_anonymous: schema.complaints.isAnonymous,
+                anon_name: schema.complaints.anonName,
+                public_id: schema.complaints.publicId,
+              })
+              .from(schema.complaints)
+              .where(
+                and(
+                  eq(schema.complaints.id, detailId),
+                  eq(schema.complaints.brandId, brandId),
+                  eq(schema.complaints.hidden, false),
+                  BRAND_VISIBLE_STATUSES,
+                ),
+              )
+              .limit(1);
+            if (!row) throw new HttpError(404, "Şikayet bulunamadı");
+
+            const [otherComplaints, attachments, shaped] = await Promise.all([
+              loadOtherComplaintsForBrand(brandId, row.user_id, row.id),
+              loadComplaintAttachments(row.id),
+              shapeBrandComplaint(row as ComplaintRow, {
+                otherCount: 0,
+              }),
+            ]);
+
+            return Response.json({
+              complaint: { ...shaped, other_complaints_count: otherComplaints.length },
+              other_complaints: otherComplaints,
+              attachments,
+            });
+          }
+
           const page = Math.max(1, Number(p.get("page")) || 1);
           const pageSize = Math.min(
             50,
             Math.max(1, Number(p.get("pageSize")) || DEFAULT_PAGE_SIZE),
           );
 
-          // Moderasyon onayı almadan firmaya gösterilmez.
           const conditions: SQL[] = [
             eq(schema.complaints.brandId, brandId),
             eq(schema.complaints.hidden, false),
-            notInArray(schema.complaints.status, ["pending", "rejected", "spam"]),
+            BRAND_VISIBLE_STATUSES,
           ];
           const statusParam = p.get("status");
           if (statusParam) {
@@ -107,8 +284,6 @@ export const Route = createFileRoute("/api/brand/complaints")({
           }
           const where = and(...conditions);
 
-          // PII: şikayetçiye ait hiçbir alan (user_id / ad / contact_phone)
-          // döndürülmez — panelin ihtiyacı yok, anonimlik korunur.
           const rows = await db
             .select({
               id: schema.complaints.id,
@@ -121,6 +296,10 @@ export const Route = createFileRoute("/api/brand/complaints")({
               rating: schema.complaints.rating,
               platform_username: schema.complaints.platformUsername,
               contact_phone: schema.complaints.contactPhone,
+              user_id: schema.complaints.userId,
+              is_anonymous: schema.complaints.isAnonymous,
+              anon_name: schema.complaints.anonName,
+              public_id: schema.complaints.publicId,
             })
             .from(schema.complaints)
             .where(where)
@@ -128,12 +307,43 @@ export const Route = createFileRoute("/api/brand/complaints")({
             .limit(pageSize)
             .offset((page - 1) * pageSize);
 
+          const userIds = [...new Set(rows.map((r) => r.user_id))];
+          const otherCounts = new Map<string, number>();
+          if (userIds.length > 0) {
+            const counts = await db
+              .select({
+                userId: schema.complaints.userId,
+                count: sql<number>`count(*)::int`,
+              })
+              .from(schema.complaints)
+              .where(
+                and(
+                  eq(schema.complaints.brandId, brandId),
+                  inArray(schema.complaints.userId, userIds),
+                  eq(schema.complaints.hidden, false),
+                  BRAND_VISIBLE_STATUSES,
+                ),
+              )
+              .groupBy(schema.complaints.userId);
+            for (const c of counts) {
+              otherCounts.set(c.userId, Math.max(0, Number(c.count) - 1));
+            }
+          }
+
+          const items = await Promise.all(
+            rows.map((row) =>
+              shapeBrandComplaint(row as ComplaintRow, {
+                otherCount: otherCounts.get(row.user_id) ?? 0,
+              }),
+            ),
+          );
+
           const [{ count }] = await db
             .select({ count: sql<number>`count(*)` })
             .from(schema.complaints)
             .where(where);
 
-          return Response.json({ items: rows, total: Number(count) });
+          return Response.json({ items, total: Number(count) });
         } catch (e) {
           return errorResponse(e);
         }

@@ -9,6 +9,7 @@ import { refreshBrandAggregates } from "@/lib/server/brand-stats";
 import { loadAuthorProfile } from "@/lib/server/author-profile";
 import { displayPhone } from "@/lib/phone-mask";
 import { normalizePlatformUsername } from "@/lib/server/ai/prompts";
+import { assertComplaintHasVisualEvidence } from "@/lib/server/complaint-evidence";
 
 // schema.complaintStatus enum ile birebir. İstemciden gelen değer BURADA doğrulanır.
 const STATUSES = [
@@ -214,6 +215,9 @@ export const Route = createFileRoute("/api/admin/complaints")({
           if (b.status !== undefined) {
             if (!STATUSES.includes(b.status as Status)) throw new HttpError(400, "Geçersiz durum");
             const nextStatus = b.status as Status;
+            if (nextStatus === "approved") {
+              await assertComplaintHasVisualEvidence(b.id);
+            }
             patch.status = nextStatus;
             if (nextStatus === "approved") patch.isPublic = true;
             if (nextStatus === "rejected" || nextStatus === "spam") patch.isPublic = false;

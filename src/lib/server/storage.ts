@@ -143,6 +143,7 @@ export const FOLDERS = [
   "blog-images",
   "complaint-images",
   "complaint-files",
+  "complaint-evidence",
   "brand-documents",
   "brand-application-photos",
   "brand-videos",
@@ -176,6 +177,22 @@ export function validateUpload(
       return { ok: false, error: "Sadece video yükleyebilirsiniz (mp4, webm, mov)" };
     if (size > MAX_VIDEO_BYTES) return { ok: false, error: "Video en fazla 100 MB olabilir" };
     return { ok: true, folder: folder as Folder };
+  }
+
+  if (folder === "complaint-evidence") {
+    if (VIDEO_TYPES.includes(contentType)) {
+      if (size > MAX_VIDEO_BYTES) return { ok: false, error: "Video en fazla 100 MB olabilir" };
+      return { ok: true, folder: folder as Folder };
+    }
+    if (IMAGE_TYPES.includes(contentType)) {
+      if (size > MAX_IMAGE_BYTES) return { ok: false, error: "Görsel en fazla 10 MB olabilir" };
+      return { ok: true, folder: folder as Folder };
+    }
+    if (contentType === "application/pdf") {
+      if (size > MAX_FILE_BYTES) return { ok: false, error: "PDF en fazla 25 MB olabilir" };
+      return { ok: true, folder: folder as Folder };
+    }
+    return { ok: false, error: "Kanıt olarak görsel, video veya PDF yükleyebilirsiniz" };
   }
 
   const isImageFolder = folder !== "complaint-files" && folder !== "brand-documents";
