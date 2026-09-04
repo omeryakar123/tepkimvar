@@ -16,7 +16,7 @@ import { Combobox } from "@/components/combobox";
 import { FileDropzone, hasRequiredVisualEvidence, type AcceptedFile } from "@/components/file-dropzone";
 import { SiteLogoMark, SiteLogoTitle } from "@/components/site-logo-mark";
 import { looksLikeFakePlatformUsername } from "@/lib/platform-username";
-import { EMPTY_COMPLAINT_STATE, type ComplaintState } from "@/lib/complaint-intake-state";
+import { EMPTY_COMPLAINT_STATE, logComplaintDebug, rebuildStateFromMessages, type ComplaintState } from "@/lib/complaint-intake-state";
 import { cn } from "@/lib/utils";
 
 type Brand = { id: string; name: string };
@@ -104,6 +104,9 @@ export function ComplaintWizard({
   const chatInputRef = useRef<HTMLTextAreaElement>(null);
   const shouldAutoScrollRef = useRef(true);
   const panelRef = useRef<HTMLDivElement>(null);
+  const complaintStateRef = useRef<ComplaintState>(EMPTY_COMPLAINT_STATE);
+  const assistInFlightRef = useRef(false);
+  const greetingFetchedRef = useRef(false);
 
   const selectedBrand = useMemo(
     () => brands.find((b) => b.id === brandId) ?? null,
@@ -111,6 +114,10 @@ export function ComplaintWizard({
   );
 
   const sidebarBrandLabel = selectedBrand?.name ?? detectedBrandName;
+
+  useEffect(() => {
+    complaintStateRef.current = complaintState;
+  }, [complaintState]);
 
   useEffect(() => {
     if (step !== 1 || step1Phase !== "chat") return;
@@ -122,6 +129,9 @@ export function ComplaintWizard({
   }, [messages, aiLoading, step, step1Phase]);
 
   useEffect(() => {
+    if (greetingFetchedRef.current) return;
+    greetingFetchedRef.current = true;
+
     let cancelled = false;
     fetch("/api/complaints/assist")
       .then((r) => (r.ok ? r.json() : null))
@@ -130,17 +140,21 @@ export function ComplaintWizard({
         const text =
           j?.greeting?.trim() ||
           "Merhaba. Hangi site veya markayla sorun yaşadınız? Kısaca anlatın.";
-        setMessages([{ role: "bot", text }]);
+        setMessages((prev) => (prev.length === 0 ? [{ role: "bot", text }] : prev));
         setGreetingLoaded(true);
       })
       .catch(() => {
         if (!cancelled) {
-          setMessages([
-            {
-              role: "bot",
-              text: "Merhaba. Hangi site veya markayla sorun yaşadınız? Kısaca anlatın.",
-            },
-          ]);
+          setMessages((prev) =>
+            prev.length === 0
+              ? [
+                  {
+                    role: "bot",
+                    text: "Merhaba. Hangi site veya markayla sorun yaşadınız? Kısaca anlatın.",
+                  },
+                ]
+              : prev,
+          );
           setGreetingLoaded(true);
         }
       });
@@ -181,14 +195,26 @@ export function ComplaintWizard({
 
   async function runAssist(
     nextMessages: ChatMessage[],
-    options?: { mode?: "chat" | "finalize" },
+    options?: { mode?: "chat" | "finalize"; complaintState?: ComplaintState },
   ) {
+    if (assistInFlightRef.current) return;
+    assistInFlightRef.current = true;
     setAiLoading(true);
+
+    const stateForApi = options?.complaintState ?? complaintStateRef.current;
+
     try {
       const apiMessages = nextMessages.map((m) => ({
         role: m.role === "bot" ? ("assistant" as const) : ("user" as const),
         content: m.text,
       }));
+
+      logComplaintDebug("client request", {
+        userMessage: apiMessages.filter((m) => m.role === "user").at(-1)?.content,
+        complaintState: stateForApi,
+        historyLength: apiMessages.length,
+        mode: options?.mode ?? "chat",
+      });
 
       const res = await fetch("/api/complaints/assist", {
         method: "POST",
@@ -197,7 +223,7 @@ export function ComplaintWizard({
         body: JSON.stringify({
           messages: apiMessages,
           brands,
-          complaintState,
+          complaintState: stateForApi,
           currentTitle: title,
           currentBody: body,
           mode: options?.mode ?? "chat",
@@ -213,7 +239,16 @@ export function ComplaintWizard({
       if (json.suggestedBrandName) setDetectedBrandName(json.suggestedBrandName);
       if (json.suggestedRating && rating < 1) setRating(json.suggestedRating);
       setDraftQuality(json.draftQuality ?? "draft");
-      if (json.state) setComplaintState(json.state);
+      if (json.state) {
+        setComplaintState(json.state);
+        complaintStateRef.current = json.state;
+      }
+
+      logComplaintDebug("client response", {
+        state: json.state,
+        reply: json.reply,
+        readyToContinue: json.readyToContinue,
+      });
 
       if (options?.mode === "finalize") {
         setStep1Phase("summary");
@@ -242,18 +277,28 @@ export function ComplaintWizard({
         },
       ]);
     } finally {
+      assistInFlightRef.current = false;
       setAiLoading(false);
     }
   }
 
   function handleChatSend() {
     const text = chatInput.trim();
-    if (!text || aiLoading) return;
+    if (!text || aiLoading || assistInFlightRef.current) return;
 
     shouldAutoScrollRef.current = true;
     const nextMessages: ChatMessage[] = [...messages, { role: "user", text }];
     setMessages(nextMessages);
     setChatInput("");
+
+    const brandHints = brands.map((b) => ({ id: b.id, name: b.name }));
+    const historyForState = nextMessages.map((m) => ({
+      role: m.role === "bot" ? "assistant" : "user",
+      content: m.text,
+    }));
+    const updatedState = rebuildStateFromMessages(historyForState, brandHints);
+    setComplaintState(updatedState);
+    complaintStateRef.current = updatedState;
 
     requestAnimationFrame(() => {
       chatInputRef.current?.focus({ preventScroll: true });
@@ -265,7 +310,7 @@ export function ComplaintWizard({
     }
 
     if (awaitingMoreConfirmation && isDecliningMore(text)) {
-      void runAssist(nextMessages, { mode: "finalize" });
+      void runAssist(nextMessages, { mode: "finalize", complaintState: updatedState });
       return;
     }
 
@@ -273,7 +318,7 @@ export function ComplaintWizard({
       setAwaitingMoreConfirmation(false);
     }
 
-    void runAssist(nextMessages);
+    void runAssist(nextMessages, { complaintState: updatedState });
   }
 
   function approveSummary() {

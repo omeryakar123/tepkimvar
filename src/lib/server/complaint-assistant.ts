@@ -4,6 +4,7 @@ import {
   type ComplaintAssistantConfig,
 } from "@/lib/server/complaint-assistant-config";
 import {
+  buildAcknowledgmentReply,
   buildBodyFromState,
   buildIntakeReply,
   buildTitleFromState,
@@ -12,10 +13,12 @@ import {
   EMPTY_COMPLAINT_STATE,
   extractStateFromMessage,
   getMissingFields,
-  getNextQuestion,
+  hasMinimumComplaintInfo,
+  isFrustratedRepeatMessage,
+  logComplaintDebug,
   mergeComplaintState,
   normalizeComplaintState,
-  processIntakeMessage,
+  rebuildStateFromMessages,
   replyAsksKnownField,
   type ComplaintState,
 } from "@/lib/complaint-intake-state";
@@ -91,6 +94,17 @@ function applyStateBrandFromDb(state: ComplaintState, brands: BrandHint[]): Comp
   return state;
 }
 
+/** Sunucu tarafında tek kaynak: tüm kullanıcı mesajlarından state üret, client state ile birleştir. */
+function resolveConversationState(
+  messages: AssistMessage[],
+  clientState: ComplaintState | undefined,
+  brands: BrandHint[],
+): ComplaintState {
+  const fromHistory = rebuildStateFromMessages(messages, brands);
+  const merged = mergeComplaintState(fromHistory, normalizeComplaintState(clientState));
+  return applyStateBrandFromDb(merged, brands);
+}
+
 function stateFromAiPatch(
   prev: ComplaintState,
   raw: Partial<ComplaintState> | undefined,
@@ -105,15 +119,31 @@ function stateFromAiPatch(
   return applyStateBrandFromDb(merged, brands);
 }
 
-function sanitizeReply(raw: string, state: ComplaintState, body: string, fallback: string): string {
-  const reply = raw.trim();
-  if (!reply || reply.length < 10) return fallback;
-  if (replyAsksKnownField(reply, state)) return fallback;
-  if (state.brandName && normalize(reply) === normalize(state.brandName)) return fallback;
-  if (reply.length < 40 && !reply.includes("?") && !reply.includes(".") && !reply.includes(",")) {
-    return fallback;
+function pickReply(
+  state: ComplaintState,
+  body: string,
+  lastMsg: string,
+  mode: "chat" | "finalize",
+  aiReply?: string,
+): string {
+  if (mode === "finalize") {
+    return "Anlattıklarınızı düzenledim. Özeti kontrol edin; uygunsa onaylayarak devam edebilirsiniz.";
   }
-  return reply;
+
+  const ruleReply = buildIntakeReply(state, lastMsg, {
+    isFrustrated: isFrustratedRepeatMessage(lastMsg),
+  });
+
+  const ai = (aiReply ?? "").trim();
+  if (ai && !replyAsksKnownField(ai, state) && ai.length >= 20) {
+    if (hasMinimumComplaintInfo(state) || !ai.includes("?")) return ai;
+  }
+
+  if (hasMinimumComplaintInfo(state)) {
+    return ruleReply.includes("?") ? buildAcknowledgmentReply(state) : ruleReply;
+  }
+
+  return ruleReply;
 }
 
 function buildSystemPrompt(
@@ -127,7 +157,7 @@ function buildSystemPrompt(
   const stateBlock = JSON.stringify(state, null, 2);
   return `${base}${extra ? `\n\nEk talimatlar:\n${extra}` : ""}
 
-MEVCUT complaintState (temel gerçeklik — tekrar sorma, varsayma):
+CURRENT COMPLAINT STATE (doğrulanmış mevcut bilgiler — tekrar sorma, varsayma):
 ${stateBlock}
 
 Markalar (eşleştir): ${brandList || "—"}`;
@@ -143,28 +173,19 @@ function ruleBasedAssist(input: {
 }): ComplaintAssistResult {
   const lastMsg = lastUserMessage(input.messages);
   const state = applyStateBrandFromDb(normalizeComplaintState(input.complaintState), input.brands);
-
   const brand = matchBrandFromState(state, input.brands);
 
   let body = buildBodyFromState(state);
   const currentBody = (input.currentBody ?? "").trim();
-  if (currentBody.length > body.length && currentBody.length >= lastMsg.length) {
-    body = currentBody;
-  }
+  if (currentBody.length > body.length) body = currentBody;
 
   let title = (input.currentTitle ?? "").trim();
   if (!title) title = buildTitleFromState(state, body);
 
-  const fallbackReply =
-    input.mode === "finalize"
-      ? "Anlattıklarınızı düzenledim. Özeti kontrol edin; uygunsa onaylayarak devam edebilirsiniz."
-      : buildIntakeReply(state, body, lastMsg);
-
-  const reply = input.mode === "finalize" ? fallbackReply : buildIntakeReply(state, body, lastMsg);
-
-  const missingFields = getMissingFields(state, body);
+  const reply = pickReply(state, body, lastMsg, input.mode ?? "chat");
+  const missingFields = getMissingFields(state);
   const readyToContinue =
-    input.mode === "finalize" ? body.length >= 80 : computeReadyToContinue(state, body);
+    input.mode === "finalize" ? body.length >= 60 : computeReadyToContinue(state, body);
   const draftQuality = computeDraftQuality(state, body);
 
   return {
@@ -195,11 +216,15 @@ export async function assistComplaintDraft(input: {
   const config = await loadComplaintAssistantConfig();
   const lastMsg = lastUserMessage(input.messages);
 
-  let state = normalizeComplaintState(input.complaintState ?? EMPTY_COMPLAINT_STATE);
-  if (lastMsg) {
-    state = processIntakeMessage({ message: lastMsg, complaintState: state, brands });
-  }
-  state = applyStateBrandFromDb(state, brands);
+  const state = resolveConversationState(input.messages, input.complaintState, brands);
+
+  logComplaintDebug("request", {
+    userMessage: lastMsg,
+    clientState: input.complaintState ?? EMPTY_COMPLAINT_STATE,
+    resolvedState: state,
+    historyLength: input.messages.length,
+    mode,
+  });
 
   const fallback = () =>
     ruleBasedAssist({
@@ -212,18 +237,16 @@ export async function assistComplaintDraft(input: {
     });
 
   if (!isAiConfigured() || (mode === "chat" && lastMsg.length < 1 && input.messages.length <= 1)) {
-    return fallback();
+    const result = fallback();
+    logComplaintDebug("response", { aiUsed: false, state: result.state, reply: result.reply });
+    return result;
   }
 
   const brandList = brands.map((b) => b.name).slice(0, 80).join(", ");
 
   const aiMessages: { role: "system" | "user" | "assistant"; content: string }[] = [
     { role: "system", content: buildSystemPrompt(config, mode, brandList, state) },
-    {
-      role: "user",
-      content: `Güncel complaintState:\n${JSON.stringify(state)}\n\nSon kullanıcı mesajı:\n${lastMsg || "(yok)"}\n\nÖnce state güncelle, sonra en fazla bir soru sor veya taslak hazırla.`,
-    },
-    ...input.messages.slice(-10).map((m) => ({
+    ...input.messages.slice(-12).map((m) => ({
       role: m.role as "user" | "assistant",
       content: m.content,
     })),
@@ -245,37 +268,17 @@ export async function assistComplaintDraft(input: {
 
     let body = (raw.body ?? "").trim();
     const stateBody = buildBodyFromState(nextState);
-    if (!body || body.length < stateBody.length * 0.6) body = stateBody;
-    const currentBody = (input.currentBody ?? "").trim();
-    if (mode === "chat" && currentBody.length > body.length && currentBody.length >= lastMsg.length) {
-      body = currentBody;
-    }
+    if (!body || body.length < stateBody.length * 0.5) body = stateBody;
     body = body.slice(0, 5000);
 
     let title = (raw.title ?? input.currentTitle ?? "").trim();
     if (!title) title = buildTitleFromState(nextState, body);
 
-    const fallbackReply =
-      mode === "finalize"
-        ? "Anlattıklarınızı düzenledim. Özeti kontrol edin; uygunsa onaylayarak devam edebilirsiniz."
-        : buildIntakeReply(nextState, body, lastMsg);
+    const reply = pickReply(nextState, body, lastMsg, mode, raw.reply);
 
-    let reply = sanitizeReply(raw.reply ?? "", nextState, body, fallbackReply);
-
-    if (mode === "chat") {
-      const question = getNextQuestion(nextState, body);
-      if (question && replyAsksKnownField(reply, nextState)) reply = question;
-      if (!computeReadyToContinue(nextState, body) && question && !reply.includes("?")) {
-        reply = question;
-      }
-    }
-
-    const missingFields = Array.isArray(raw.missingFields)
-      ? raw.missingFields.map(String)
-      : getMissingFields(nextState, body);
-
+    const missingFields = getMissingFields(nextState);
     const readyToContinue =
-      mode === "finalize" ? body.length >= 80 : computeReadyToContinue(nextState, body);
+      mode === "finalize" ? body.length >= 60 : computeReadyToContinue(nextState, body);
 
     const quality = (["draft", "good", "excellent"] as const).includes(
       raw.draftQuality as ComplaintAssistResult["draftQuality"],
@@ -283,7 +286,7 @@ export async function assistComplaintDraft(input: {
       ? (raw.draftQuality as ComplaintAssistResult["draftQuality"])
       : computeDraftQuality(nextState, body);
 
-    return {
+    const result: ComplaintAssistResult = {
       reply,
       title: title.slice(0, 200),
       body,
@@ -301,8 +304,19 @@ export async function assistComplaintDraft(input: {
       state: nextState,
       aiUsed: true,
     };
+
+    logComplaintDebug("response", {
+      aiUsed: true,
+      state: result.state,
+      reply: result.reply,
+      readyToContinue: result.readyToContinue,
+    });
+
+    return result;
   } catch {
-    return fallback();
+    const result = fallback();
+    logComplaintDebug("response", { aiUsed: false, fallback: true, state: result.state });
+    return result;
   }
 }
 
