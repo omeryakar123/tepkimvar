@@ -1,4 +1,6 @@
 import { chatCompleteJson, isAiConfigured } from "@/lib/server/ai/client";
+import { eq } from "drizzle-orm";
+import { db, schema } from "@/db";
 import {
   loadComplaintAssistantConfig,
   type ComplaintAssistantConfig,
@@ -25,7 +27,44 @@ import {
 
 export type AssistMessage = { role: "user" | "assistant"; content: string };
 
-export type BrandHint = { id: string; name: string };
+export type BrandHint = { id: string; name: string; slug?: string };
+
+let brandCache: { brands: BrandHint[]; at: number } | null = null;
+const BRAND_CACHE_MS = 60_000;
+
+async function resolveAssistBrands(clientBrands: BrandHint[]): Promise<BrandHint[]> {
+  const now = Date.now();
+  if (!brandCache || now - brandCache.at > BRAND_CACHE_MS) {
+    const rows = await db
+      .select({ id: schema.brands.id, name: schema.brands.name, slug: schema.brands.slug })
+      .from(schema.brands)
+      .where(eq(schema.brands.isActive, true))
+      .limit(800);
+    brandCache = {
+      brands: rows.map((r) => ({ id: r.id, name: r.name, slug: r.slug })),
+      at: now,
+    };
+  }
+
+  const byId = new Map<string, BrandHint>();
+  for (const b of brandCache.brands) byId.set(b.id, b);
+  for (const b of clientBrands) {
+    byId.set(b.id, { id: b.id, name: b.name, slug: b.slug });
+  }
+  return [...byId.values()];
+}
+
+type AiAssistJson = {
+  reply?: string;
+  title?: string;
+  body?: string;
+  brandName?: string;
+  rating?: number;
+  readyToContinue?: boolean;
+  draftQuality?: string;
+  missingFields?: string[];
+  state?: Partial<ComplaintState>;
+};
 
 export type ComplaintAssistResult = {
   reply: string;
@@ -39,18 +78,6 @@ export type ComplaintAssistResult = {
   missingFields: string[];
   state: ComplaintState;
   aiUsed: boolean;
-};
-
-type AiAssistJson = {
-  reply?: string;
-  title?: string;
-  body?: string;
-  brandName?: string;
-  rating?: number;
-  readyToContinue?: boolean;
-  draftQuality?: string;
-  missingFields?: string[];
-  state?: Partial<ComplaintState>;
 };
 
 function normalize(s: string): string {
@@ -211,7 +238,7 @@ export async function assistComplaintDraft(input: {
   currentBody?: string;
   mode?: "chat" | "finalize";
 }): Promise<ComplaintAssistResult> {
-  const brands = input.brands.slice(0, 200);
+  const brands = await resolveAssistBrands(input.brands.slice(0, 300));
   const mode = input.mode ?? "chat";
   const config = await loadComplaintAssistantConfig();
   const lastMsg = lastUserMessage(input.messages);

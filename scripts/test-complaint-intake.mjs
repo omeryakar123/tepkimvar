@@ -104,4 +104,14 @@ console.log("TEST 8 — ready without extra questions");
   console.assert(getNextQuestion(state) === null, getNextQuestion(state));
 }
 
+console.log("TEST 9 — fixbette parama coktuler (screenshot)");
+{
+  const state = fromHistory(["fixbette sorun yasıyorum parama coktuler"]);
+  console.assert(state.brandName === "FixBet" || state.brandName === "Fixbet", `brand=${state.brandName}`);
+  console.assert(state.problem, `problem=${state.problem}`);
+  console.assert(getNextQuestion(state) === null, `should not ask brand: ${getNextQuestion(state)}`);
+  const reply = buildIntakeReply(state, "fixbette sorun yasıyorum parama coktuler");
+  console.assert(!/hangi site|hangi marka|ne sorun/i.test(reply), reply);
+}
+
 console.log("ALL TESTS PASSED");

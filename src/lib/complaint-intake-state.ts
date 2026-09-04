@@ -22,34 +22,89 @@ export const EMPTY_COMPLAINT_STATE: ComplaintState = {
   desiredResolution: null,
 };
 
-type BrandHint = { id: string; name: string };
+type BrandHint = { id: string; name: string; slug?: string };
 
 function normalize(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9çğıöşü]/gi, "");
 }
 
+function stripTurkishSuffix(token: string): string {
+  return token.replace(/(?:[''']?(?:te|ta|de|da|den|dan|ten|tan|e|a|i|ı|u|ü))$/i, "");
+}
+
+function formatBrandToken(base: string): string {
+  const lower = base.toLowerCase();
+  if (lower.endsWith("bet")) {
+    const stem = lower.slice(0, -3);
+    if (!stem) return base;
+    return `${stem.charAt(0).toUpperCase()}${stem.slice(1)}Bet`;
+  }
+  if (lower.endsWith("casino")) {
+    const stem = lower.slice(0, -6);
+    return `${stem.charAt(0).toUpperCase()}${stem.slice(1)}Casino`;
+  }
+  return base.charAt(0).toUpperCase() + base.slice(1).toLowerCase();
+}
+
 function matchBrand(text: string, brands: BrandHint[]): string | null {
   const n = normalize(text);
   if (!n) return null;
+
   let best: string | null = null;
   let bestLen = 0;
+
   for (const b of brands) {
     const bn = normalize(b.name);
-    if (bn.length < 3) continue;
-    if (n.includes(bn) && bn.length > bestLen) {
+    const bs = b.slug ? normalize(b.slug) : bn;
+    if (bn.length >= 3 && n.includes(bn) && bn.length > bestLen) {
       best = b.name;
       bestLen = bn.length;
     }
+    if (bs.length >= 3 && bs !== bn && n.includes(bs) && bs.length > bestLen) {
+      best = b.name;
+      bestLen = bs.length;
+    }
   }
+
+  if (best) return best;
+
+  for (const word of text.split(/\s+/)) {
+    const raw = normalize(word);
+    if (raw.length < 4) continue;
+    const stripped = stripTurkishSuffix(raw);
+    for (const b of brands) {
+      const bn = normalize(b.name);
+      const bs = b.slug ? normalize(b.slug) : bn;
+      if (stripped === bn || stripped === bs || bn.startsWith(stripped) || stripped.startsWith(bn)) {
+        if (bn.length > bestLen) {
+          best = b.name;
+          bestLen = bn.length;
+        }
+      }
+    }
+  }
+
   return best;
 }
 
-/** Marka listesi henüz yüklenmemişse metinden tahmin (fixbet → Fixbet). */
+/** Marka listesi yoksa metinden tahmin (fixbette → FixBet). */
 function extractBrandFallback(text: string): string | null {
-  const m = text.match(/\b([a-z0-9]{2,24}(?:bet|casino))\b/i);
-  if (!m) return null;
-  const raw = m[1];
-  return raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
+  const patterns = [
+    /\b([a-z0-9]{2,18}bet)(?:[''']?(?:te|ta|de|da|den|dan|ten|tan))?\b/i,
+    /\b([a-z0-9]{2,18}casino)(?:[''']?(?:te|ta|de|da))?\b/i,
+    /\b([a-z0-9]{2,24}(?:bet|casino))\b/i,
+  ];
+  for (const re of patterns) {
+    const m = text.match(re);
+    if (m?.[1]) return formatBrandToken(m[1]);
+  }
+  return null;
+}
+
+function resolveBrandName(name: string, brands: BrandHint[]): string {
+  const n = normalize(name);
+  const hit = brands.find((b) => normalize(b.name) === n || (b.slug && normalize(b.slug) === n));
+  return hit?.name ?? name;
 }
 
 function parseAmount(raw: string): number | string {
@@ -86,6 +141,18 @@ const PROBLEM_PATTERNS: { re: RegExp; problem: string }[] = [
   { re: /(vermediler|ödemediler|odedemediler|paramı vermediler|parami vermediler)/i, problem: "Ödeme/çekim yapılmadı" },
   { re: /bonus.*(verilmedi|iptal|silindi)/i, problem: "Bonus hakkı tanınmadı veya iptal edildi" },
   { re: /hesab.*(kapand|kapatt|bloke|askıya|askiya)/i, problem: "Hesap erişimi kısıtlandı veya kapatıldı" },
+  {
+    re: /param(a|ı|i|ım|im)?\s*(çöktü|çöktüler|coktu|coktuler|çekti|cekti|çektiler|cektiler|bloke|kilitl)/i,
+    problem: "Bakiyeme/parama el konuldu veya para çekildi",
+  },
+  {
+    re: /para(mı|mi|m)?\s*(aldı|aldi|çekti|cekti|yok|kayboldu|gitti|vermediler)/i,
+    problem: "Param alındı veya iade edilmedi",
+  },
+  {
+    re: /(çöktü|çöktüler|coktu|coktuler|el koyd|bloke)/i,
+    problem: "Bakiyeme el konuldu veya hesap bloke edildi",
+  },
   {
     re: /canlı yardım|canli yardim|canli destek|canlı destek/i,
     problem: "Canlı yardım yanıt vermedi",
@@ -167,6 +234,12 @@ function inferProblem(text: string, prev: ComplaintState): string | null {
 
   if (isVagueProblemStatement(text)) return prev.problem;
   if (prev.problem) return prev.problem;
+  if (text.length >= 22 && /sorun yaşıyorum|sorun yasiyorum|sorun yasıyorum/.test(text)) {
+    const cleaned = text.replace(/\s+/g, " ").trim();
+    if (/parama|para |çöktü|coktu|çekti|cekti|bloke|geçmedi|yansımadı|yansimadi/.test(cleaned)) {
+      return cleaned.length <= 200 ? cleaned : cleaned.slice(0, 200);
+    }
+  }
   if (text.length >= 28 && /sorun|mağdur|magdur|şikayet|sikayet|yaşadım|yasadim/.test(text)) {
     const cleaned = text.replace(/\s+/g, " ").trim();
     return cleaned.length <= 200 ? cleaned : cleaned.slice(0, 200);
@@ -283,15 +356,13 @@ export function extractStateFromMessage(
   const updates: Partial<ComplaintState> = {};
   const lower = text.toLowerCase();
 
-  const brandHit = matchBrand(text, brands) ?? (isCorrectionMessage(text) ? matchBrand(text, brands) : null);
-  const brandFallback = !brandHit ? extractBrandFallback(text) : null;
+  const brandHit = matchBrand(text, brands);
+  const brandFallback = brandHit ? null : extractBrandFallback(text);
 
-  if (brandHit && (isCorrectionMessage(text) || !prev.brandName || normalize(text).includes(normalize(brandHit)))) {
+  if (brandHit) {
     updates.brandName = brandHit;
-  } else if (brandFallback && (!prev.brandName || isCorrectionMessage(text))) {
-    updates.brandName = brandFallback;
-  } else if (brandHit && !prev.brandName) {
-    updates.brandName = brandHit;
+  } else if (brandFallback) {
+    updates.brandName = resolveBrandName(brandFallback, brands);
   }
 
   for (const { re, type } of TX_PATTERNS) {

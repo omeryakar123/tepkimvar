@@ -107,6 +107,7 @@ export function ComplaintWizard({
   const complaintStateRef = useRef<ComplaintState>(EMPTY_COMPLAINT_STATE);
   const assistInFlightRef = useRef(false);
   const greetingFetchedRef = useRef(false);
+  const brandsRef = useRef<Brand[]>([]);
 
   const selectedBrand = useMemo(
     () => brands.find((b) => b.id === brandId) ?? null,
@@ -118,6 +119,10 @@ export function ComplaintWizard({
   useEffect(() => {
     complaintStateRef.current = complaintState;
   }, [complaintState]);
+
+  useEffect(() => {
+    brandsRef.current = brands;
+  }, [brands]);
 
   useEffect(() => {
     if (step !== 1 || step1Phase !== "chat") return;
@@ -222,7 +227,7 @@ export function ComplaintWizard({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: apiMessages,
-          brands,
+          brands: brandsRef.current.map((b) => ({ id: b.id, name: b.name })),
           complaintState: stateForApi,
           currentTitle: title,
           currentBody: body,
@@ -291,7 +296,7 @@ export function ComplaintWizard({
     setMessages(nextMessages);
     setChatInput("");
 
-    const brandHints = brands.map((b) => ({ id: b.id, name: b.name }));
+    const brandHints = brandsRef.current.map((b) => ({ id: b.id, name: b.name }));
     const historyForState = nextMessages.map((m) => ({
       role: m.role === "bot" ? "assistant" : "user",
       content: m.text,
