@@ -14,10 +14,8 @@ import {
 import { toast } from "sonner";
 import { Combobox } from "@/components/combobox";
 import { FileDropzone, hasRequiredVisualEvidence, type AcceptedFile } from "@/components/file-dropzone";
-import { PhoneOtpModal } from "@/components/phone-otp-modal";
 import { SiteLogoMark, SiteLogoTitle } from "@/components/site-logo-mark";
 import { looksLikeFakePlatformUsername } from "@/lib/platform-username";
-import { toE164Tr } from "@/lib/phone";
 import { cn } from "@/lib/utils";
 
 type Brand = { id: string; name: string };
@@ -97,10 +95,8 @@ export function ComplaintWizard({
   const [files, setFiles] = useState<AcceptedFile[]>([]);
   const [mediaPrivacy, setMediaPrivacy] = useState<"public" | "brand_only" | "super_admin_only">("public");
   const [kvkk, setKvkk] = useState(false);
-  const [phone, setPhone] = useState("");
 
   const [submitting, setSubmitting] = useState(false);
-  const [otpOpen, setOtpOpen] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [draftQuality, setDraftQuality] = useState<AssistResponse["draftQuality"]>("draft");
   const [detectedBrandName, setDetectedBrandName] = useState<string | null>(null);
@@ -315,7 +311,7 @@ export function ComplaintWizard({
     if (step === 2 && !validateStep2()) return;
     if (step === 3) {
       if (!validateStep3()) return;
-      setOtpOpen(true);
+      void submitComplaint();
       return;
     }
     setStep((s) => (s + 1) as WizardStep);
@@ -325,11 +321,9 @@ export function ComplaintWizard({
     setStep((s) => (s > 1 ? ((s - 1) as WizardStep) : s));
   }
 
-  const submitComplaint = useCallback(
-    async (verificationId: string, verifiedPhone: string) => {
+  const submitComplaint = useCallback(async () => {
       setSubmitting(true);
       try {
-        const e164 = toE164Tr(verifiedPhone) ?? verifiedPhone;
         const attachmentIds: string[] = [];
         const uploadedFiles = [...files];
 
@@ -372,11 +366,9 @@ export function ComplaintWizard({
             body: body.trim(),
             brandId,
             categoryId: categoryId || null,
-            contactPhone: e164,
             platformUsername: platformUsername.trim(),
             rating,
             attachmentIds,
-            phoneVerificationId: verificationId,
           }),
         });
 
@@ -403,12 +395,6 @@ export function ComplaintWizard({
     },
     [files, mediaPrivacy, title, body, brandId, categoryId, platformUsername, rating, onSuccess],
   );
-
-  function handlePhoneVerified(result: { verificationId: string; phone: string }) {
-    setPhone(result.phone.replace(/^\+90/, ""));
-    setOtpOpen(false);
-    void submitComplaint(result.verificationId, result.phone);
-  }
 
   return (
     <div className="min-h-[calc(100dvh-4rem)] bg-surface">
@@ -589,7 +575,7 @@ export function ComplaintWizard({
               {step === 1 && step1Phase === "chat" ? null : (
                 <button
                   type="button"
-                  onClick={step === 1 ? approveSummary : goNext}
+                  onClick={step === 1 ? approveSummary : step === 3 ? submitComplaint : goNext}
                   disabled={submitting || (step === 1 && aiLoading)}
                   className="inline-flex items-center gap-2 h-10 sm:h-11 px-5 sm:px-6 rounded-full bg-brand text-brand-foreground text-[13px] sm:text-[14px] font-semibold hover:brightness-105 disabled:opacity-60 ml-auto shrink-0"
                 >
@@ -607,13 +593,6 @@ export function ComplaintWizard({
           </div>
         </div>
       </div>
-
-      <PhoneOtpModal
-        open={otpOpen}
-        onClose={() => setOtpOpen(false)}
-        initialPhone={phone}
-        onVerified={handlePhoneVerified}
-      />
     </div>
   );
 }
