@@ -1,11 +1,20 @@
 # Caddy reverse proxy — TLS otomatik (Let's Encrypt).
 # DOMAIN env'i compose'dan gelir.
+# Rollback: deploy/backups/Caddyfile.pre-hsts-308.bak  |  git: 8df9d212
+
+# HTTP → HTTPS kalıcı yönlendirme (308). Geçici 307 yerine tarayıcı/Outlook cache'leyebilir.
+http://{$DOMAIN} {
+	redir https://{$DOMAIN}{uri} 308
+}
+
 {$DOMAIN} {
+	header Strict-Transport-Security "max-age=31536000; includeSubDomains"
 	encode gzip
 	reverse_proxy app:3000
 }
 
 # www -> apex yönlendirmesi (INVALID_ORIGIN tuzağını da önler).
+# www DNS kaydı yok — blok korunur, apex davranışı değişmez.
 www.{$DOMAIN} {
 	redir https://{$DOMAIN}{uri} permanent
 }
